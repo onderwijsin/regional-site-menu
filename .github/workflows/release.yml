@@ -4,38 +4,20 @@ on:
   workflow_call:
     inputs:
       package:
-        description: >
-          Name of the package to release. Use "all" to release all packages via workspaces. Use
-          'root' to release the root package only.
-        required: false
+        type: string
         default: 'all'
-        type: string
       build-command:
-        description: 'Command to build packages before release'
-        required: false
+        type: string
         default: 'pnpm build'
-        type: string
       build-before-release:
-        description: 'Whether to build packages before release'
-        required: false
-        default: true
         type: boolean
+        default: true
       workspace-concurrency:
-        description: 'Concurrency for workspace releases'
-        required: false
-        default: 1
         type: number
-      merge-git-and-npmignore:
-        description:
-          'Whether to merge .gitignore and .npmignore files into .npmignore before release'
-        required: false
-        default: true
-        type: boolean
+        default: 1
       runner:
-        description: 'Runner to execute the job on'
-        required: false
-        default: ubuntu-latest
         type: string
+        default: ubuntu-latest
     secrets:
       RELEASE_APP_ID:
         required: true
@@ -43,27 +25,18 @@ on:
         required: true
       GH_PACKAGES_TOKEN:
         required: true
-    outputs:
-      releases:
-        description: 'Tagged releases output'
-        value: ${{ jobs.semantic-release.outputs.releases }}
 
 permissions:
   contents: write
 
 jobs:
   semantic-release:
-    name: Run Semantic Release
     runs-on: ${{ inputs.runner }}
     permissions:
       contents: write
       packages: write
       issues: write
       pull-requests: write
-      id-token: write
-
-    outputs:
-      releases: ${{ steps.extract.outputs.releases }}
 
     steps:
       - name: Generate GitHub App token
@@ -73,46 +46,41 @@ jobs:
           app-id: ${{ secrets.RELEASE_APP_ID }}
           private-key: ${{ secrets.RELEASE_APP_PRIVATE_KEY }}
 
-      - name: Checkout repository with app token
+      - name: Checkout
         uses: actions/checkout@v5
         with:
           fetch-depth: 0
           token: ${{ steps.app-token.outputs.token }}
 
-      - name: Setup Node & dependencies
+      - name: Setup
         uses: ./.github/actions/setup
         with:
           gh-packages-token: ${{ secrets.GH_PACKAGES_TOKEN }}
 
-      - name: Build packages
-        if: ${{ inputs.build-command && inputs.build-before-release }}
+      - name: Configure git
+        run: |
+          git config user.name "release-bot"
+          git config user.email "release-bot@users.noreply.github.com"
+
+      - name: Build
+        if: ${{ inputs.build-before-release }}
         run: ${{ inputs.build-command }}
 
-      - name: Run Semantic Release
-        id: release
+      - name: Run semantic-release
         env:
           GITHUB_TOKEN: ${{ steps.app-token.outputs.token }}
           NPM_TOKEN: ${{ secrets.GH_PACKAGES_TOKEN }}
           NODE_AUTH_TOKEN: ${{ secrets.GH_PACKAGES_TOKEN }}
           HUSKY: '0'
         run: |
-          mkdir -p tmp
+          set -euo pipefail
+
           echo "🔍 Running semantic-release for '${{ inputs.package }}'..."
 
           if [ "${{ inputs.package }}" = "root" ]; then
-            pnpm exec semantic-release > tmp/out.log 2>&1 || true
+            pnpm exec semantic-release
+          elif [ "${{ inputs.package }}" = "all" ]; then
+            pnpm -r --workspace-concurrency=${{ inputs.workspace-concurrency }} exec semantic-release
           else
-            if [ "${{ inputs.package }}" = "all" ]; then
-              pnpm -r --workspace-concurrency=${{ inputs.workspace-concurrency }} exec semantic-release > tmp/out.log 2>&1 || true
-            else
-              pnpm --filter ${{ inputs.package }} exec semantic-release > tmp/out.log 2>&1 || true
-            fi
+            pnpm --filter ${{ inputs.package }} exec semantic-release
           fi
-
-          echo "📝 semantic-release log (full):"
-          cat tmp/out.log
-
-          # Wrap JSON in single quotes so it remains a literal string
-          echo "releases<<EOF" >> "$GITHUB_OUTPUT"
-          echo "$releases_json" >> "$GITHUB_OUTPUT"
-          echo "EOF" >> "$GITHUB_OUTPUT"

@@ -34,7 +34,7 @@ jobs:
   release:
     # Only trigger release workflow if the "release" input is set to true, and if the branch is "main"
     if: ${{ github.event.inputs.release == 'true' && github.ref == 'refs/heads/main' }}
-    uses: ./.github/workflows/release_semantic.yml
+    uses: ./.github/workflows/release.yml
     with:
       runner: blacksmith-4vcpu-ubuntu-2404
       build-command: pnpm nuxt:prepare
