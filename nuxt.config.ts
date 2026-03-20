@@ -13,6 +13,10 @@ const isDev = process.env.MODE === 'dev'
 const isNext = process.env.MODE === 'next'
 const isLivePreview = process.env.MODE === 'live-preview'
 
+const siteTitle = 'Regiosite Menukaart'
+const siteDescription =
+	'Ontwerp, evalueer en verbeter regiosites voor onderwijs met een flexibele menukaart van onderdelen. Stel eenvoudig een concrete briefing samen voor verdere ontwikkeling.'
+
 export default defineNuxtConfig({
 	modules: [
 		'@nuxt/eslint',
@@ -23,6 +27,8 @@ export default defineNuxtConfig({
 		'pinia-plugin-persistedstate/nuxt',
 		'@vueuse/nuxt',
 		'@nuxthub/core',
+		'nuxt-site-config',
+		'@nuxtjs/robots',
 	],
 
 	devtools: {
@@ -197,5 +203,16 @@ export default defineNuxtConfig({
 		// Default storage, can be overridden per Pinia store
 		storage: 'localStorage',
 		debug: isDebug || isDev,
+	},
+
+	site: {
+		name: siteTitle,
+		description: siteDescription,
+		url: process.env.APP_URL,
+		titleSeparator: '|',
+		defaultLocale: 'nl', // not needed if you have @nuxtjs/i18n installed
+		language: 'nl_NL',
+		indexable: false,
+		trailingSlash: false,
 	},
 })
