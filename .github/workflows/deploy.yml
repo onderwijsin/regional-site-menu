@@ -1,5 +1,5 @@
 # Deploys new releases of the Nuxt application to NuxtHub
-name: Deploy Worker
+name: Release and Deploy
 
 on:
   push:
