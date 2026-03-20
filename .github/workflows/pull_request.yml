@@ -1,0 +1,46 @@
+name: Pull Request
+
+on:
+  pull_request:
+    branches: [main, next]
+  repository_dispatch:
+    types: [retrigger-workflows]
+
+permissions:
+  id-token: write
+  contents: read
+  deployments: write
+  issues: write
+  pull-requests: write
+
+concurrency:
+  group: pr-${{ github.event.pull_request.head.ref }}
+  cancel-in-progress: true
+
+jobs:
+  code-quality:
+    uses: ./.github/workflows/code_quality.yml@main
+    with:
+      runner: blacksmith-4vcpu-ubuntu-2404
+      build-command: pnpm nuxt:prepare
+      build-before-lint: true
+      build-before-typecheck: false
+      typecheck-command: pnpm typecheck
+      lint-command: pnpm lint
+    secrets:
+      GH_PACKAGES_TOKEN: ${{ secrets.GH_PACKAGES_TOKEN }}
+
+  preview-deployment:
+    if: >
+      !(
+        github.event_name == 'pull_request' &&
+        github.event.pull_request.head.ref == 'next' &&
+        github.event.pull_request.base.ref == 'main'
+      )
+    needs: code-quality
+    uses: ./.github/workflows/deploy_worker.yml
+    with:
+      runner: blacksmith-8vcpu-ubuntu-2404
+      environment: preview
+      upload_version: true
+    secrets: inherit

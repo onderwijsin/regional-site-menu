@@ -1,0 +1,41 @@
+name: Setup
+description:
+  'Setup Node.js, pnpm, configure GitHub Packages authentication and install dependencies'
+
+inputs:
+  node-version:
+    description: Node.js version
+    required: false
+    default: '24'
+  gh-packages-token:
+    description: 'GitHub Packages token with read:packages scope'
+    required: false
+
+runs:
+  using: composite
+  steps:
+    - name: Install pnpm
+      uses: pnpm/action-setup@v4
+      # Uses pnpm version from package.json if not specified
+      with:
+        run_install: false
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v6
+      with:
+        node-version: ${{ inputs.node-version }}
+        cache: pnpm
+
+    - name: Configure GitHub Packages
+      if: ${{ inputs.gh-packages-token }}
+      shell: bash
+      run: |
+        echo "//npm.pkg.github.com/:_authToken=${{ inputs.gh-packages-token }}" >> ~/.npmrc
+        echo "@onderwijsin:registry=https://npm.pkg.github.com" >> ~/.npmrc
+        echo "always-auth=true" >> ~/.npmrc
+
+    - name: Install dependencies
+      shell: bash
+      run: pnpm install --frozen-lockfile
+      env:
+        HUSKY: '0'

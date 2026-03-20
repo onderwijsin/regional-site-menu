@@ -1,0 +1,29 @@
+{
+	"cSpell.words": [
+		"brinvest",
+		"croho",
+		"Datahub",
+		"hovi",
+		"kiesmbo",
+		"onderwijsin",
+		"Onderwijs in",
+		"regioloket"
+	],
+	"editor.defaultFormatter": "esbenp.prettier-vscode",
+	"editor.formatOnSave": false,
+	"[typescript]": {
+		"editor.defaultFormatter": "vscode.typescript-language-features"
+	},
+	"[javascript]": {
+		"editor.defaultFormatter": "esbenp.prettier-vscode"
+	},
+	"[json]": {
+		"editor.defaultFormatter": "esbenp.prettier-vscode"
+	},
+	"[markdown]": {
+		"editor.defaultFormatter": "esbenp.prettier-vscode"
+	},
+	"[vue]": {
+		"editor.defaultFormatter": "esbenp.prettier-vscode"
+	}
+}

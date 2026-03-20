@@ -1,0 +1,41 @@
+catalog:
+  '@commitlint/cli': 20.5.0
+  '@commitlint/config-conventional': 20.5.0
+  '@ianvs/prettier-plugin-sort-imports': 4.7.1
+  '@iconify-json/lucide': 1.2.98
+  '@iconify-json/simple-icons': 1.2.74
+  '@nuxt/eslint': 1.15.2
+  '@nuxt/image': 2.0.0
+  '@nuxt/ui': 4.5.1
+  '@nuxthub/core': 0.10.7
+  '@nuxtjs/eslint-module': 4.1.0
+  '@nuxtjs/plausible': 3.0.2
+  '@pinia/nuxt': 0.11.3
+  '@types/node': 25.5.0
+  '@vueuse/core': 14.2.1
+  '@vueuse/nuxt': 14.2.1
+  defu: 6.1.4
+  eslint: 10.0.3
+  husky: 9.1.7
+  nuxt: 4.4.2
+  ofetch: 1.5.1
+  pinia: 3.0.4
+  pinia-plugin-persistedstate: 4.7.1
+  prettier: 3.8.1
+  prettier-plugin-tailwindcss: 0.7.2
+  tailwindcss: 4.2.1
+  typescript: 5.9.3
+  ufo: 1.6.3
+  vue-tsc: 3.2.5
+  wrangler: 4.76.0
+
+catalogMode: 'strict'
+cleanupUnusedCatalogs: true
+ignoredBuiltDependencies:
+  - '@parcel/watcher'
+  - '@tailwindcss/oxide'
+  - esbuild
+  - unrs-resolver
+  - vue-demi
+saveExact: true
+shamefullyHoist: true

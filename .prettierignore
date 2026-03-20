@@ -1,0 +1,9 @@
+.idea/
+.next/
+pnpm-lock.yaml
+CHANGELOG.md
+dist
+.nuxt
+nuxt/.nuxt
+.output
+node_modules

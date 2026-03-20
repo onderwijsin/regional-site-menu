@@ -1,0 +1,58 @@
+# Deploys new releases of the Nuxt application to NuxtHub
+name: Deploy Worker
+
+on:
+  push:
+    branches:
+      - next
+  workflow_dispatch:
+    inputs:
+      environment:
+        type: choice
+        description: Pick an environment
+        default: preview
+        options:
+          - preview
+          - production
+          - next
+      release:
+        type: boolean
+        description:
+          Whether to create a new release (and trigger release workflow) or just deploy the current
+          commit
+        default: true
+
+permissions:
+  id-token: write
+  contents: write
+  deployments: write
+  issues: write
+  pull-requests: write
+  packages: write
+
+jobs:
+  release:
+    # Only trigger release workflow if the "release" input is set to true, and if the branch is "main"
+    if: ${{ github.event.inputs.release == 'true' && github.ref == 'refs/heads/main' }}
+    uses: ./.github/workflows/release_semantic.yml
+    with:
+      runner: blacksmith-4vcpu-ubuntu-2404
+      build-command: pnpm nuxt:prepare
+      package: root
+    secrets:
+      GH_PACKAGES_TOKEN: ${{ secrets.GH_PACKAGES_TOKEN }}
+      RELEASE_APP_ID: ${{ secrets.RELEASE_APP_ID }}
+      RELEASE_APP_PRIVATE_KEY: ${{ secrets.RELEASE_APP_PRIVATE_KEY }}
+
+  deploy:
+    uses: ./.github/workflows/deploy_worker.yml
+    with:
+      runner: blacksmith-8vcpu-ubuntu-2404
+      set-sentry-release: true
+      upload_version: false
+      environment: >-
+        ${{ github.event.inputs.environment
+          || (github.ref == 'refs/heads/main' && 'production')
+          || (github.ref == 'refs/heads/next' && 'next')
+          || 'preview' }}
+    secrets: inherit

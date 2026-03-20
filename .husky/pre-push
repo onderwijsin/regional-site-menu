@@ -1,0 +1,16 @@
+#!/bin/bash
+
+# Load environment variables from .env file
+if [ -f .env ]; then
+    export $(grep -v '^#' .env | xargs)
+fi
+
+# Run typecheck unless explicitly disabled
+if [ "$DISABLE_PRE_PUSH_TYPECHECK" != "true" ]; then
+    pnpm typecheck
+fi
+
+# Run lint unless explicitly disabled
+if [ "$DISABLE_PRE_PUSH_LINT" != "true" ]; then
+    pnpm lint
+fi
