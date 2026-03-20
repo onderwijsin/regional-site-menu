@@ -41,7 +41,7 @@ export default defineNuxtConfig({
 		},
 	},
 
-	compatibilityDate: '2025-01-15',
+	compatibilityDate: '2026-01-05',
 
 	components: [
 		{
@@ -67,6 +67,20 @@ export default defineNuxtConfig({
 		cloudflare: {
 			deployConfig: true,
 			nodeCompat: true,
+			wrangler: {
+				name: process.env.WORKER_NAME,
+				assets: {
+					directory: './.output/public/',
+					binding: 'ASSETS',
+				},
+				observability: {
+					logs: {
+						enabled: true,
+						head_sampling_rate: 1,
+						invocation_logs: true,
+					},
+				},
+			},
 		},
 	},
 

@@ -1,5 +1,5 @@
 # Deploys new releases of the Nuxt application to NuxtHub
-name: Deploy Worker
+name: Release and Deploy
 
 on:
   push:
@@ -48,7 +48,6 @@ jobs:
     uses: ./.github/workflows/deploy_worker.yml
     with:
       runner: blacksmith-8vcpu-ubuntu-2404
-      set-sentry-release: true
       upload_version: false
       environment: >-
         ${{ github.event.inputs.environment
