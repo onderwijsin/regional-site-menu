@@ -3,47 +3,49 @@ useHead({
 	meta: [{ name: 'viewport', content: 'width=device-width, initial-scale=1' }],
 	link: [{ rel: 'icon', href: '/favicon.ico' }],
 	htmlAttrs: {
-		lang: 'en',
+		lang: 'nl',
 	},
 })
 
-const title = 'Nuxt Starter Template'
+const title = 'Regiosite Menukaart'
 const description =
-	'A production-ready starter template powered by Nuxt UI. Build beautiful, accessible, and performant applications in minutes, not hours.'
+	'Ontwerp, evalueer en verbeter regiosites voor onderwijs met een flexibele menukaart van onderdelen. Stel eenvoudig een concrete briefing samen voor verdere ontwikkeling.'
 
 useSeoMeta({
 	title,
 	description,
 	ogTitle: title,
 	ogDescription: description,
-	ogImage: 'https://ui.nuxt.com/assets/templates/nuxt/starter-light.png',
-	twitterImage: 'https://ui.nuxt.com/assets/templates/nuxt/starter-light.png',
+	ogImage: '/ogimage.png',
+	twitterImage: '/ogimage.png',
 	twitterCard: 'summary_large_image',
 })
+
+const { mode } = storeToRefs(useStateStore())
+
+// Always navigate to the explorer if the tab is changed and current route is landing
+const route = useRoute()
+watch(mode, async () => {
+	if (route.path === '/') await navigateTo('/explorer')
+})
+
+const { externalSite } = useMenu()
 </script>
 
 <template>
 	<UApp>
-		<UHeader>
+		<UHeader :ui="{ right: 'flex items-center gap-4' }">
 			<template #left>
-				<NuxtLink to="/">
-					<AppLogo class="h-6 w-auto shrink-0" />
+				<NuxtLink to="/" class="flex items-center gap-2">
+					<NuxtImg src="logo.png" width="40" alt="Onderwijsregio's logo" />
+					<span class="text-lg font-bold">Onderwijsregio's</span>
 				</NuxtLink>
-
-				<TemplateMenu />
 			</template>
 
 			<template #right>
+				<Cart v-if="mode === 'edit'" />
 				<UColorModeButton />
-
-				<UButton
-					to="https://github.com/nuxt-ui-templates/starter"
-					target="_blank"
-					icon="i-simple-icons-github"
-					aria-label="GitHub"
-					color="neutral"
-					variant="ghost"
-				/>
+				<ViewMode />
 			</template>
 		</UHeader>
 
@@ -51,24 +53,22 @@ useSeoMeta({
 			<NuxtPage />
 		</UMain>
 
-		<USeparator icon="i-simple-icons-nuxtdotjs" />
+		<USeparator
+			:avatar="{
+				src: '/logo.png',
+				loading: 'lazy',
+			}"
+		/>
 
 		<UFooter>
 			<template #left>
 				<p class="text-muted text-sm">
-					Built with Nuxt UI • © {{ new Date().getFullYear() }}
+					Onderwijsregio's • © {{ new Date().getFullYear() }}
 				</p>
 			</template>
 
 			<template #right>
-				<UButton
-					to="https://github.com/nuxt-ui-templates/starter"
-					target="_blank"
-					icon="i-simple-icons-github"
-					aria-label="GitHub"
-					color="neutral"
-					variant="ghost"
-				/>
+				<UButton aria-label="Onderwijsregio" v-bind="externalSite" />
 			</template>
 		</UFooter>
 	</UApp>
