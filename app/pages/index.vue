@@ -6,10 +6,10 @@
 			:links="[
 				{
 					label: 'Get started',
-					to: 'https://ui.nuxt.com/docs/getting-started/installation/nuxt',
-					target: '_blank',
+					to: '/explorer',
 					trailingIcon: 'i-lucide-arrow-right',
 					size: 'xl',
+					color: 'secondary',
 				},
 				{
 					label: 'Use this template',
@@ -69,24 +69,16 @@
 
 		<UPageSection>
 			<UPageCTA
-				title="Ready to build your next Nuxt app?"
-				description="Join thousands of developers building with Nuxt and Nuxt UI. Get this template and start shipping today."
+				title="Heb je vragen of opmerkingen?"
+				description="Laat het ons weten via het contactformulier. We reageren zo snel mogelijk."
 				variant="subtle"
 				:links="[
 					{
-						label: 'Start building',
-						to: 'https://ui.nuxt.com/docs/getting-started/installation/nuxt',
+						label: 'Stuur een bericht',
+						to: 'https://www.onderwijsregio.nl/service/contact',
 						target: '_blank',
 						trailingIcon: 'i-lucide-arrow-right',
-						color: 'neutral',
-					},
-					{
-						label: 'View on GitHub',
-						to: 'https://github.com/nuxt-ui-templates/starter',
-						target: '_blank',
-						icon: 'i-simple-icons-github',
-						color: 'neutral',
-						variant: 'outline',
+						color: 'primary',
 					},
 				]"
 			/>

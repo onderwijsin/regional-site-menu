@@ -2,7 +2,7 @@
 @import '@nuxt/ui';
 
 @theme static {
-	--font-sans: 'Rijksoverheidc', sans-serif;
+	--font-sans: 'Rijksoverheid', sans-serif;
 	--font-heading: 'Rijksoverheid Heading', sans-serif;
 
 	--color-primary-50: #fdf2f7;

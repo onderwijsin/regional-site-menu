@@ -35,6 +35,11 @@ export default defineNuxtConfig({
 		enabled: true,
 	},
 
+	imports: {
+		// Auto-import pinia stores defined in `~/stores`
+		dirs: ['stores'],
+	},
+
 	css: ['~/assets/css/main.css'],
 
 	routeRules: {
@@ -61,6 +66,8 @@ export default defineNuxtConfig({
 			include: ['@plausible-analytics/tracker', '@vue/devtools-core', '@vue/devtools-kit'],
 		},
 	},
+
+	ssr: false,
 
 	nitro: {
 		minify: !isDebug,
@@ -92,10 +99,12 @@ export default defineNuxtConfig({
 	},
 
 	hub: {
-		cache: {
-			driver: 'cloudflare-kv-binding',
-			namespaceId: process.env.CLOUDFLARE_CACHE_NAMESPACE_ID,
-		},
+		cache: !isDev
+			? {
+					driver: 'cloudflare-kv-binding',
+					namespaceId: process.env.CLOUDFLARE_CACHE_NAMESPACE_ID,
+				}
+			: false,
 	},
 
 	debug: {
@@ -178,7 +187,7 @@ export default defineNuxtConfig({
 
 	ui: {
 		theme: {
-			colors: ['primary', 'secondary', 'neutral', 'info', 'warning', 'error', 'success'],
+			colors: ['primary', 'secondary', 'neutral'],
 		},
 		experimental: {
 			componentDetection: true,
