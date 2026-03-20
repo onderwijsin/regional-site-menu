@@ -19,7 +19,7 @@ concurrency:
 
 jobs:
   code-quality:
-    uses: ./.github/workflows/code_quality.yml@main
+    uses: ./.github/workflows/code_quality.yml
     with:
       runner: blacksmith-4vcpu-ubuntu-2404
       build-command: pnpm nuxt:prepare
