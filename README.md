@@ -1,61 +1,162 @@
-# Nuxt Starter Template
+![github_banner](https://github.com/user-attachments/assets/641fecad-0b75-4fbb-9d53-22ffb0d819a8)
 
-[![Nuxt UI](https://img.shields.io/badge/Made%20with-Nuxt%20UI-00DC82?logo=nuxt&labelColor=020420)](https://ui.nuxt.com)
+<p>
+    <a href="https://nuxt.com/"><img src="https://img.shields.io/badge/Nuxt-28CF8D?style=flat&logo=nuxt.js" alt="Nuxt"></a>
+    <a href="https://www.typescriptlang.org/"><img src="https://img.shields.io/badge/TypeScript-3178C6?logo=typescript&logoColor=fff" alt="TypeScript"></a>
+    <a href="https://www.cloudflare.com/">
+      <img src="https://img.shields.io/badge/Cloudflare-Deployed-F38020?logo=cloudflare&logoColor=white" alt="Cloudflare Deployed">
+    </a>
+    <a href="https://ui.nuxt.com/"><img src="https://img.shields.io/badge/Built_with-NuxtUI-28CF8D" alt="Built with NuxtUI"></a>
+</p>
 
-Use this template to get started with [Nuxt UI](https://ui.nuxt.com) quickly.
+# Regional Site Menu
 
-- [Live demo](https://starter-template.nuxt.dev/)
-- [Documentation](https://ui.nuxt.com/docs/getting-started/installation/nuxt)
+## Introduction
 
-<a href="https://starter-template.nuxt.dev/" target="_blank">
-  <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="https://ui.nuxt.com/assets/templates/nuxt/starter-dark.png">
-    <source media="(prefers-color-scheme: light)" srcset="https://ui.nuxt.com/assets/templates/nuxt/starter-light.png">
-    <img alt="Nuxt Starter Template" src="https://ui.nuxt.com/assets/templates/nuxt/starter-light.png" width="830" height="466">
-  </picture>
-</a>
+Regional Site Menu is an interactive web application designed to help education regions design,
+evaluate, and improve their regional website.
 
-> The starter template for Vue is on https://github.com/nuxt-ui-templates/starter-vue.
+Instead of providing a fixed template, the app offers a flexible “menu” of possible website
+components. Users can explore these components, assess their current website, and compile a
+structured briefing for further development.
 
-## Quick Start
+---
 
-```bash [Terminal]
-npm create nuxt@latest -- -t ui
-```
+## Overview
 
-## Deploy your own
+The application supports three main use cases:
 
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-name=starter&repository-url=https%3A%2F%2Fgithub.com%2Fnuxt-ui-templates%2Fstarter&demo-image=https%3A%2F%2Fui.nuxt.com%2Fassets%2Ftemplates%2Fnuxt%2Fstarter-dark.png&demo-url=https%3A%2F%2Fstarter-template.nuxt.dev%2F&demo-title=Nuxt%20Starter%20Template&demo-description=A%20minimal%20template%20to%20get%20started%20with%20Nuxt%20UI.)
+- **Inspiration** Explore what a strong regional website can include.
 
-## Setup
+- **Audit** Evaluate an existing website based on predefined components.
 
-Make sure to install the dependencies:
+- **Briefing** Select relevant components and generate a structured output for web agencies.
+
+The app is fully client-side and built with:
+
+- Nuxt (edge runtime)
+- Nuxt UI + Tailwind CSS
+- Pinia (persisted state)
+- Tiptap (planned for rich text input)
+- Cloudflare Workers (via NuxtHub)
+
+---
+
+## Local Development
+
+### Requirements
+
+Make sure you have the following installed globally:
+
+- Node.js >= 24
+- pnpm >= 10
+- gitleaks
+
+---
+
+### Setup
 
 ```bash
 pnpm install
 ```
 
-## Development Server
+Copy the environment file:
 
-Start the development server on `http://localhost:3000`:
+```bash
+cp .env.example .env
+```
+
+Update `.env` as needed.
+
+---
+
+### Run the app
 
 ```bash
 pnpm dev
 ```
 
-## Production
+Build and preview:
 
-Build the application for production:
+```bash
+pnpm build
+pnpm preview
+```
+
+---
+
+### Git hooks behavior
+
+This project uses Husky + linting/formatting checks.
+
+You can disable specific checks via environment variables:
+
+```bash
+DISABLE_PRE_COMMIT_FORMAT=false
+DISABLE_PRE_COMMIT_LINT=false
+DISABLE_PRE_PUSH_TYPECHECK=false
+DISABLE_PRE_PUSH_FORMAT=false
+```
+
+---
+
+## Deployment
+
+This project is designed to run on **Cloudflare Workers** using NuxtHub.
+
+---
+
+### 1. Configure environment variables
+
+Set the following in NuxtHub (or your deployment environment):
+
+```bash
+MODE=prod
+APP_URL=https://your-domain.com
+
+CLOUDFLARE_ACCOUNT_ID=
+CLOUDFLARE_API_TOKEN=
+CLOUDFLARE_CACHE_NAMESPACE_ID=
+WORKER_NAME=
+```
+
+Optional:
+
+```bash
+PLAUSIBLE_DOMAIN=
+API_TOKEN=
+GH_ORG=
+GH_REPO=
+```
+
+---
+
+### 2. CI/CD
+
+Deployment is handled via GitHub Actions using the shared onderwijsin workflows.
+
+Typical flow:
+
+- Pull requests → preview deployments
+- `next` branch → staging
+- `main` branch → production
+
+---
+
+### 3. Build output
+
+Nuxt builds a Cloudflare-compatible worker using:
 
 ```bash
 pnpm build
 ```
 
-Locally preview production build:
+The output is deployed via NuxtHub and Cloudflare Workers.
 
-```bash
-pnpm preview
-```
+---
 
-Check out the [deployment documentation](https://nuxt.com/docs/getting-started/deployment) for more
-information.
+## Notes
+
+- All content is managed via Markdown in `/content`
+- State is persisted in the browser (no backend)
+- Analytics is handled via Plausible (privacy-friendly)
