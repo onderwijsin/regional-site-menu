@@ -75,6 +75,7 @@ export default defineNuxtConfig({
 			nodeCompat: true,
 			wrangler: {
 				name: process.env.WORKER_NAME,
+
 				assets: {
 					directory: './.output/public/',
 					binding: 'ASSETS',
