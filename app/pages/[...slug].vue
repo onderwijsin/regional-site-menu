@@ -21,24 +21,47 @@ const { data: surround } = await useAsyncData(`${route.path}-surround`, () => {
 </script>
 
 <template>
-	<NuxtLayout name="menu">
+	<NuxtLayout v-if="page" name="menu">
+		<UPageHeader
+			:title="page.title"
+			:headline="page.pillar"
+			:ui="{
+				root: 'pt-2',
+			}"
+		>
+			<template #description>
+				<p class="text-muted my-4 text-lg text-pretty">{{ page.description }}</p>
+				<div class="space-x-2">
+					<UBadge
+						v-for="item in page.goals"
+						:key="item"
+						:label="item"
+						icon="lucide:goal"
+						variant="subtle"
+						color="secondary"
+					/>
+					<UBadge
+						:label="page.priority"
+						icon="heroicons:fire-16-solid"
+						variant="subtle"
+						color="neutral"
+					/>
+					<UBadge
+						:label="page.scope"
+						icon="lucide:square-dashed-mouse-pointer"
+						variant="subtle"
+						color="neutral"
+					/>
+				</div>
+			</template>
+			<template #links>
+				<PageHeaderLinks />
+			</template>
+		</UPageHeader>
 		<ContentRenderer v-if="page" :value="page" />
 		<div class="space-y-8 pt-16 pb-8">
-			<UContentSurround :surround="surround as any" />
-			<UPageCTA
-				title="Heb je vragen of opmerkingen?"
-				description="Laat het ons weten via het contactformulier. We reageren zo snel mogelijk."
-				variant="subtle"
-				:links="[
-					{
-						label: 'Stuur een bericht',
-						to: 'https://www.onderwijsregio.nl/service/contact',
-						target: '_blank',
-						trailingIcon: 'i-lucide-arrow-right',
-						color: 'primary',
-					},
-				]"
-			/>
+			<USeparator label="Verder lezen" />
+			<UContentSurround :surround="surround" />
 		</div>
 	</NuxtLayout>
 </template>

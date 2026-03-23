@@ -6,21 +6,21 @@ const { data: navigation } = await useAsyncData('navigation', () => {
 const { staticNavigation } = useMenu()
 
 const route = useRoute()
-const isExplorer = computed(() => route.path === '/explorer')
+const isExplorer = computed(() => route.path === '/')
 </script>
 
 <template>
 	<UContainer>
 		<UPage>
 			<template #left>
-				<UPageAside>
+				<UPageAside :ui="{ root: 'md:block' }">
 					<UButton
 						icon="lucide:layout-dashboard"
 						variant="ghost"
 						label="Het menu"
 						:color="isExplorer ? 'primary' : 'neutral'"
-						class="-mx-1.5 font-bold"
-						to="/explorer"
+						class="-mx-2.5 font-bold"
+						to="/"
 					/>
 					<USeparator class="my-3" />
 					<UContentNavigation
@@ -28,13 +28,20 @@ const isExplorer = computed(() => route.path === '/explorer')
 						highlight
 						type="single"
 						default-open
+						class="w-80"
 					/>
 					<USeparator class="mt-4 mb-3" />
-					<UNavigationMenu orientation="vertical" :items="staticNavigation" />
+					<UNavigationMenu
+						orientation="vertical"
+						:items="staticNavigation"
+						class="-mx-2.5"
+					/>
 				</UPageAside>
 			</template>
 
-			<slot />
+			<UPageBody>
+				<slot />
+			</UPageBody>
 		</UPage>
 	</UContainer>
 </template>

@@ -30,6 +30,7 @@ export default defineNuxtConfig({
 		'nuxt-site-config',
 		'@nuxtjs/robots',
 		'@nuxt/content',
+		'nuxt-llms',
 	],
 
 	devtools: {
@@ -43,13 +44,15 @@ export default defineNuxtConfig({
 
 	css: ['~/assets/css/main.css'],
 
-	routeRules: {
-		'/': { prerender: true },
-	},
-
 	$development: {
 		routeRules: {
 			'/**': { cache: false },
+		},
+	},
+
+	$production: {
+		routeRules: {
+			'/**': { prerender: true },
 		},
 	},
 
@@ -74,15 +77,12 @@ export default defineNuxtConfig({
 		},
 	},
 
-	ssr: false,
-
 	nitro: {
 		minify: !isDebug,
 		prerender: {
 			crawlLinks: true,
 			failOnError: true,
-			concurrency: 10,
-			routes: ['/', '/explorer'],
+			routes: ['/overview'],
 		},
 		preset: 'cloudflare_module',
 		cloudflare: {
@@ -113,19 +113,7 @@ export default defineNuxtConfig({
 					namespaceId: process.env.CLOUDFLARE_CACHE_NAMESPACE_ID,
 				}
 			: false,
-		// db: {
-		// 	dialect: 'sqlite',
-		// 	driver: 'd1',
-		// 	connection: { databaseId: process.env.CLOUDFLARE_DATABASE_ID }
-		// },
 	},
-
-	// content: {
-	// 	database: {
-	// 		type: 'd1',
-	// 		bindingName: 'DB'
-	// 	}
-	// },
 
 	content: {
 		build: {
@@ -181,7 +169,7 @@ export default defineNuxtConfig({
 	},
 
 	app: {
-		keepalive: !isDev,
+		keepalive: true,
 		head: {
 			htmlAttrs: {
 				lang: 'nl',
@@ -254,5 +242,15 @@ export default defineNuxtConfig({
 		language: 'nl_NL',
 		indexable: false,
 		trailingSlash: false,
+	},
+
+	llms: {
+		domain: process.env.APP_URL,
+		title: siteTitle,
+		description: siteDescription,
+		full: {
+			title: `${siteTitle} - Full Documentation`,
+			description: `${siteDescription} - Full documentation of the application`,
+		},
 	},
 })
