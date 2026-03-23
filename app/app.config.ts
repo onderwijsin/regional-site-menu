@@ -9,6 +9,16 @@ export default defineAppConfig({
 			slots: {
 				base: 'cursor-pointer',
 			},
+			variants: {
+				size: {
+					md: {
+						leadingIcon: 'size-4',
+					},
+				},
+			},
+		},
+		pageColumns: {
+			base: 'space-y-6 gap-x-6 lg:columns-2',
 		},
 	},
 })

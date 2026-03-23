@@ -9,9 +9,12 @@ export const useStateStore = defineStore(
 
 		const filter = ref<ViewFilter>('all')
 
+		const suggestionOpen = ref(false)
+
 		return {
 			mode,
 			filter,
+			suggestionOpen,
 		}
 	},
 	{
