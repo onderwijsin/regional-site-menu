@@ -30,6 +30,7 @@ export default defineNuxtConfig({
 		'nuxt-site-config',
 		'@nuxtjs/robots',
 		'@nuxt/content',
+		'nuxt-llms',
 	],
 
 	devtools: {
@@ -241,5 +242,15 @@ export default defineNuxtConfig({
 		language: 'nl_NL',
 		indexable: false,
 		trailingSlash: false,
+	},
+
+	llms: {
+		domain: process.env.APP_URL,
+		title: siteTitle,
+		description: siteDescription,
+		full: {
+			title: `${siteTitle} - Full Documentation`,
+			description: `${siteDescription} - Full documentation of the application`,
+		},
 	},
 })

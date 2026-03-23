@@ -156,15 +156,17 @@ onNuxtReady(() => {
 				:description="item.description"
 				:to="item.path"
 				:ui="{
-					footer: 'space-x-2',
+					footer: 'space-x-2 space-y-1.5',
 				}"
 			>
 				<template #footer>
+					<UBadge :label="item.pillar" size="sm" color="primary" variant="subtle" />
 					<UBadge
 						v-for="goal in item.goals"
 						:key="goal"
 						:label="goal"
 						size="sm"
+						color="secondary"
 						variant="subtle"
 					/>
 				</template>

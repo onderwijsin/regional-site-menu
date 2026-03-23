@@ -13,17 +13,13 @@ export const useStateStore = defineStore(
 
 		const hideWelcome = ref(false)
 
-		function hideWelcomeForNextVisit() {
-			hideWelcome.value = true
-		}
-
 		const shouldShowWelcomeModal = computed(() => !hideWelcome.value)
 
 		return {
 			mode,
 			filter,
 			suggestionOpen,
-			hideWelcomeForNextVisit,
+			hideWelcome,
 			shouldShowWelcomeModal,
 		}
 	},

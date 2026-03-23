@@ -30,7 +30,7 @@ const { openCart } = useCart()
 
 <template>
 	<UApp>
-		<UHeader :ui="{ right: 'flex items-center gap-4' }">
+		<UHeader :toggle="false">
 			<template #left>
 				<NuxtLink to="/" class="flex items-center gap-2">
 					<NuxtImg src="logo.png" width="40" alt="Onderwijsregio's logo" />
@@ -40,25 +40,33 @@ const { openCart } = useCart()
 
 			<template #right>
 				<ClientOnly>
-					<UButton
-						v-if="mode === 'edit'"
-						icon="lucide:circle-fading-plus"
-						aria-label="Doe een suggestie"
-						color="neutral"
-						variant="ghost"
-						@click="openSuggestion"
-					/>
+					<div class="flex items-center gap-4">
+						<UTooltip text="Doe een suggestie">
+							<UButton
+								v-if="mode === 'edit'"
+								icon="lucide:circle-fading-plus"
+								aria-label="Doe een suggestie"
+								color="neutral"
+								variant="ghost"
+								@click="openSuggestion"
+							/>
+						</UTooltip>
 
-					<UButton
-						v-if="mode === 'edit'"
-						trailing-icon="lucide:shopping-cart"
-						aria-label="Winkelmandje"
-						color="neutral"
-						variant="ghost"
-						@click="openCart"
-					/>
-					<UColorModeButton />
-					<ViewMode />
+						<UTooltip text="Bekijk je winkelmandje">
+							<UButton
+								v-if="mode === 'edit'"
+								icon="lucide:shopping-cart"
+								aria-label="Winkelmandje"
+								color="neutral"
+								variant="ghost"
+								@click="openCart"
+							/>
+						</UTooltip>
+
+						<AiTools />
+						<UColorModeButton />
+						<ViewMode />
+					</div>
 				</ClientOnly>
 			</template>
 		</UHeader>
@@ -85,5 +93,16 @@ const { openCart } = useCart()
 				<UButton aria-label="Onderwijsregio" v-bind="externalSite" />
 			</template>
 		</UFooter>
+		<div class="bg-default fixed inset-0 z-50 md:hidden">
+			<UContainer class="h-full">
+				<UEmpty
+					icon="lucide:message-circle-warning"
+					title="Niet beschikbaar"
+					description="Deze app is momenteel alleen beschikbaar op grotere schermen."
+					variant="naked"
+					class="h-full"
+				/>
+			</UContainer>
+		</div>
 	</UApp>
 </template>

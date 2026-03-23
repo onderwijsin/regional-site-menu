@@ -13,7 +13,7 @@ const isExplorer = computed(() => route.path === '/')
 	<UContainer>
 		<UPage>
 			<template #left>
-				<UPageAside>
+				<UPageAside :ui="{ root: 'md:block' }">
 					<UButton
 						icon="lucide:layout-dashboard"
 						variant="ghost"
