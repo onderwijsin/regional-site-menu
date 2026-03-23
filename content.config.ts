@@ -5,7 +5,10 @@ export default defineContentConfig({
 	collections: {
 		items: defineCollection({
 			type: 'page',
-			source: '**/*.md',
+			source: {
+				include: '**',
+				exclude: [],
+			},
 			schema: z.object({
 				title: z.string(),
 				description: z.string(),

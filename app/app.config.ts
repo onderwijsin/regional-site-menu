@@ -20,5 +20,15 @@ export default defineAppConfig({
 		pageColumns: {
 			base: 'space-y-6 gap-x-6 lg:columns-2',
 		},
+		contentNavigation: {
+			slots: {
+				linkLeadingIcon: 'size-4',
+			},
+		},
+		navigationMenu: {
+			slots: {
+				linkLeadingIcon: 'size-4',
+			},
+		},
 	},
 })

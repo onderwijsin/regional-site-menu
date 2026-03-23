@@ -22,13 +22,6 @@ useSeoMeta({
 })
 
 const { mode } = storeToRefs(useStateStore())
-
-// Always navigate to the explorer if the tab is changed and current route is landing
-const route = useRoute()
-watch(mode, async () => {
-	if (route.path === '/') await navigateTo('/explorer')
-})
-
 const { externalSite } = useMenu()
 
 const { openSuggestion } = useSuggestion()
@@ -46,25 +39,27 @@ const { openCart } = useCart()
 			</template>
 
 			<template #right>
-				<UButton
-					v-if="mode === 'edit'"
-					icon="lucide:circle-fading-plus"
-					aria-label="Doe een suggestie"
-					color="neutral"
-					variant="ghost"
-					@click="openSuggestion"
-				/>
+				<ClientOnly>
+					<UButton
+						v-if="mode === 'edit'"
+						icon="lucide:circle-fading-plus"
+						aria-label="Doe een suggestie"
+						color="neutral"
+						variant="ghost"
+						@click="openSuggestion"
+					/>
 
-				<UButton
-					v-if="mode === 'edit'"
-					trailing-icon="lucide:shopping-cart"
-					aria-label="Winkelmandje"
-					color="neutral"
-					variant="ghost"
-					@click="openCart"
-				/>
-				<UColorModeButton />
-				<ViewMode />
+					<UButton
+						v-if="mode === 'edit'"
+						trailing-icon="lucide:shopping-cart"
+						aria-label="Winkelmandje"
+						color="neutral"
+						variant="ghost"
+						@click="openCart"
+					/>
+					<UColorModeButton />
+					<ViewMode />
+				</ClientOnly>
 			</template>
 		</UHeader>
 

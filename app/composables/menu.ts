@@ -20,7 +20,7 @@ export const useMenu = () => {
 		{
 			label: 'Help',
 			icon: 'i-lucide-circle-help',
-			to: '/',
+			to: '/help',
 		},
 	]
 
