@@ -21,10 +21,22 @@ const { data: surround } = await useAsyncData(`${route.path}-surround`, () => {
 </script>
 
 <template>
-	<NuxtLayout name="menu">
+	<NuxtLayout v-if="page" name="menu">
+		<UPageHeader
+			:title="page.title"
+			:headline="page.pillar"
+			:ui="{
+				root: 'pt-2',
+			}"
+		>
+			<template #description>
+				<p class="text-muted mt-4 text-lg text-pretty">{{ page.description }}</p>
+			</template>
+		</UPageHeader>
 		<ContentRenderer v-if="page" :value="page" />
 		<div class="space-y-8 pt-16 pb-8">
-			<UContentSurround :surround="surround as any" />
+			<USeparator label="Verder lezen" />
+			<UContentSurround :surround="surround" />
 			<UPageCTA
 				title="Heb je vragen of opmerkingen?"
 				description="Laat het ons weten via het contactformulier. We reageren zo snel mogelijk."

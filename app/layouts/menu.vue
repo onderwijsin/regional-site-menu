@@ -39,9 +39,9 @@ const isExplorer = computed(() => route.path === '/')
 				</UPageAside>
 			</template>
 
-			<div class="py-8">
+			<UPageBody>
 				<slot />
-			</div>
+			</UPageBody>
 		</UPage>
 	</UContainer>
 </template>
