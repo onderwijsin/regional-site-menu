@@ -30,6 +30,9 @@ watch(mode, async () => {
 })
 
 const { externalSite } = useMenu()
+
+const { openSuggestion } = useSuggestion()
+const { openCart } = useCart()
 </script>
 
 <template>
@@ -43,7 +46,23 @@ const { externalSite } = useMenu()
 			</template>
 
 			<template #right>
-				<Cart v-if="mode === 'edit'" />
+				<UButton
+					v-if="mode === 'edit'"
+					icon="lucide:circle-fading-plus"
+					aria-label="Doe een suggestie"
+					color="neutral"
+					variant="ghost"
+					@click="openSuggestion"
+				/>
+
+				<UButton
+					v-if="mode === 'edit'"
+					trailing-icon="lucide:shopping-cart"
+					aria-label="Winkelmandje"
+					color="neutral"
+					variant="ghost"
+					@click="openCart"
+				/>
 				<UColorModeButton />
 				<ViewMode />
 			</template>

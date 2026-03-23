@@ -27,6 +27,7 @@
 		"@ianvs/prettier-plugin-sort-imports": "catalog:",
 		"@iconify-json/lucide": "catalog:",
 		"@iconify-json/simple-icons": "catalog:",
+		"@nuxt/content": "catalog:",
 		"@nuxt/eslint": "catalog:",
 		"@nuxt/image": "catalog:",
 		"@nuxt/ui": "catalog:",
@@ -44,9 +45,11 @@
 		"@types/node": "catalog:",
 		"@vueuse/core": "catalog:",
 		"@vueuse/nuxt": "catalog:",
+		"better-sqlite3": "catalog:",
 		"defu": "catalog:",
 		"eslint": "catalog:",
 		"eslint-config-prettier": "catalog:",
+		"fuse.js": "catalog:",
 		"husky": "catalog:",
 		"nuxt": "catalog:",
 		"nuxt-site-config": "catalog:",
@@ -60,6 +63,7 @@
 		"typescript": "catalog:",
 		"ufo": "catalog:",
 		"vue-tsc": "catalog:",
-		"wrangler": "catalog:"
+		"wrangler": "catalog:",
+		"zod": "catalog:"
 	}
 }

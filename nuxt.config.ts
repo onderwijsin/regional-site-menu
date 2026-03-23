@@ -29,6 +29,7 @@ export default defineNuxtConfig({
 		'@nuxthub/core',
 		'nuxt-site-config',
 		'@nuxtjs/robots',
+		'@nuxt/content',
 	],
 
 	devtools: {
@@ -63,7 +64,13 @@ export default defineNuxtConfig({
 
 	vite: {
 		optimizeDeps: {
-			include: ['@plausible-analytics/tracker', '@vue/devtools-core', '@vue/devtools-kit'],
+			include: [
+				'@plausible-analytics/tracker',
+				'@vue/devtools-core',
+				'@vue/devtools-kit',
+				'fuse.js',
+				'@vueuse/integrations/useFuse',
+			],
 		},
 	},
 
@@ -72,9 +79,10 @@ export default defineNuxtConfig({
 	nitro: {
 		minify: !isDebug,
 		prerender: {
-			crawlLinks: false,
+			crawlLinks: true,
 			failOnError: true,
 			concurrency: 10,
+			routes: ['/', '/explorer'],
 		},
 		preset: 'cloudflare_module',
 		cloudflare: {
@@ -105,6 +113,28 @@ export default defineNuxtConfig({
 					namespaceId: process.env.CLOUDFLARE_CACHE_NAMESPACE_ID,
 				}
 			: false,
+		// db: {
+		// 	dialect: 'sqlite',
+		// 	driver: 'd1',
+		// 	connection: { databaseId: process.env.CLOUDFLARE_DATABASE_ID }
+		// },
+	},
+
+	// content: {
+	// 	database: {
+	// 		type: 'd1',
+	// 		bindingName: 'DB'
+	// 	}
+	// },
+
+	content: {
+		build: {
+			markdown: {
+				toc: {
+					searchDepth: 1,
+				},
+			},
+		},
 	},
 
 	debug: {

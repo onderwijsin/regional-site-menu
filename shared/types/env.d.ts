@@ -25,6 +25,7 @@ declare global {
 			CLOUDFLARE_ACCOUNT_ID?: string
 			CLOUDFLARE_API_TOKEN?: string
 			CLOUDFLARE_CACHE_NAMESPACE_ID: string
+			CLOUDFLARE_DATABASE_ID: string
 
 			/**
 			 * GitHub

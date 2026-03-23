@@ -7,6 +7,7 @@ catalog:
   '@ianvs/prettier-plugin-sort-imports': 4.7.1
   '@iconify-json/lucide': 1.2.98
   '@iconify-json/simple-icons': 1.2.74
+  '@nuxt/content': 3.12.0
   '@nuxt/eslint': 1.15.2
   '@nuxt/image': 2.0.0
   '@nuxt/ui': 4.5.1
@@ -24,9 +25,11 @@ catalog:
   '@types/node': 25.5.0
   '@vueuse/core': 14.2.1
   '@vueuse/nuxt': 14.2.1
+  better-sqlite3: 12.8.0
   defu: 6.1.4
   eslint: 9.39.2
   eslint-config-prettier: 10.1.8
+  fuse.js: 7.1.0
   husky: 9.1.7
   nuxt: 4.4.2
   nuxt-site-config: 3.2.21
@@ -41,6 +44,7 @@ catalog:
   ufo: 1.6.3
   vue-tsc: 3.2.6
   wrangler: 4.76.0
+  zod: 4.3.6
 
 catalogMode: 'strict'
 cleanupUnusedCatalogs: true
@@ -50,5 +54,8 @@ ignoredBuiltDependencies:
   - esbuild
   - unrs-resolver
   - vue-demi
+onlyBuiltDependencies:
+  - better-sqlite3
+  - sharp
 saveExact: true
 shamefullyHoist: true
