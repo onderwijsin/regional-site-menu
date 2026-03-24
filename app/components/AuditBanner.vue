@@ -58,7 +58,7 @@ const actions = computed<ButtonProps[]>(() => {
 					:tooltip="{ text: currentScoreLabel }"
 					class="grow"
 				/>
-				<span class="shrink-0 font-bold"> {{ state.score }} / 10 </span>
+				<span class="shrink-0 font-bold"> {{ state.score ?? '?' }} / 10 </span>
 			</div>
 
 			<div class="flex gap-2 py-6">
