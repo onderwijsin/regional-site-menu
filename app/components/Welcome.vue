@@ -81,7 +81,8 @@ const { contact } = useRuntimeConfig().public
 					variant="soft"
 					color="neutral"
 					v-bind="help"
-					class="relative top-0.75 no-underline"
+					size="sm"
+					class="relative top-0.5 mx-1 font-bold no-underline"
 				/>
 				navigeren voor extra uitleg over de menukaart. Voor vragen en opmerkingen kun je
 				<NuxtLink :to="contact.page" target="_blank">een bericht achterlaten</NuxtLink> voor
@@ -104,7 +105,7 @@ const { contact } = useRuntimeConfig().public
 			<UFieldGroup>
 				<UButton
 					label="Verkennen"
-					color="secondary"
+					color="neutral"
 					variant="subtle"
 					@click="handleSelect('explore')"
 				/>

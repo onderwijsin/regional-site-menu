@@ -34,7 +34,9 @@ function handleSave() {
 			body: 'prose dark:prose-invert min-w-full',
 		}"
 	>
+		<slot :score="state.score" />
 		<UButton
+			v-if="!$slots.default"
 			:label="!state.score ? 'Beoordeel je site' : 'Bewerk beoordeling'"
 			color="primary"
 			variant="subtle"
@@ -52,7 +54,7 @@ function handleSave() {
 					:tooltip="{ text: currentScoreLabel }"
 					class="grow"
 				/>
-				<span class="shrink-0 font-bold"> {{ state.score }} / 10 </span>
+				<span class="shrink-0 font-bold"> {{ state.score ?? '?' }} / 10 </span>
 			</div>
 			<Editor v-model="state.comment" class="my-6" outline />
 		</template>
