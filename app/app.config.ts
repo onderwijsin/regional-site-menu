@@ -36,6 +36,9 @@ export default defineAppConfig({
 			},
 		},
 		dropdownMenu: {
+			slots: {
+				content: 'dark:bg-neutral-950',
+			},
 			variants: {
 				size: {
 					md: {
@@ -56,21 +59,23 @@ export default defineAppConfig({
 		input: {
 			slots: {
 				root: 'w-full',
+				base: 'dark:bg-neutral-950',
 			},
 		},
 		selectMenu: {
 			slots: {
-				base: 'w-full',
+				base: 'w-full dark:bg-neutral-950',
 			},
 		},
 		select: {
 			slots: {
-				base: 'w-full',
+				base: 'w-full dark:bg-neutral-950',
 			},
 		},
 		textarea: {
 			slots: {
 				root: 'w-full',
+				base: 'dark:bg-neutral-950',
 			},
 		},
 		formField: {
