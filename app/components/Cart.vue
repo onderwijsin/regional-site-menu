@@ -2,13 +2,13 @@
 
 <template>
 	<USlideover
-		title="Jouw winkelmandje"
-		description="In je winkelmandje vind je alle onderdelen terug waar je mee aan de slag bent geweest."
+		title="Rapportage"
+		description="Hier vind je alle onderdelen terug die je hebt beoordeeld en kunt je een rapport genereren."
 		:ui="{ content: 'max-w-3xl' }"
 	>
 		<UButton
-			trailing-icon="lucide:shopping-cart"
-			aria-label="Winkelmandje"
+			trailing-icon="lucide:file-badge"
+			aria-label="Rapportage"
 			color="neutral"
 			variant="ghost"
 		/>

@@ -148,22 +148,7 @@ onNuxtReady(() => {
 			/>
 		</div>
 		<UPageColumns v-if="results.length">
-			<UPageCard
-				v-for="({ item }, i) in results"
-				:key="i"
-				variant="soft"
-				:title="item.title"
-				:description="item.description"
-				:to="item.path"
-				:ui="{
-					footer: 'space-x-2 space-y-1.5',
-				}"
-			>
-				<template #footer>
-					<Pillar :value="item.pillar" size="sm" />
-					<Goal v-for="goal in item.goals" :key="goal" :value="goal" size="sm" />
-				</template>
-			</UPageCard>
+			<MenuCard v-for="({ item }, i) in results" :key="i" :item="item" />
 		</UPageColumns>
 		<UEmpty
 			v-else

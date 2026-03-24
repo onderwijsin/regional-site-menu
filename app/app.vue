@@ -42,11 +42,11 @@ const { openCart } = useCart()
 							/>
 						</UTooltip>
 
-						<UTooltip text="Bekijk je winkelmandje">
+						<UTooltip text="Bekijk je beoordelingen">
 							<UButton
 								v-if="mode === 'edit'"
-								icon="lucide:shopping-cart"
-								aria-label="Winkelmandje"
+								icon="lucide:file-badge"
+								aria-label="Rapportage"
 								color="neutral"
 								variant="ghost"
 								@click="openCart"

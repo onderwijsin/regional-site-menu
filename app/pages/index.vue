@@ -4,7 +4,7 @@
 	<NuxtLayout name="menu">
 		<ClientOnly>
 			<MenuOverview persist />
-			<ContactCta />
+			<SuggestionCta />
 			<template #fallback>
 				<SkeletonMenu />
 			</template>

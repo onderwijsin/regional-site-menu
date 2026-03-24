@@ -105,7 +105,7 @@ const { contact } = useRuntimeConfig().public
 			<UFieldGroup>
 				<UButton
 					label="Verkennen"
-					color="secondary"
+					color="neutral"
 					variant="subtle"
 					@click="handleSelect('explore')"
 				/>

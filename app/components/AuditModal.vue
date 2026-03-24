@@ -34,7 +34,9 @@ function handleSave() {
 			body: 'prose dark:prose-invert min-w-full',
 		}"
 	>
+		<slot :score="state.score" />
 		<UButton
+			v-if="!$slots.default"
 			:label="!state.score ? 'Beoordeel je site' : 'Bewerk beoordeling'"
 			color="primary"
 			variant="subtle"

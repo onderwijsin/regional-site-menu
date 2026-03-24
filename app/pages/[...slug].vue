@@ -19,6 +19,8 @@ const { data: surround } = await useAsyncData(`${route.path}-surround`, () => {
 		fields: ['description'],
 	})
 })
+
+const score = computed(() => state.getAuditScore(page.value!.id))
 </script>
 
 <template>
@@ -37,6 +39,7 @@ const { data: surround } = await useAsyncData(`${route.path}-surround`, () => {
 					<Goal v-for="item in page.goals" :key="item" :value="item" />
 					<Priority :value="page.priority" />
 					<Scope :value="page.scope" />
+					<Score v-if="state.mode === 'edit'" :value="score" />
 				</div>
 			</template>
 			<template #links>
