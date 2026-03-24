@@ -5,7 +5,8 @@ export default defineNuxtPlugin(() => {
 
 	addRouteMiddleware(
 		'screensize-guard',
-		() => {
+		(to) => {
+			if (to.path === '/disclaimer') return
 			if (isMd.value) return
 			return navigateTo('/disclaimer')
 		},

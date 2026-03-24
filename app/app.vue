@@ -20,7 +20,7 @@ const { openCart } = useCart()
 
 <template>
 	<UApp>
-		<UHeader :toggle="false">
+		<UHeader :toggle="false" :ui="{ right: 'hidden md:flex' }">
 			<template #left>
 				<NuxtLink to="/" class="flex items-center gap-2">
 					<NuxtImg src="logo.png" width="40" alt="Onderwijsregio's logo" />
