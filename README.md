@@ -27,9 +27,7 @@ structured briefing for further development.
 The application supports three main use cases:
 
 - **Inspiration** Explore what a strong regional website can include.
-
 - **Audit** Evaluate an existing website based on predefined components.
-
 - **Briefing** Select relevant components and generate a structured output for web agencies.
 
 The app is fully client-side and built with:

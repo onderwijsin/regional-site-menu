@@ -4,6 +4,7 @@ const toast = useToast()
 const { copy, copied } = useClipboard()
 const site = useSiteConfig()
 const appConfig = useAppConfig()
+const { trackEvent } = useTracking()
 
 const mdPath = computed(() => `${site.url}/raw${route.path}.md`)
 
@@ -25,6 +26,11 @@ const items = [
 		icon: 'i-lucide-link',
 		onSelect() {
 			copy(mdPath.value)
+			trackEvent('ai_action', {
+				event_category: 'engagement',
+				event_label: 'markdown',
+				event_value: 'copy',
+			})
 			toast.add({
 				title: 'Gekopieerd naar klembord',
 				icon: 'i-lucide-check-circle',
@@ -36,18 +42,39 @@ const items = [
 		icon: 'i-simple-icons:markdown',
 		target: '_blank',
 		to: `/raw${route.path}.md`,
+		onSelect: () => {
+			trackEvent('ai_action', {
+				event_category: 'engagement',
+				event_label: 'markdown',
+				event_value: 'view',
+			})
+		},
 	},
 	{
 		label: 'Open in ChatGPT',
 		icon: 'i-simple-icons:openai',
 		target: '_blank',
 		to: `https://chatgpt.com/?hints=search&q=${encodeURIComponent(prompt.value)}`,
+		onSelect: () => {
+			trackEvent('ai_action', {
+				event_category: 'engagement',
+				event_label: 'chatgpt',
+				event_value: 'open_item',
+			})
+		},
 	},
 	{
 		label: 'Open in Claude',
 		icon: 'i-simple-icons:anthropic',
 		target: '_blank',
 		to: `https://claude.ai/new?q=${encodeURIComponent(prompt.value)}`,
+		onSelect: () => {
+			trackEvent('ai_action', {
+				event_category: 'engagement',
+				event_label: 'claude',
+				event_value: 'open_item',
+			})
+		},
 	},
 ]
 

@@ -1,27 +1,8 @@
 <script setup lang="ts">
-import { computed } from 'vue'
-import { z } from 'zod'
-
-const props = defineProps<{
+defineProps<{
 	src: string
 	caption?: string
 }>()
-
-const schema = z.object({
-	src: z.url(),
-})
-
-const parsed = schema.safeParse({
-	src: props.src,
-})
-
-if (!parsed.success) {
-	console.error('Invalid embed src:', parsed.error)
-}
-
-const safeSrc = computed(() => {
-	return parsed.success ? parsed.data.src : null
-})
 </script>
 
 <template>
@@ -29,8 +10,8 @@ const safeSrc = computed(() => {
 		<div class="border-muted bg-elevated relative w-full overflow-hidden rounded-xl border">
 			<div class="aspect-video w-full">
 				<iframe
-					v-if="safeSrc"
-					:src="safeSrc"
+					v-if="src"
+					:src="src"
 					class="h-full w-full border-0"
 					loading="lazy"
 					referrerpolicy="no-referrer"
@@ -46,13 +27,13 @@ const safeSrc = computed(() => {
 				/>
 
 				<UButton
-					v-if="safeSrc"
+					v-if="src"
 					variant="subtle"
 					size="sm"
 					color="secondary"
-					:to="safeSrc"
+					:to="src"
 					class="absolute right-2 bottom-2"
-					label="open"
+					label="open in tabblad"
 					trailing-icon="lucide:arrow-up-right"
 				/>
 			</div>
