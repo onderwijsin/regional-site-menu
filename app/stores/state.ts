@@ -42,6 +42,18 @@ export const useStateStore = defineStore(
 			}
 		}
 
+		function removeAudit(itemId: string) {
+			// eslint-disable-next-line @typescript-eslint/no-dynamic-delete
+			delete audit[itemId]
+		}
+
+		function clearAllAudits() {
+			for (const key in audit) {
+				// eslint-disable-next-line @typescript-eslint/no-dynamic-delete
+				delete audit[key]
+			}
+		}
+
 		return {
 			mode,
 			filter,
@@ -53,6 +65,8 @@ export const useStateStore = defineStore(
 			setAuditScore,
 			getAuditComment,
 			setAuditComment,
+			removeAudit,
+			clearAllAudits,
 		}
 	},
 	{

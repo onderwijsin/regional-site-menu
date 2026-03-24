@@ -4,36 +4,23 @@ import type { AuditProps } from '~~/shared/types/audit'
 
 const props = defineProps<AuditProps>()
 
-const { state, isDirty, description, currentScoreColor, currentScoreLabel, saveChanges } =
-	useAudit(props)
-const comment = useComment()
+const { score, comment, description, currentScoreColor, currentScoreLabel } = useAudit(props)
+const editComment = useComment()
 
 const actions = computed<ButtonProps[]>(() => {
-	const items: ButtonProps[] = []
-	if ((isDirty.value && !state.comment) || state.comment) {
-		// For new audit items, we only want to show the comments button after a score has been given (in that case its dirty)
-		items.push({
-			label: !state.comment ? 'Voeg opmerking toe' : 'Bewerk opmerking',
+	const items: ButtonProps[] = [
+		{
+			label: !comment.value ? 'Voeg opmerking toe' : 'Bewerk opmerking',
 			variant: 'subtle',
 			color: 'neutral',
 			icon: 'lucide:notebook-pen',
 			onClick: async () => {
-				const result = await comment({ initialValue: state.comment })
+				const result = await editComment({ initialValue: comment.value ?? '' })
 				if (!result) return
-				state.comment = result.value
+				comment.value = result.value
 			},
-		})
-	}
-
-	if (isDirty.value) {
-		items.push({
-			label: 'Opslaan',
-			variant: 'subtle',
-			color: 'success',
-			icon: 'lucide:save',
-			onClick: saveChanges,
-		})
-	}
+		},
+	]
 
 	return items
 })
@@ -50,7 +37,7 @@ const actions = computed<ButtonProps[]>(() => {
 		<template #links>
 			<div class="flex w-full items-center gap-4">
 				<USlider
-					v-model="state.score"
+					v-model="score"
 					:min="1"
 					:max="10"
 					:default-value="5"
@@ -58,7 +45,7 @@ const actions = computed<ButtonProps[]>(() => {
 					:tooltip="{ text: currentScoreLabel }"
 					class="grow"
 				/>
-				<span class="shrink-0 font-bold"> {{ state.score ?? '?' }} / 10 </span>
+				<span class="shrink-0 font-bold"> {{ score ?? '?' }} / 10 </span>
 			</div>
 
 			<div class="flex gap-2 py-6">

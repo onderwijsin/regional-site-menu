@@ -50,7 +50,6 @@
 		"@vueuse/nuxt": "catalog:",
 		"better-sqlite3": "catalog:",
 		"defu": "catalog:",
-		"dequal": "catalog:",
 		"eslint": "catalog:",
 		"eslint-config-prettier": "catalog:",
 		"fuse.js": "catalog:",

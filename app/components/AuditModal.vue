@@ -4,29 +4,17 @@ import type { AuditProps } from '~~/shared/types/audit'
 const props = defineProps<AuditProps>()
 const open = ref(false)
 
-const {
-	state,
-	isDirty,
-	description,
-	currentScoreColor,
-	currentScoreLabel,
-	saveChanges,
-	revertState,
-} = useAudit(props)
-
-onActivated(() => revertState)
+const { score, comment, description, currentScoreColor, currentScoreLabel } = useAudit(props)
 
 function handleSave() {
 	open.value = false
-	// Wait for the close animation to prevent flashes
-	setTimeout(() => saveChanges(), 200)
 }
 </script>
 
 <template>
 	<UModal
 		v-model:open="open"
-		:title="!state.score ? 'Voeg jouw beoordeling toe' : 'Bewerk je beoordeling'"
+		:title="!score ? 'Voeg jouw beoordeling toe' : 'Bewerk je beoordeling'"
 		:description="description"
 		:ui="{
 			content: 'max-w-3xl min-h-[50dvh] max-h-[80dvh]',
@@ -34,10 +22,10 @@ function handleSave() {
 			body: 'prose dark:prose-invert min-w-full',
 		}"
 	>
-		<slot :score="state.score" />
+		<slot :score="score" :comment="comment" />
 		<UButton
 			v-if="!$slots.default"
-			:label="!state.score ? 'Beoordeel je site' : 'Bewerk beoordeling'"
+			:label="!score ? 'Beoordeel je site' : 'Bewerk beoordeling'"
 			color="primary"
 			variant="subtle"
 		/>
@@ -46,7 +34,7 @@ function handleSave() {
 			<p>Hoe vind jij dat jullie website scoort op dit onderdeel?</p>
 			<div class="flex w-full items-center gap-4">
 				<USlider
-					v-model="state.score"
+					v-model="score"
 					:min="1"
 					:max="10"
 					:default-value="5"
@@ -54,23 +42,20 @@ function handleSave() {
 					:tooltip="{ text: currentScoreLabel }"
 					class="grow"
 				/>
-				<span class="shrink-0 font-bold"> {{ state.score ?? '?' }} / 10 </span>
+				<span class="shrink-0 font-bold"> {{ score ?? '?' }} / 10 </span>
 			</div>
-			<Editor v-model="state.comment" class="my-6" outline />
+			<Editor
+				v-model="comment"
+				class="my-6"
+				outline
+				placeholder="Voeg jouw opmerking toe of typ / voor opties... Je opmerking wordt verwerkt in de rapportage die je kunt genereren."
+			/>
 		</template>
 		<template #footer>
 			<UButton
-				v-if="isDirty"
-				label="Ongedaan maken"
-				icon="lucide:undo"
-				variant="soft"
-				color="neutral"
-				@click="revertState"
-			/>
-			<UButton
-				:color="isDirty ? 'success' : 'neutral'"
-				:icon="isDirty ? 'lucide:save' : undefined"
-				:label="isDirty ? 'Opslaan' : 'Sluit'"
+				color="success"
+				icon="lucide:save"
+				label="Opslaan"
 				variant="subtle"
 				@click="handleSave"
 			/>

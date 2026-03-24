@@ -30,21 +30,23 @@ const hint = computed(() => {
 	return 'Eén van de content categorieën van de website van jouw regionale onderwijsloket'
 })
 
+const { getIcon } = useIcons()
+
 const icon = computed(() => {
 	if (props.value === 'Inzicht & Overzicht') {
-		return 'lucide:component'
+		return getIcon('inzicht')
 	}
 
 	if (props.value === 'Verdieping & Ervaring') {
-		return 'lucide:scan-text'
+		return getIcon('verdieping')
 	}
 
 	if (props.value === 'Activatie & Deelname') {
-		return 'lucide:activity'
+		return getIcon('activatie')
 	}
 
 	if (props.value === 'Ondersteuning & Contact') {
-		return 'lucide:messages-square'
+		return getIcon('ondersteuning')
 	}
 
 	return undefined

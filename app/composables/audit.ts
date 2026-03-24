@@ -1,6 +1,4 @@
-import type { AuditEntry, AuditProps } from '~~/shared/types/audit'
-
-import { dequal } from 'dequal/lite'
+import type { AuditProps } from '~~/shared/types/audit'
 
 export const useAuditUtils = () => {
 	function getScoreColor(score: number | undefined) {
@@ -53,45 +51,15 @@ export const useAudit = (props: AuditProps) => {
 	const { getScoreColor, getScoreLabel } = useAuditUtils()
 	const { getAuditScore, setAuditScore, getAuditComment, setAuditComment } = useStateStore()
 
-	const initialState = ref<AuditEntry>(
-		JSON.parse(
-			JSON.stringify({
-				score: getAuditScore(props.itemId),
-				comment: getAuditComment(props.itemId) ?? '',
-			}),
-		),
-	)
+	const score = computed({
+		get: () => getAuditScore(props.itemId),
+		set: (value: number) => setAuditScore(props.itemId, value),
+	})
 
-	const state = reactive<AuditEntry>({ ...initialState.value })
-	const isDirty = computed(() => !dequal(state, initialState.value))
-
-	// If the store state changes from elsewhere, we want to update the local state as well!
-	watch(
-		[
-			computed(() => getAuditComment(props.itemId)),
-			computed(() => getAuditScore(props.itemId)),
-		],
-		() => {
-			revertState()
-		},
-	)
-
-	function revertState() {
-		initialState.value = JSON.parse(
-			JSON.stringify({
-				score: getAuditScore(props.itemId),
-				comment: getAuditComment(props.itemId) ?? '',
-			}),
-		)
-		Object.assign(state, initialState.value)
-	}
-
-	function saveChanges() {
-		if (typeof state.score === 'number') {
-			setAuditScore(props.itemId, state.score)
-		}
-		setAuditComment(props.itemId, state.comment)
-	}
+	const comment = computed({
+		get: () => getAuditComment(props.itemId),
+		set: (value: string) => setAuditComment(props.itemId, value),
+	})
 
 	const description = computed(() => {
 		if (props.description) {
@@ -100,16 +68,17 @@ export const useAudit = (props: AuditProps) => {
 		return `Hoe scoort jouw website op het onderdeel "${props.itemTitle}"?`
 	})
 
-	const currentScoreColor = computed(() => getScoreColor(state.score))
-	const currentScoreLabel = computed(() => getScoreLabel(state.score))
+	// const currentScoreColor = computed(() => getScoreColor(state.score))
+	// const currentScoreLabel = computed(() => getScoreLabel(state.score))
+
+	const currentScoreColor = computed(() => getScoreColor(score.value))
+	const currentScoreLabel = computed(() => getScoreLabel(score.value))
 
 	return {
-		state,
-		isDirty,
 		description,
 		currentScoreColor,
 		currentScoreLabel,
-		saveChanges,
-		revertState,
+		score,
+		comment,
 	}
 }
