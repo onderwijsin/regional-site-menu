@@ -2,7 +2,7 @@
 import type { BadgeProps } from '@nuxt/ui'
 
 const props = withDefaults(
-	defineProps<Omit<BadgeProps, 'label' | 'color'> & { value?: number }>(),
+	defineProps<Omit<BadgeProps, 'label' | 'color'> & { value: number | undefined }>(),
 	{
 		variant: 'subtle',
 		icon: 'lucide:file-badge',

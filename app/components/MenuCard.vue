@@ -46,7 +46,7 @@ const score = computed(() => state.getAuditScore(props.item.id))
 						:item-title="item.title"
 						:description="item.audit?.description"
 					>
-						<template #default="{ score }">
+						<template #default>
 							<UTooltip
 								:delay-duration="300"
 								:text="
