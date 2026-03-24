@@ -20,7 +20,7 @@ export default defineContentConfig({
 					'Ondersteuning & Contact',
 				]),
 				goals: z.array(z.enum(['Enthousiasmeren', 'Informeren', 'Activeren'])),
-				scope: z.enum(['Regionaal', 'Boven-regionaal', 'Landelijk']),
+				scope: z.enum(['Regionaal', 'Bovenregionaal', 'Landelijk']),
 				priority: z.enum(['Must have', 'Should have', 'Nice to have']),
 				exampleUrl: z.url().optional(),
 			}),

@@ -160,15 +160,8 @@ onNuxtReady(() => {
 				}"
 			>
 				<template #footer>
-					<UBadge :label="item.pillar" size="sm" color="primary" variant="subtle" />
-					<UBadge
-						v-for="goal in item.goals"
-						:key="goal"
-						:label="goal"
-						size="sm"
-						color="secondary"
-						variant="subtle"
-					/>
+					<Pillar :value="item.pillar" size="sm" />
+					<Goal v-for="goal in item.goals" :key="goal" :value="goal" size="sm" />
 				</template>
 			</UPageCard>
 		</UPageColumns>
