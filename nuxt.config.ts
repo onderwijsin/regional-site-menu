@@ -167,6 +167,10 @@ export default defineNuxtConfig({
 			org: process.env.GH_ORG,
 			repo: process.env.GH_REPO,
 		},
+		datahub: {
+			url: process.env.DATAHUB_URL,
+			token: process.env.DATAHUB_TOKEN,
+		},
 		public: {
 			siteUrl: process.env.APP_URL,
 			titleSeparator: '|',

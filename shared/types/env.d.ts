@@ -38,6 +38,13 @@ declare global {
 			 */
 			PLAUSIBLE_DOMAIN: string
 			DISABLE_TRACKING?: 'true' | 'false'
+
+			/**
+			 * Datahub
+			 * Used for handling form submissions
+			 */
+			DATAHUB_URL: string
+			DATAHUB_TOKEN: string
 		}
 	}
 }
