@@ -12,5 +12,8 @@ export default defineEventHandler(async (event) => {
 	return proxyRequest(event, target, {
 		cookieDomainRewrite: new URL(config.public.siteUrl).hostname,
 		cookiePathRewrite: '/',
+		headers: {
+			Authorization: `Bearer ${config.datahub.token}`,
+		},
 	}) as Promise<Response>
 })
