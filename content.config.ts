@@ -1,6 +1,8 @@
 import { defineCollection, defineContentConfig } from '@nuxt/content'
 import { z } from 'zod'
 
+import { goal, pillar, priority, scope } from './schema/fields'
+
 export default defineContentConfig({
 	collections: {
 		items: defineCollection({
@@ -13,15 +15,10 @@ export default defineContentConfig({
 				title: z.string(),
 				description: z.string(),
 				date: z.iso.date(),
-				pillar: z.enum([
-					'Inzicht & Overzicht',
-					'Verdieping & Ervaring',
-					'Activatie & Deelname',
-					'Ondersteuning & Contact',
-				]),
-				goals: z.array(z.enum(['Enthousiasmeren', 'Informeren', 'Activeren'])),
-				scope: z.enum(['Regionaal', 'Bovenregionaal', 'Landelijk']),
-				priority: z.enum(['Must have', 'Should have', 'Nice to have']),
+				pillar,
+				goals: z.array(goal),
+				scope,
+				priority,
 				exampleUrl: z.url().optional(),
 				audit: z
 					.object({

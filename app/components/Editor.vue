@@ -3,7 +3,7 @@ import type { EditorSuggestionMenuItem, EditorToolbarItem } from '@nuxt/ui'
 
 import EditorLinkPopover from './EditorLinkPopover.vue'
 
-defineProps<{ autofocus?: boolean; outline?: boolean }>()
+defineProps<{ autofocus?: boolean; outline?: boolean; placeholder: string }>()
 const model = defineModel<string>()
 
 const suggestions: EditorSuggestionMenuItem[][] = [
@@ -149,7 +149,7 @@ const appendToBody = import.meta.client ? () => document.body : undefined
 		v-slot="{ editor }"
 		v-model="model"
 		content-type="markdown"
-		placeholder="Voeg jouw opmerking toe of typ / voor opties... Je opmerking wordt verwerkt in de rapportage die je kunt genereren."
+		:placeholder="placeholder"
 		class="min-h-21 w-full"
 		:autofocus="autofocus"
 		:ui="

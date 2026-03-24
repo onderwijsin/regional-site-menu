@@ -52,5 +52,31 @@ export default defineAppConfig({
 				center: 'md:col-span-7',
 			},
 		},
+
+		input: {
+			slots: {
+				root: 'w-full',
+			},
+		},
+		selectMenu: {
+			slots: {
+				base: 'w-full',
+			},
+		},
+		select: {
+			slots: {
+				base: 'w-full',
+			},
+		},
+		textarea: {
+			slots: {
+				root: 'w-full',
+			},
+		},
+		formField: {
+			slots: {
+				label: 'font-bold',
+			},
+		},
 	},
 })

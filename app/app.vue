@@ -1,4 +1,5 @@
 <script setup>
+import { nl } from '@nuxt/ui/locale'
 import { siteDescription, siteTitle } from '~~/config/indentity'
 
 useSeoMeta({
@@ -19,7 +20,7 @@ const { openCart } = useCart()
 </script>
 
 <template>
-	<UApp>
+	<UApp :toaster="{ expand: false }" :tooltip="{ delayDuration: 250 }" :locale="nl">
 		<UHeader :toggle="false" :ui="{ right: 'hidden md:flex' }">
 			<template #left>
 				<NuxtLink to="/" class="flex items-center gap-2">
@@ -30,10 +31,9 @@ const { openCart } = useCart()
 
 			<template #right>
 				<ClientOnly>
-					<div class="flex items-center gap-4">
+					<div class="relative flex items-center gap-4">
 						<UTooltip text="Doe een suggestie">
 							<UButton
-								v-if="mode === 'edit'"
 								icon="lucide:circle-fading-plus"
 								aria-label="Doe een suggestie"
 								color="neutral"
@@ -41,20 +41,20 @@ const { openCart } = useCart()
 								@click="openSuggestion"
 							/>
 						</UTooltip>
-
-						<UTooltip text="Bekijk je beoordelingen">
+						<AiTools />
+						<UColorModeButton />
+						<UTooltip
+							v-if="mode === 'edit'"
+							text="Bekijk je beoordelingen en genereer rapportages"
+						>
 							<UButton
-								v-if="mode === 'edit'"
 								icon="lucide:file-badge"
 								aria-label="Rapportage"
-								color="neutral"
-								variant="ghost"
+								color="primary"
+								variant="subtle"
 								@click="openCart"
 							/>
 						</UTooltip>
-
-						<AiTools />
-						<UColorModeButton />
 						<ViewMode />
 					</div>
 				</ClientOnly>

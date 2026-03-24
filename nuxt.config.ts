@@ -1,6 +1,8 @@
 // https://nuxt.com/docs/api/configuration/nuxt-config
 import type { Mode } from './shared/types/primitives'
 
+import { fileURLToPath } from 'node:url'
+
 import { parseURL } from 'ufo'
 
 import { app } from './config/head'
@@ -40,6 +42,10 @@ export default defineNuxtConfig({
 	imports: {
 		// Auto-import pinia stores defined in `~/stores`
 		dirs: ['stores'],
+	},
+
+	alias: {
+		'@schema': fileURLToPath(new URL('./schema', import.meta.url)),
 	},
 
 	css: ['~/assets/css/main.css'],
@@ -82,6 +88,7 @@ export default defineNuxtConfig({
 				'@vue/devtools-kit',
 				'fuse.js',
 				'@vueuse/integrations/useFuse',
+				'zod',
 			],
 		},
 	},
