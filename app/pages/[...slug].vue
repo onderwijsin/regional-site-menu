@@ -32,26 +32,9 @@ const { data: surround } = await useAsyncData(`${route.path}-surround`, () => {
 			<template #description>
 				<p class="text-muted my-4 text-lg text-pretty">{{ page.description }}</p>
 				<div class="space-x-2">
-					<UBadge
-						v-for="item in page.goals"
-						:key="item"
-						:label="item"
-						icon="lucide:goal"
-						variant="subtle"
-						color="secondary"
-					/>
-					<UBadge
-						:label="page.priority"
-						icon="heroicons:fire-16-solid"
-						variant="subtle"
-						color="neutral"
-					/>
-					<UBadge
-						:label="page.scope"
-						icon="lucide:square-dashed-mouse-pointer"
-						variant="subtle"
-						color="neutral"
-					/>
+					<Goal v-for="item in page.goals" :key="item" :value="item" />
+					<Priority :value="page.priority" />
+					<Scope :value="page.scope" />
 				</div>
 			</template>
 			<template #links>
