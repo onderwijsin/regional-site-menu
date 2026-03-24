@@ -1,5 +1,9 @@
 <script lang="ts" setup>
-import type { TabsItem } from '@nuxt/ui'
+import type { TabsItem, TabsProps } from '@nuxt/ui'
+
+withDefaults(defineProps<Omit<TabsProps, 'items' | 'modelValue' | 'ui'>>(), {
+	size: 'sm',
+})
 
 const state = useStateStore()
 
@@ -14,6 +18,6 @@ const tabs: TabsItem[] = [
 		v-model="state.mode"
 		:items="tabs"
 		:ui="{ root: 'gap-0', label: 'font-bold', trigger: 'cursor-pointer' }"
-		size="sm"
+		v-bind="$props"
 	/>
 </template>

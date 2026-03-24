@@ -1,21 +1,11 @@
 <script setup>
-useHead({
-	meta: [{ name: 'viewport', content: 'width=device-width, initial-scale=1' }],
-	link: [{ rel: 'icon', href: '/favicon.ico' }],
-	htmlAttrs: {
-		lang: 'nl',
-	},
-})
-
-const title = 'Regiosite Menukaart'
-const description =
-	'Ontwerp, evalueer en verbeter regiosites voor onderwijs met een flexibele menukaart van onderdelen. Stel eenvoudig een concrete briefing samen voor verdere ontwikkeling.'
+import { siteDescription, siteTitle } from '~~/config/indentity'
 
 useSeoMeta({
-	title,
-	description,
-	ogTitle: title,
-	ogDescription: description,
+	title: siteTitle,
+	description: siteDescription,
+	ogTitle: siteTitle,
+	ogDescription: siteDescription,
 	ogImage: '/ogimage.png',
 	twitterImage: '/ogimage.png',
 	twitterCard: 'summary_large_image',
@@ -82,7 +72,7 @@ const { openCart } = useCart()
 			}"
 		/>
 
-		<UFooter>
+		<UFooter class="mb-2">
 			<template #left>
 				<p class="text-muted text-sm">
 					Onderwijsregio's • © {{ new Date().getFullYear() }}
@@ -93,16 +83,5 @@ const { openCart } = useCart()
 				<UButton aria-label="Onderwijsregio" v-bind="externalSite" />
 			</template>
 		</UFooter>
-		<div class="bg-default fixed inset-0 z-50 md:hidden">
-			<UContainer class="h-full">
-				<UEmpty
-					icon="lucide:message-circle-warning"
-					title="Niet beschikbaar"
-					description="Deze app is momenteel alleen beschikbaar op grotere schermen."
-					variant="naked"
-					class="h-full"
-				/>
-			</UContainer>
-		</div>
 	</UApp>
 </template>

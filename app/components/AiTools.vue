@@ -1,11 +1,12 @@
 <script setup lang="ts">
-import type { ButtonProps } from '@nuxt/ui'
+import type { ButtonProps, DropdownMenuItem } from '@nuxt/ui'
 
 withDefaults(defineProps<Omit<ButtonProps, 'icon' | 'aria-label'>>(), {
 	variant: 'ghost',
 	color: 'neutral',
 })
 const site = useSiteConfig()
+const { trackEvent } = useTracking()
 
 const prompt = computed(
 	() => `Lees deze documentatie ${site.url}/llms-full.txt zodat we erover kunnen sparren. 
@@ -16,18 +17,32 @@ website van een regionaal onderwijsloket zou moeten /kunnen bevatten om hun doel
 `,
 )
 
-const items = [
+const items: DropdownMenuItem[] = [
 	{
 		label: 'Sparren met ChatGPT',
 		icon: 'i-simple-icons:openai',
 		target: '_blank',
 		to: `https://chatgpt.com/?hints=search&q=${encodeURIComponent(prompt.value)}`,
+		onSelect: () => {
+			trackEvent('ai_action', {
+				event_category: 'engagement',
+				event_label: 'chatgpt',
+				event_value: 'sparren',
+			})
+		},
 	},
 	{
 		label: 'Sparren met Claude',
 		icon: 'i-simple-icons:anthropic',
 		target: '_blank',
 		to: `https://claude.ai/new?q=${encodeURIComponent(prompt.value)}`,
+		onSelect: () => {
+			trackEvent('ai_action', {
+				event_category: 'engagement',
+				event_label: 'claude',
+				event_value: 'sparren',
+			})
+		},
 	},
 ]
 </script>

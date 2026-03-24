@@ -1,5 +1,10 @@
 /** @type {import('prettier').Config & import('prettier-plugin-tailwindcss').PluginOptions & import('@ianvs/prettier-plugin-sort-imports').PluginOptions} */
 export default {
+	plugins: [
+		'@ianvs/prettier-plugin-sort-imports',
+		'prettier-plugin-tailwindcss',
+		'prettier-plugin-mdc',
+	],
 	semi: false,
 	singleQuote: true,
 	trailingComma: 'all',
@@ -23,10 +28,10 @@ export default {
 			options: {
 				tabWidth: 2,
 				useTabs: false,
+				parser: 'mdc',
 			},
 		},
 	],
-	plugins: ['@ianvs/prettier-plugin-sort-imports', 'prettier-plugin-tailwindcss'],
 	importOrder: [
 		'<TYPES>^(node:)',
 		'<TYPES>',

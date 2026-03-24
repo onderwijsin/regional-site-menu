@@ -3,6 +3,10 @@ import type { Mode } from './shared/types/primitives'
 
 import { parseURL } from 'ufo'
 
+import { app } from './config/head'
+import { siteDescription, siteTitle } from './config/indentity'
+import { robots } from './config/robots'
+
 const isDebug = process.env.DEBUG === 'true'
 const isProd = process.env.MODE === 'prod'
 const isPreview =
@@ -12,10 +16,6 @@ const isPreview =
 const isDev = process.env.MODE === 'dev'
 const isNext = process.env.MODE === 'next'
 const isLivePreview = process.env.MODE === 'live-preview'
-
-const siteTitle = 'Regiosite Menukaart'
-const siteDescription =
-	'Ontwerp, evalueer en verbeter regiosites voor onderwijs met een flexibele menukaart van onderdelen. Stel eenvoudig een concrete briefing samen voor verdere ontwikkeling.'
 
 export default defineNuxtConfig({
 	modules: [
@@ -107,6 +107,15 @@ export default defineNuxtConfig({
 	},
 
 	hub: {
+		/**
+		 * There is a weird error in local development if we define the cache driver, where the binding is undefined
+		 * We can only resolve the issue by adding the binding in a wrangler.json file, which we don't want to add
+		 * specifically for this issue.
+		 *
+		 * Adding the binding to nitro.cloudflare.wrangler doesnt help, because that config does nothing in local dev.
+		 *
+		 * `Cache write error. [unstorage] [cloudflare] Invalid binding CACHE: undefined`
+		 */
 		cache: !isDev
 			? {
 					driver: 'cloudflare-kv-binding',
@@ -165,42 +174,15 @@ export default defineNuxtConfig({
 			tracking: {
 				disabled: process.env.DISABLE_TRACKING === 'true',
 			},
+			contact: {
+				page: 'https://www.onderwijsregio.nl/service/contact',
+			},
 		},
 	},
 
 	app: {
 		keepalive: true,
-		head: {
-			htmlAttrs: {
-				lang: 'nl',
-			},
-			meta: [
-				{ charset: 'utf-8' },
-				{
-					name: 'viewport',
-					content:
-						'width=device-width, initial-scale=1, minimum-scale=1.0, maximum-scale=5.0, viewport-fit=cover',
-				},
-				{ name: 'format-detection', content: 'telephone=no' },
-				{ name: 'mobile-web-app-capable', content: 'yes' },
-				{ name: 'apple-mobile-web-app-capable', content: 'yes' },
-				{ name: 'apple-mobile-web-app-title', content: 'Regiosite Menukaart' },
-				{ name: 'apple-mobile-web-app-status-bar-style', content: 'default' },
-			],
-			noscript: [
-				{
-					innerHTML:
-						'Je hebt Javascript nodig om deze website te kunnen gebruiken. Pas je browserinstellingen in om verder te gaan!',
-				},
-			],
-			link: [
-				{
-					rel: 'icon',
-					type: 'image/ico',
-					href: '/favicon.ico',
-				},
-			],
-		},
+		head: app.head,
 	},
 
 	ui: {
@@ -244,84 +226,7 @@ export default defineNuxtConfig({
 		trailingSlash: false,
 	},
 
-	robots: {
-		groups: [
-			/**
-			 * ----------------------------------------
-			 * 1. Block ALL search engine indexing bots
-			 * ----------------------------------------
-			 */
-			{
-				userAgent: [
-					'Googlebot',
-					'Bingbot',
-					'DuckDuckBot',
-					'Baiduspider',
-					'YandexBot',
-					'Slurp', // Yahoo
-					'Applebot', // Spotlight/Siri indexing
-				],
-				disallow: '/',
-			},
-
-			/**
-			 * ----------------------------------------
-			 * 2. Block SEO / scraping tools (optional but recommended)
-			 * ----------------------------------------
-			 */
-			{
-				userAgent: ['AhrefsBot', 'MJ12bot'],
-				disallow: '/',
-			},
-
-			/**
-			 * ----------------------------------------
-			 * 3. Block dataset / training crawlers explicitly
-			 * (stronger than Content-Signal alone)
-			 * ----------------------------------------
-			 */
-			{
-				userAgent: ['CCBot', 'Bytespider', 'Diffbot'],
-				disallow: '/',
-			},
-
-			/**
-			 * ----------------------------------------
-			 * 4. Allow everything else + AI directives
-			 * ----------------------------------------
-			 */
-			{
-				userAgent: '*',
-				allow: '/',
-				contentSignal: {
-					search: 'no', // ❌ no indexing
-					'ai-input': 'yes', // ✅ allow RAG / LLM usage
-					'ai-train': 'no', // ❌ no training
-				},
-				contentUsage: {
-					'train-ai': 'n',
-				},
-			},
-
-			/**
-			 * ----------------------------------------
-			 * 5. Vendor-specific AI controls
-			 * ----------------------------------------
-			 */
-
-			// Google AI (Gemini, Vertex)
-			{
-				userAgent: 'Google-Extended',
-				disallow: '/',
-			},
-
-			// Apple AI
-			{
-				userAgent: 'Applebot-Extended',
-				disallow: '/',
-			},
-		],
-	},
+	robots,
 
 	llms: {
 		domain: process.env.APP_URL,

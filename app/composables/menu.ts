@@ -15,14 +15,13 @@ export const useMenu = () => {
 		icon: 'lucide:arrow-up-right',
 	}
 
-	const staticNavigation: NavigationMenuItem[] = [
-		externalSiteMenuLink,
-		{
-			label: 'Help',
-			icon: 'i-lucide-circle-help',
-			to: '/help',
-		},
-	]
+	const help = {
+		label: 'Help',
+		icon: 'i-lucide-circle-help',
+		to: '/help',
+	} satisfies NavigationMenuItem
 
-	return { externalSite, staticNavigation }
+	const staticNavigation: NavigationMenuItem[] = [externalSiteMenuLink, help]
+
+	return { externalSite, staticNavigation, help }
 }

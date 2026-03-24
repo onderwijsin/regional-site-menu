@@ -12,15 +12,82 @@ function handleSelect(value: ViewMode) {
 	emit('close')
 	return navigateTo('/')
 }
+
+function setMode(mode: ViewMode) {
+	state.mode = mode
+}
+
+const { help } = useMenu()
+const { contact } = useRuntimeConfig().public
 </script>
 
 <template>
 	<UModal
 		title="Welkom"
 		description="Bij de menukaart voor regionale onderwijsloket websites"
-		:ui="{ content: 'max-w-3xl min-h-[50dvh] max-w-[80dvh]', footer: 'justify-between' }"
+		:ui="{
+			content: 'max-w-3xl min-h-[50dvh] max-h-[80dvh]',
+			footer: 'justify-between',
+			body: 'prose dark:prose-invert min-w-full',
+		}"
 	>
-		<template #body> TODO: intro </template>
+		<template #body>
+			<p>
+				Deze tool helpt je bij het ontwerpen en verbeteren van de website van jouw regionale
+				onderwijsloket. Je kunt hier:
+			</p>
+			<ul>
+				<li>
+					<strong>Inspiratie opdoen</strong> over welke elementen van belang zijn voor
+					jouw doelgroep(en)
+				</li>
+				<li>
+					Je huidige website <strong>evalueren en beoordelen</strong> op al deze mogelijke
+					elementen
+				</li>
+				<li>
+					Op basis van je evaluatie een <strong>rapport genereren</strong> dat kan dienen
+					als briefing voor je webbureau
+				</li>
+			</ul>
+			<h3>Twee manieren om te starten</h3>
+			<p>
+				Je kunt deze tool in twee modi gebruiken: je kunt kiezen voor
+				<UButton
+					:variant="state.mode === 'explore' ? 'subtle' : 'soft'"
+					color="secondary"
+					label="Verkennen"
+					size="sm"
+					class="relative -top-px mx-1 font-bold"
+					@click="setMode('explore')"
+				/>
+				om door de menukaart te browsen, of je kunt
+				<UButton
+					:variant="state.mode === 'edit' ? 'subtle' : 'soft'"
+					color="primary"
+					label="Aan de slag"
+					size="sm"
+					class="relative -top-px font-bold"
+					@click="setMode('edit')"
+				/>
+				om de verschillende evaluatietools te activeren. Je kunt altijd later van modus
+				switchen via het menu.
+			</p>
+
+			<h3>Hulp nodig?</h3>
+			<p>
+				Je kunt vanuit elke pagina in de tool direct naar
+				<UButton
+					variant="ghost"
+					color="neutral"
+					v-bind="help"
+					class="relative top-0.75 no-underline"
+				/>
+				navigeren voor extra uitleg over de menukaart. Voor vragen en opmerkingen kun je
+				<NuxtLink :to="contact.page" target="_blank">een bericht achterlaten</NuxtLink> voor
+				het team.
+			</p>
+		</template>
 		<template #footer>
 			<USwitch
 				v-model="state.hideWelcome"
@@ -32,7 +99,7 @@ function handleSelect(value: ViewMode) {
 			<UFieldGroup>
 				<UButton
 					label="Verkennen"
-					color="neutral"
+					color="secondary"
 					variant="subtle"
 					@click="handleSelect('explore')"
 				/>
