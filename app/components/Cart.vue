@@ -12,7 +12,13 @@
 			color="neutral"
 			variant="ghost"
 		/>
-		<template #body> TODO: lijst met stuff </template>
-		<template #footer> TODO: checkout </template>
+		<template #body>
+			<UEmpty
+				icon="lucide:sparkles"
+				title="Nog in ontwikkeling"
+				description="Aan deze feature wordt nog hard gewerkt! Probeer het later nog een keer"
+			/>
+		</template>
+		<template #footer></template>
 	</USlideover>
 </template>

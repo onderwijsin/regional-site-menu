@@ -99,6 +99,9 @@ catalogs:
     defu:
       specifier: 6.1.4
       version: 6.1.4
+    dequal:
+      specifier: 2.0.3
+      version: 2.0.3
     eslint:
       specifier: 9.39.2
       version: 9.39.2
@@ -257,6 +260,9 @@ importers:
       defu:
         specifier: 'catalog:'
         version: 6.1.4
+      dequal:
+        specifier: 'catalog:'
+        version: 2.0.3
       eslint:
         specifier: 'catalog:'
         version: 9.39.2(jiti@2.6.1)

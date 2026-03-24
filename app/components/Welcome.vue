@@ -74,11 +74,11 @@ const { contact } = useRuntimeConfig().public
 				switchen via het menu.
 			</p>
 
-			<h3>Hulp nodig?</h3>
+			<h3>Goed om te weten</h3>
 			<p>
 				Je kunt vanuit elke pagina in de tool direct naar
 				<UButton
-					variant="ghost"
+					variant="soft"
 					color="neutral"
 					v-bind="help"
 					class="relative top-0.75 no-underline"
@@ -86,6 +86,11 @@ const { contact } = useRuntimeConfig().public
 				navigeren voor extra uitleg over de menukaart. Voor vragen en opmerkingen kun je
 				<NuxtLink :to="contact.page" target="_blank">een bericht achterlaten</NuxtLink> voor
 				het team.
+			</p>
+
+			<p>
+				Het gebruik van deze tool is <strong>volledig anoniem</strong>. De informatie die je
+				invult wordt met niemand gedeeld.
 			</p>
 		</template>
 		<template #footer>
