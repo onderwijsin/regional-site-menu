@@ -23,6 +23,11 @@ export default defineContentConfig({
 				scope: z.enum(['Regionaal', 'Bovenregionaal', 'Landelijk']),
 				priority: z.enum(['Must have', 'Should have', 'Nice to have']),
 				exampleUrl: z.url().optional(),
+				audit: z
+					.object({
+						description: z.string().optional(),
+					})
+					.optional(),
 			}),
 		}),
 	},

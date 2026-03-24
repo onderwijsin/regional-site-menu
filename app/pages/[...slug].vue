@@ -1,4 +1,5 @@
 <script lang="ts" setup>
+const state = useStateStore()
 const route = useRoute()
 const { data: page } = await useAsyncData(route.path, () => {
 	return queryCollection('items').path(route.path).first()
@@ -42,6 +43,12 @@ const { data: surround } = await useAsyncData(`${route.path}-surround`, () => {
 			</template>
 		</UPageHeader>
 		<ContentRenderer v-if="page" :value="page" />
+		<AuditBanner
+			v-if="state.mode === 'edit'"
+			:item-id="page.id"
+			:item-title="page.title"
+			:description="page.audit?.description"
+		/>
 		<div class="space-y-8 pt-16 pb-8">
 			<USeparator label="Verder lezen" />
 			<UContentSurround :surround="surround" />
