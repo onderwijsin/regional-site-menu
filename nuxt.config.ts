@@ -56,6 +56,15 @@ export default defineNuxtConfig({
 		},
 	},
 
+	routeRules: {
+		'/stats': {
+			redirect: {
+				statusCode: 301,
+				to: `https://plausible.io/${process.env.PLAUSIBLE_DOMAIN}`,
+			},
+		},
+	},
+
 	compatibilityDate: '2026-01-05',
 
 	components: [
