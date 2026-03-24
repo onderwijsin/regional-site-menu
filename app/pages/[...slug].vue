@@ -28,6 +28,7 @@ const { data: surround } = await useAsyncData(`${route.path}-surround`, () => {
 			:headline="page.pillar"
 			:ui="{
 				root: 'pt-2',
+				wrapper: 'items-start lg:items-start',
 			}"
 		>
 			<template #description>
@@ -39,16 +40,22 @@ const { data: surround } = await useAsyncData(`${route.path}-surround`, () => {
 				</div>
 			</template>
 			<template #links>
-				<PageHeaderLinks />
+				<PageHeaderLinks
+					:item-id="page.id"
+					:item-title="page.title"
+					:description="page.audit?.description"
+				/>
 			</template>
 		</UPageHeader>
 		<ContentRenderer v-if="page" :value="page" />
-		<AuditBanner
-			v-if="state.mode === 'edit'"
-			:item-id="page.id"
-			:item-title="page.title"
-			:description="page.audit?.description"
-		/>
+		<ClientOnly>
+			<AuditBanner
+				v-if="state.mode === 'edit'"
+				:item-id="page.id"
+				:item-title="page.title"
+				:description="page.audit?.description"
+			/>
+		</ClientOnly>
 		<div class="space-y-8 pt-16 pb-8">
 			<USeparator label="Verder lezen" />
 			<UContentSurround :surround="surround" />

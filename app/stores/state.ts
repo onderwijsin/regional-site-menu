@@ -1,12 +1,8 @@
 import type { ItemsCollectionItem } from '@nuxt/content'
+import type { AuditEntry } from '~~/shared/types/audit'
 import type { ViewMode } from '~~/shared/types/primitives'
 
 import { defineStore } from 'pinia'
-
-type AuditEntry = {
-	score: number | undefined
-	comment: string
-}
 
 export const useStateStore = defineStore(
 	'State',
@@ -52,6 +48,7 @@ export const useStateStore = defineStore(
 			suggestionOpen,
 			hideWelcome,
 			shouldShowWelcomeModal,
+			audit,
 			getAuditScore,
 			setAuditScore,
 			getAuditComment,
@@ -60,7 +57,7 @@ export const useStateStore = defineStore(
 	},
 	{
 		persist: {
-			pick: ['mode', 'filter', 'hideWelcome'],
+			pick: ['mode', 'filter', 'hideWelcome', 'audit'],
 		},
 	},
 )

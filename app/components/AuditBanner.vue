@@ -1,61 +1,41 @@
 <script lang="ts" setup>
-const props = defineProps<{
-	itemId: string
-	itemTitle: string
-	description?: string
-}>()
+import type { ButtonProps } from '@nuxt/ui'
+import type { AuditProps } from '~~/shared/types/audit'
 
-const description = computed(() => {
-	if (props.description) {
-		return props.description
-	}
-	return `Hoe scoort jouw website op het onderdeel "${props.itemTitle}"?`
-})
+const props = defineProps<AuditProps>()
 
-const { getAuditScore, setAuditScore } = useStateStore()
-const value = computed({
-	get: () => getAuditScore(props.itemId),
-	set: (newValue: number) => setAuditScore(props.itemId, newValue),
-})
+const { state, isDirty, description, currentScoreColor, currentScoreLabel, saveChanges } =
+	useAudit(props)
+const comment = useComment()
 
-const currentColor = computed(() => {
-	if (value.value === undefined) {
-		return 'neutral'
+const actions = computed<ButtonProps[]>(() => {
+	const items: ButtonProps[] = []
+	if ((isDirty.value && !state.comment) || state.comment) {
+		// For new audit items, we only want to show the comments button after a score has been given (in that case its dirty)
+		items.push({
+			label: !state.comment ? 'Voeg opmerking toe' : 'Bewerk opmerking',
+			variant: 'subtle',
+			color: 'neutral',
+			icon: 'lucide:notebook-pen',
+			onClick: async () => {
+				const result = await comment({ initialValue: state.comment })
+				if (!result) return
+				state.comment = result.value
+			},
+		})
 	}
-	if (value.value >= 8) {
-		return 'success'
-	}
-	if (value.value >= 5) {
-		return 'warning'
-	}
-	return 'error'
-})
 
-const tooltip = computed(() => {
-	switch (value.value) {
-		case 1:
-			return 'Zeer slecht (1/10)'
-		case 2:
-			return 'Zeer slecht (2/10)'
-		case 3:
-			return 'Slecht (3/10)'
-		case 4:
-			return 'Slecht (4/10)'
-		case 5:
-			return 'Matig (5/10)'
-		case 6:
-			return 'Voldoende (6/10)'
-		case 7:
-			return 'Goed (7/10)'
-		case 8:
-			return 'Zeer goed (8/10)'
-		case 9:
-			return 'Uitstekend (9/10)'
-		case 10:
-			return 'Perfect (10/10)'
-		default:
-			return 'Nog geen score'
+	if (isDirty.value) {
+		items.push({
+			label: 'Opslaan',
+			variant: 'subtle',
+			color: 'success',
+			icon: 'lucide:save',
+			onClick: saveChanges,
+		})
 	}
+
+	return items
 })
 </script>
 
@@ -68,14 +48,22 @@ const tooltip = computed(() => {
 		:ui="{ links: 'max-w-lg mx-auto' }"
 	>
 		<template #links>
-			<USlider
-				v-model="value"
-				:min="1"
-				:max="10"
-				:default-value="5"
-				:color="currentColor"
-				:tooltip="{ text: tooltip }"
-			/>
+			<div class="flex w-full items-center gap-4">
+				<USlider
+					v-model="state.score"
+					:min="1"
+					:max="10"
+					:default-value="5"
+					:color="currentScoreColor"
+					:tooltip="{ text: currentScoreLabel }"
+					class="grow"
+				/>
+				<span class="shrink-0 font-bold"> {{ state.score }} / 10 </span>
+			</div>
+
+			<div class="flex gap-2 py-6">
+				<UButton v-for="(item, index) in actions" :key="index" v-bind="item" />
+			</div>
 		</template>
 	</UPageCTA>
 </template>

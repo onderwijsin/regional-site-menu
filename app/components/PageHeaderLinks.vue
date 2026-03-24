@@ -6,6 +6,8 @@ const site = useSiteConfig()
 const appConfig = useAppConfig()
 const { trackEvent } = useTracking()
 
+const props = defineProps<{ itemId: string; itemTitle: string; description?: string }>()
+
 const mdPath = computed(() => `${site.url}/raw${route.path}.md`)
 
 const prompt = computed(
@@ -81,38 +83,50 @@ const items = [
 async function copyPage() {
 	copy(await $fetch<string>(`/raw${route.path}.md`))
 }
+
+const state = useStateStore()
 </script>
 
 <template>
-	<UFieldGroup>
-		<UButton
-			label="Kopieer pagina"
-			:icon="copied ? appConfig.ui.icons.copyCheck : appConfig.ui.icons.copy"
-			color="neutral"
-			variant="outline"
-			:ui="{
-				leadingIcon: [copied ? 'text-primary' : 'text-neutral', 'size-3.5'],
-			}"
-			@click="copyPage"
-		/>
-		<UDropdownMenu
-			:items="items"
-			:content="{
-				align: 'end',
-				side: 'bottom',
-				sideOffset: 8,
-			}"
-			:ui="{
-				content: 'w-48',
-			}"
-		>
+	<div class="flex gap-2">
+		<ClientOnly>
+			<AuditModal
+				v-if="state.mode === 'edit'"
+				:item-id="props.itemId"
+				:item-title="props.itemTitle"
+				:description="props.description"
+			/>
+		</ClientOnly>
+		<UFieldGroup>
 			<UButton
-				:icon="appConfig.ui.icons.chevronDown"
-				size="sm"
+				label="Kopieer"
+				:icon="copied ? appConfig.ui.icons.copyCheck : appConfig.ui.icons.copy"
 				color="neutral"
 				variant="outline"
-				aria-label="Open kopieeracties menu"
+				:ui="{
+					leadingIcon: [copied ? 'text-primary' : 'text-neutral', 'size-3.5'],
+				}"
+				@click="copyPage"
 			/>
-		</UDropdownMenu>
-	</UFieldGroup>
+			<UDropdownMenu
+				:items="items"
+				:content="{
+					align: 'end',
+					side: 'bottom',
+					sideOffset: 8,
+				}"
+				:ui="{
+					content: 'w-48',
+				}"
+			>
+				<UButton
+					:icon="appConfig.ui.icons.chevronDown"
+					size="sm"
+					color="neutral"
+					variant="outline"
+					aria-label="Open kopieeracties menu"
+				/>
+			</UDropdownMenu>
+		</UFieldGroup>
+	</div>
 </template>
