@@ -5,9 +5,11 @@ const props = withDefaults(
 	defineProps<Omit<BadgeProps, 'label' | 'color'> & { value: number | undefined }>(),
 	{
 		variant: 'subtle',
-		icon: 'lucide:file-badge',
 	},
 )
+
+const { getIcon } = useIcons()
+const icon = computed(() => props.icon ?? getIcon('report'))
 
 const { getScoreColor, getScoreLabel } = useAuditUtils()
 
@@ -25,6 +27,7 @@ const hint = computed(() => {
 			v-bind="$props"
 			:label="getScoreLabel(value)"
 			:color="getScoreColor(value)"
+			:icon="icon"
 			class="font-bold"
 		/>
 		<template #content>

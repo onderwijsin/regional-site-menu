@@ -1,17 +1,56 @@
 <script setup lang="ts">
+import type { DropdownMenuItem } from '@nuxt/ui'
+
+/**
+ * Dependencies
+ */
 const route = useRoute()
 const toast = useToast()
 const { copy, copied } = useClipboard()
 const site = useSiteConfig()
 const appConfig = useAppConfig()
 const { trackEvent } = useTracking()
+const { getIcon } = useIcons()
 
-const props = defineProps<{ itemId: string; itemTitle: string; description?: string }>()
+/**
+ * Props
+ */
+const props = defineProps<{
+	/** Unique identifier of the item */
+	itemId: string
 
+	/** Display title of the item */
+	itemTitle: string
+
+	/** Optional description used in audit modal */
+	description?: string
+}>()
+
+// ----------------------
+// State
+// ----------------------
+
+/**
+ * Global application state
+ */
+const state = useStateStore()
+
+// ----------------------
+// Computed
+// ----------------------
+
+/**
+ * Absolute URL to the raw markdown version of the current page
+ */
 const mdPath = computed(() => `${site.url}/raw${route.path}.md`)
 
-const prompt = computed(
-	() => `Lees dit item ${mdPath.value} zodat ik er vragen over kan stellen. 
+/**
+ * Prompt used for AI tools (ChatGPT / Claude)
+ *
+ * Gives context + directs model to full dataset
+ */
+const prompt = computed(() => {
+	return `Lees dit item ${mdPath.value} zodat ik er vragen over kan stellen. 
 
 Het item is afkomstig uit de tool "Menukaart voor regionale onderwijsloket websites". 
 Deze tool biedt een overzicht van features, inhoud en andere functionailiteiten die een 
@@ -19,72 +58,86 @@ website van een regionaal onderwijsloket zou moeten /kunnen bevatten om hun doel
 te bedienen.
 
 Meer informatie en content items kun je ontdekken via ${site.url}/llms-full.txt
-`,
-)
+`
+})
 
-const items = [
+// ----------------------
+// Helpers
+// ----------------------
+
+/**
+ * Standardized tracking wrapper for AI-related actions
+ */
+function trackAiAction(label: string, value: string): void {
+	trackEvent('ai_action', {
+		event_category: 'engagement',
+		event_label: label,
+		event_value: value,
+	})
+}
+
+// ----------------------
+// Actions
+// ----------------------
+
+/**
+ * Fetch and copy full markdown content of the page
+ */
+async function copyPage(): Promise<void> {
+	const content = await $fetch<string>(`/raw${route.path}.md`)
+	copy(content)
+}
+
+// ----------------------
+// Dropdown items
+// ----------------------
+
+/**
+ * Actions available in the "copy / AI" dropdown
+ */
+const items = computed<DropdownMenuItem[]>(() => [
 	{
 		label: 'Kopieer Markdown',
-		icon: 'i-lucide-link',
+		icon: getIcon('url'),
 		onSelect() {
 			copy(mdPath.value)
-			trackEvent('ai_action', {
-				event_category: 'engagement',
-				event_label: 'markdown',
-				event_value: 'copy',
-			})
+
+			trackAiAction('markdown', 'copy')
+
 			toast.add({
 				title: 'Gekopieerd naar klembord',
-				icon: 'i-lucide-check-circle',
+				icon: getIcon('success'),
 			})
 		},
 	},
 	{
 		label: 'Bekijk als Markdown',
-		icon: 'i-simple-icons:markdown',
+		icon: getIcon('markdown'),
 		target: '_blank',
 		to: `/raw${route.path}.md`,
-		onSelect: () => {
-			trackEvent('ai_action', {
-				event_category: 'engagement',
-				event_label: 'markdown',
-				event_value: 'view',
-			})
+		onSelect() {
+			trackAiAction('markdown', 'view')
 		},
 	},
 	{
 		label: 'Open in ChatGPT',
-		icon: 'i-simple-icons:openai',
+		icon: getIcon('chatgpt'),
 		target: '_blank',
 		to: `https://chatgpt.com/?hints=search&q=${encodeURIComponent(prompt.value)}`,
-		onSelect: () => {
-			trackEvent('ai_action', {
-				event_category: 'engagement',
-				event_label: 'chatgpt',
-				event_value: 'open_item',
-			})
+		onSelect() {
+			trackAiAction('chatgpt', 'open_item')
 		},
 	},
 	{
 		label: 'Open in Claude',
-		icon: 'i-simple-icons:anthropic',
+		icon: getIcon('claude'),
 		target: '_blank',
 		to: `https://claude.ai/new?q=${encodeURIComponent(prompt.value)}`,
-		onSelect: () => {
-			trackEvent('ai_action', {
-				event_category: 'engagement',
-				event_label: 'claude',
-				event_value: 'open_item',
-			})
+		onSelect() {
+			trackAiAction('claude', 'open_item')
 		},
 	},
-]
-
-async function copyPage() {
-	copy(await $fetch<string>(`/raw${route.path}.md`))
-}
-
-const state = useStateStore()
+])
 </script>
 
 <template>
@@ -100,7 +153,7 @@ const state = useStateStore()
 		<UFieldGroup>
 			<UButton
 				label="Kopieer"
-				:icon="copied ? appConfig.ui.icons.copyCheck : appConfig.ui.icons.copy"
+				:icon="copied ? getIcon('copied') : getIcon('copy')"
 				color="neutral"
 				variant="outline"
 				:ui="{

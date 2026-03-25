@@ -1,5 +1,6 @@
 <script lang="ts" setup>
 const { contact } = useRuntimeConfig().public
+const { getIcon } = useIcons()
 </script>
 
 <template>
@@ -13,7 +14,7 @@ const { contact } = useRuntimeConfig().public
 				label: 'Stuur een bericht',
 				to: contact.page,
 				target: '_blank',
-				trailingIcon: 'i-lucide-arrow-right',
+				trailingIcon: getIcon('external'),
 				color: 'primary',
 			},
 		]"

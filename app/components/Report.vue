@@ -2,49 +2,100 @@
 import type { ItemsCollectionItem } from '@nuxt/content'
 import type { Audit } from '~~/shared/types/audit'
 
+/**
+ * Utilities
+ */
 const { getScoreColor, getScoreLabel } = useAuditUtils()
+const { getIcon } = useIcons()
 
-const { data } = await useAsyncData(`menu-overview-all`, () =>
+/**
+ * Global state
+ */
+const state = useStateStore()
+
+// ----------------------
+// Data fetching
+// ----------------------
+
+/**
+ * All menu items (markdown only)
+ */
+const { data } = await useAsyncData('menu-overview-all', () =>
 	queryCollection('items').where('extension', '=', 'md').all(),
 )
 
-const state = useStateStore()
+// ----------------------
+// Derived data: audits
+// ----------------------
+
+/**
+ * Enriched audit entries
+ *
+ * - Filters out items without score
+ * - Joins audit data with actual content items
+ */
 const audits = computed<Audit<ItemsCollectionItem>[]>(() => {
+	if (!data.value) return []
+
 	return Object.entries(state.audit)
-		.filter(([_key, value]) => value.score !== undefined)
-		.map(([key, value]) => ({
-			id: key,
-			score: value.score,
-			comment: value.comment,
-			item: data.value?.find((item) => item.id === key),
-		}))
-		.filter((audit) => audit.item !== undefined) as Audit<ItemsCollectionItem>[]
+		// Only keep scored entries
+		.filter(([, value]) => value.score !== undefined)
+		.map(([id, value]) => {
+			const item = data.value!.find((item) => item.id === id)
+
+			return {
+				id,
+				score: value.score,
+				comment: value.comment,
+				item,
+			}
+		})
+		// Remove broken references (shouldn't happen, but defensive)
+		.filter((audit): audit is Audit<ItemsCollectionItem> => !!audit.item)
 })
 
+// ----------------------
+// Aggregation
+// ----------------------
+
+/**
+ * Calculate average score for a given pillar
+ *
+ * @param pillar - Pillar name
+ * @returns Average score + count, or undefined if no data
+ */
 function calculateAverageForPillar(
 	pillar: ItemsCollectionItem['pillar'],
 ): { score: number; count: number } | undefined {
-	const itemIdsForPillar = data.value
-		?.filter((item) => item.pillar === pillar)
+	if (!data.value) return undefined
+
+	// All item IDs belonging to this pillar
+	const itemIds = data.value
+		.filter((item) => item.pillar === pillar)
 		.map((item) => item.id)
-	if (!itemIdsForPillar || itemIdsForPillar.length === 0) {
-		return undefined
-	}
 
-	const scores = itemIdsForPillar
+	if (itemIds.length === 0) return undefined
+
+	// Collect scores for these items
+	const scores = itemIds
 		.map((id) => state.audit[id]?.score)
-		.filter((score) => score !== undefined)
-	if (scores.length === 0) {
-		return undefined
-	}
+		.filter((score): score is number => score !== undefined)
 
-	const total = scores.reduce((acc, score) => acc + (score ?? 0), 0)
+	if (scores.length === 0) return undefined
+
+	const total = scores.reduce((acc, score) => acc + score, 0)
+
 	return {
 		score: Math.round(total / scores.length),
 		count: scores.length,
 	}
 }
 
+/**
+ * Assemble UI-ready average object
+ *
+ * Adds label + color for rendering
+ */
 function assembleAverage(pillar: ItemsCollectionItem['pillar']) {
 	const result = calculateAverageForPillar(pillar)
 
@@ -56,7 +107,9 @@ function assembleAverage(pillar: ItemsCollectionItem['pillar']) {
 	}
 }
 
-const { getIcon } = useIcons()
+/**
+ * Average scores per pillar
+ */
 const averages = computed(() => [
 	{
 		pillar: 'Inzicht & Overzicht',
@@ -80,22 +133,36 @@ const averages = computed(() => [
 	},
 ])
 
+// ----------------------
+// Actions
+// ----------------------
+
+/**
+ * Report generation (placeholder)
+ */
 const isGenerating = ref(false)
-async function generateReport() {
+
+async function generateReport(): Promise<void> {
 	isGenerating.value = true
 
+	// TODO: implement actual report generation
 	setTimeout(() => {
 		isGenerating.value = false
 		window.alert('Nog niet geïmplementeerd')
 	}, 2000)
 }
 
+/**
+ * Clear all audit data (with confirmation)
+ */
 const confirm = useConfirmDialog()
-async function handleClear() {
+
+async function handleClear(): Promise<void> {
 	const confirmed = await confirm({
 		title: 'Weet je zeker dat je alle beoordelingen wilt verwijderen?',
 		description: 'Deze actie kan niet ongedaan worden gemaakt.',
 	})
+
 	if (confirmed) {
 		state.clearAllAudits()
 	}
@@ -113,7 +180,7 @@ async function handleClear() {
 		}"
 	>
 		<UButton
-			trailing-icon="lucide:file-badge"
+			:trailing-icon="getIcon('report')"
 			aria-label="Rapportage"
 			color="neutral"
 			variant="ghost"
@@ -154,7 +221,7 @@ async function handleClear() {
 				v-if="audits.length"
 				color="error"
 				variant="soft"
-				icon="lucide:trash"
+				:icon="getIcon('delete')"
 				label="Verwijder beoordelingen"
 				@click="handleClear"
 			/>
@@ -163,7 +230,7 @@ async function handleClear() {
 				:disabled="isGenerating || audits.length === 0"
 				color="success"
 				variant="subtle"
-				icon="lucide:plus"
+				:icon="getIcon('add')"
 				label="Genereer rapportage"
 				@click="generateReport"
 			/>

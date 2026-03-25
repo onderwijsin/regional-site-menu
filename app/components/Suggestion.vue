@@ -6,6 +6,7 @@ import { SubmissionSchema } from '@schema/submission'
 
 const toast = useToast()
 const form = useTemplateRef('form')
+const { getIcon } = useIcons()
 
 const emit = defineEmits<{
 	(e: 'close'): void
@@ -68,7 +69,7 @@ async function onSubmit(event: FormSubmitEvent<Submission>) {
 			description:
 				'Bedankt voor je suggestie. We gaan deze bekijken en zo snel mogelijk actie ondernemen.',
 			color: 'success',
-			icon: 'lucide:badge-check',
+			icon: getIcon('success'),
 		})
 		emit('close')
 	} catch (error) {
@@ -78,7 +79,7 @@ async function onSubmit(event: FormSubmitEvent<Submission>) {
 			description:
 				'Er is een fout opgetreden bij het indienen van het formulier. Probeer het later opnieuw.',
 			color: 'error',
-			icon: 'lucide:badge-alert',
+			icon: getIcon('warn'),
 		})
 	} finally {
 		isSubmitting.value = false
@@ -156,7 +157,7 @@ async function onSubmit(event: FormSubmitEvent<Submission>) {
 						v-model="state.exampleUrl"
 						size="lg"
 						type="url"
-						icon="lucide:link"
+						:icon="getIcon('url')"
 						placeholder="https://voorbeeld.nl"
 					/>
 				</UFormField>
@@ -175,16 +176,15 @@ async function onSubmit(event: FormSubmitEvent<Submission>) {
 		</template>
 		<template #footer>
 			<UButton
+				label="Verstuur"
 				type="submit"
 				:loading="isSubmitting"
 				:disabled="isSubmitting"
 				color="success"
 				variant="soft"
-				icon="lucide:send"
+				:icon="getIcon('send')"
 				@click="form?.submit()"
-			>
-				Verstuur
-			</UButton>
+			/>
 		</template>
 	</USlideover>
 </template>

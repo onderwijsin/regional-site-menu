@@ -10,6 +10,8 @@ const props = withDefaults(
 	},
 )
 
+const { getIcon } = useIcons()
+
 const hint = computed(() => {
 	if (props.value === 'Regionaal') {
 		return 'Deze informatie is alleen relevant binnen jouw onderwijsregio.'
@@ -29,7 +31,7 @@ const hint = computed(() => {
 
 <template>
 	<UPopover mode="hover" :ui="{ content: 'max-w-sm px-3 py-2' }">
-		<UBadge v-bind="$props" :label="value" icon="lucide:square-dashed-mouse-pointer" />
+		<UBadge v-bind="$props" :label="value" :icon="getIcon('scope')" />
 		<template #content>
 			<p class="text-muted text-xs leading-relaxed">{{ hint }}</p>
 		</template>

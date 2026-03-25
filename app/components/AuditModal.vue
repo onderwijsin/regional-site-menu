@@ -5,6 +5,7 @@ const props = defineProps<AuditProps>()
 const open = ref(false)
 
 const { score, comment, description, currentScoreColor, currentScoreLabel } = useAudit(props)
+const { getIcon } = useIcons()
 
 function handleSave() {
 	open.value = false
@@ -54,7 +55,7 @@ function handleSave() {
 		<template #footer>
 			<UButton
 				color="success"
-				icon="lucide:save"
+				:icon="getIcon('save')"
 				label="Opslaan"
 				variant="subtle"
 				@click="handleSave"

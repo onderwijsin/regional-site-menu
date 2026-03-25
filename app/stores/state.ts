@@ -1,53 +1,135 @@
+/**
+ * Global UI + audit state store
+ *
+ * Responsibilities:
+ * - UI state (mode, filters, modals)
+ * - Audit state (scores + comments per item)
+ * - Persistence of user preferences
+ */
+
 import type { ItemsCollectionItem } from '@nuxt/content'
 import type { AuditEntry } from '~~/shared/types/audit'
 import type { ViewMode } from '~~/shared/types/primitives'
 
 import { defineStore } from 'pinia'
 
+/**
+ * Internal audit map
+ * Key = itemId
+ */
+type AuditMap = Record<string, AuditEntry>
+
 export const useStateStore = defineStore(
 	'State',
 	() => {
+		// ----------------------
+		// UI state
+		// ----------------------
+
+		/** Current application mode */
 		const mode = ref<ViewMode>('explore')
+
+		/** Active goal filter */
 		const filter = ref<ItemsCollectionItem['goals'][number] | 'all'>('all')
 
+		/** Controls suggestion modal visibility */
 		const suggestionOpen = ref(false)
 
+		/** Whether the welcome modal has been dismissed */
 		const hideWelcome = ref(false)
 
+		/**
+		 * Derived: whether to show welcome modal
+		 */
 		const shouldShowWelcomeModal = computed(() => !hideWelcome.value)
 
-		const audit = reactive<Record<string, AuditEntry>>({})
+		// ----------------------
+		// Audit state
+		// ----------------------
 
+		/**
+		 * Stores audit entries per item
+		 */
+		const audit = reactive<AuditMap>({})
+
+		/**
+		 * Ensure an audit entry exists for a given item
+		 *
+		 * @param itemId - Unique item identifier
+		 * @returns AuditEntry (existing or newly created)
+		 */
+		function ensureAudit(itemId: string): AuditEntry {
+			if (!audit[itemId]) {
+				// lazy init → avoids useless empty entries
+				audit[itemId] = { score: undefined, comment: '' }
+			}
+			return audit[itemId]
+		}
+
+		/**
+		 * Get audit score for item
+		 *
+		 * @param itemId - Unique item identifier
+		 * @returns score or undefined
+		 */
 		function getAuditScore(itemId: string): number | undefined {
 			return audit[itemId]?.score
 		}
 
-		function setAuditScore(itemId: string, score: number) {
-			if (!audit[itemId]) {
-				audit[itemId] = { score, comment: '' }
-			} else {
-				audit[itemId].score = score
-			}
+		/**
+		 * Set audit score for item
+		 *
+		 * @param itemId - Unique item identifier
+		 * @param score - Score value
+		 */
+		function setAuditScore(itemId: string, score: number): void {
+			const entry = ensureAudit(itemId)
+			entry.score = score
 		}
 
+		/**
+		 * Get audit comment for item
+		 *
+		 * @param itemId - Unique item identifier
+		 * @returns comment or undefined
+		 */
 		function getAuditComment(itemId: string): string | undefined {
 			return audit[itemId]?.comment
 		}
 
-		function setAuditComment(itemId: string, comment: string) {
-			if (!audit[itemId]) {
-				audit[itemId] = { score: undefined, comment }
-			} else {
-				audit[itemId].comment = comment
-			}
+		/**
+		 * Set audit comment for item
+		 *
+		 * @param itemId - Unique item identifier
+		 * @param comment - Freeform comment
+		 */
+		function setAuditComment(itemId: string, comment: string): void {
+			const entry = ensureAudit(itemId)
+			entry.comment = comment
 		}
 
-		function removeAudit(itemId: string) {
+		/**
+		 * Remove audit entry for a specific item
+		 *
+		 * NOTE:
+		 * Using `delete` is intentional here to preserve reactivity
+		 * and ensure Pinia persistence removes the key entirely.
+		 *
+		 * @param itemId - Unique item identifier
+		 */
+		function removeAudit(itemId: string): void {
 			// eslint-disable-next-line @typescript-eslint/no-dynamic-delete
 			delete audit[itemId]
 		}
 
-		function clearAllAudits() {
+		/**
+		 * Clear all audit entries
+		 *
+		 * NOTE:
+		 * We explicitly delete keys instead of reassigning the object
+		 * to keep Vue reactivity intact.
+		 */
+		function clearAllAudits(): void {
 			for (const key in audit) {
 				// eslint-disable-next-line @typescript-eslint/no-dynamic-delete
 				delete audit[key]
@@ -55,11 +137,14 @@ export const useStateStore = defineStore(
 		}
 
 		return {
+			// UI
 			mode,
 			filter,
 			suggestionOpen,
 			hideWelcome,
 			shouldShowWelcomeModal,
+
+			// Audit
 			audit,
 			getAuditScore,
 			setAuditScore,
@@ -70,6 +155,9 @@ export const useStateStore = defineStore(
 		}
 	},
 	{
+		/**
+		 * Persist selected state across sessions
+		 */
 		persist: {
 			pick: ['mode', 'filter', 'hideWelcome', 'audit'],
 		},

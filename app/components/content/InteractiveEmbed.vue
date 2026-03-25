@@ -3,6 +3,8 @@ defineProps<{
 	src: string
 	caption?: string
 }>()
+
+const { getIcon } = useIcons()
 </script>
 
 <template>
@@ -21,7 +23,7 @@ defineProps<{
 				<UEmpty
 					v-else
 					class="text-muted flex h-full items-center justify-center text-sm"
-					icon="lucide:message-square-warning"
+					:icon="getIcon('warn')"
 					title="Ongeldige embed URL"
 					description="De opgegeven URL kan niet geëmbed worden."
 				/>
@@ -34,7 +36,7 @@ defineProps<{
 					:to="src"
 					class="absolute right-2 bottom-2"
 					label="open in tabblad"
-					trailing-icon="lucide:arrow-up-right"
+					:trailing-icon="getIcon('external')"
 				/>
 			</div>
 		</div>

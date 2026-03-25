@@ -10,6 +10,8 @@ export default defineContentConfig({
 			source: {
 				include: 'items/**',
 				exclude: [],
+				// Drops the leading /items prefix in path. We only use that for organisation; it should not have an effect on front end routing!
+				prefix: '/',
 			},
 			schema: z.object({
 				title: z.string(),
