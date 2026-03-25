@@ -53,6 +53,21 @@ export const useStateStore = defineStore(
 		const audit = reactive<AuditMap>({})
 
 		/**
+		 * Stores the name of the region the user belongs to
+		 */
+		const region = ref('')
+
+		/**
+		 * Stores general notes provided by the user, that should be included in the report
+		 */
+		const notes = ref('')
+
+		/**
+		 * Stores the website url provided by the user
+		 */
+		const url = ref<string | undefined>(undefined)
+
+		/**
 		 * Ensure an audit entry exists for a given item
 		 *
 		 * @param itemId - Unique item identifier
@@ -146,6 +161,9 @@ export const useStateStore = defineStore(
 
 			// Audit
 			audit,
+			region,
+			notes,
+			url,
 			getAuditScore,
 			setAuditScore,
 			getAuditComment,
@@ -159,7 +177,7 @@ export const useStateStore = defineStore(
 		 * Persist selected state across sessions
 		 */
 		persist: {
-			pick: ['mode', 'filter', 'hideWelcome', 'audit'],
+			pick: ['mode', 'filter', 'hideWelcome', 'audit', 'region', 'notes', 'url'],
 		},
 	},
 )

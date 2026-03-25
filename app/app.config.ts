@@ -83,5 +83,10 @@ export default defineAppConfig({
 				label: 'font-bold',
 			},
 		},
+		switch: {
+			slots: {
+				label: 'font-bold',
+			},
+		},
 	},
 })

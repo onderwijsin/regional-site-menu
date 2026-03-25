@@ -9,17 +9,6 @@
     <a href="https://ui.nuxt.com/"><img src="https://img.shields.io/badge/Built_with-NuxtUI-28CF8D" alt="Built with NuxtUI"></a>
 </p>
 
-![github_banner](https://github.com/user-attachments/assets/641fecad-0b75-4fbb-9d53-22ffb0d819a8)
-
-<p>
-    <a href="https://nuxt.com/"><img src="https://img.shields.io/badge/Nuxt-28CF8D?style=flat&logo=nuxt.js" alt="Nuxt"></a>
-    <a href="https://www.typescriptlang.org/"><img src="https://img.shields.io/badge/TypeScript-3178C6?logo=typescript&logoColor=fff" alt="TypeScript"></a>
-    <a href="https://www.cloudflare.com/">
-      <img src="https://img.shields.io/badge/Cloudflare-Deployed-F38020?logo=cloudflare&logoColor=white" alt="Cloudflare Deployed">
-    </a>
-    <a href="https://ui.nuxt.com/"><img src="https://img.shields.io/badge/Built_with-NuxtUI-28CF8D" alt="Built with NuxtUI"></a>
-</p>
-
 # Regional Site Menu
 
 ## Introduction
@@ -277,3 +266,64 @@ initializes a local database in the client.
 
 As a result, no D1 database binding is configured for the Worker. During local development, you may
 see warnings about missing bindings — these can safely be ignored.
+
+## PDF Generation
+
+When the user has completed their audit, they can generate a PDF report. This happens entirely
+client-side using the `jspdf` library. No server or external service is involved.
+
+### Processing pipeline
+
+The generation flow is split into a few clear steps:
+
+1. **Input collection**
+   - User input (`ReportConfig`)
+   - Computed audit data (`averages`, `audits`)
+2. **Render context creation**
+   - A fresh `jsPDF` instance is created
+   - Layout, spacing, and color tokens are initialized
+3. **Markdown parsing (TipTap-based)**
+   - Audit comments (markdown) are converted to TipTap JSON
+   - TipTap JSON is mapped to a simplified internal block model (`MarkdownBlock[]`)
+   - This avoids HTML parsing and keeps the structure predictable
+4. **Layout + measurement**
+   - Text and markdown blocks are measured before rendering
+   - Page breaks are handled via `ensurePageSpace`
+   - Heights are estimated to prevent overflow
+5. **Rendering**
+   - Sections are rendered sequentially:
+     - Cover page
+     - Introduction
+     - Pillar averages
+     - Detailed audit cards
+   - Markdown blocks are rendered via a custom renderer (paragraphs, lists, blockquotes, etc.)
+6. **Export**
+   - The final document is saved using `jsPDF.save()`
+   - The filename is auto-generated based on the selected region
+
+### Known limitations
+
+- Inline formatting (bold/italic) is only partially supported
+- Underline and strikethrough are parsed but not visually rendered yet
+- Mixed inline styles within a single paragraph are simplified during rendering
+- Complex nested structures (deeply nested lists, etc.) may not render perfectly
+
+### ⚠️ Vibe coded warning
+
+This PDF system was **100% vibe coded**.
+
+That means:
+
+- It is pragmatic, not robust
+- It works because the current pieces line up just right
+- Small changes might break everything
+
+If you touch this:
+
+- Expect layout shifts
+- Expect page break regressions
+- Expect to re-tune spacing and measurements
+
+Nothing here is sacred — but everything is interconnected.
+
+Proceed with confidence… and caution.
