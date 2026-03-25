@@ -170,10 +170,6 @@ export default defineNuxtConfig({
 			apiToken: process.env.CLOUDFLARE_API_TOKEN,
 			cacheNamespaceId: process.env.CLOUDFLARE_CACHE_NAMESPACE_ID,
 		},
-		github: {
-			org: process.env.GH_ORG,
-			repo: process.env.GH_REPO,
-		},
 		datahub: {
 			url: process.env.DATAHUB_URL,
 			token: process.env.DATAHUB_TOKEN,
