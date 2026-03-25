@@ -60,32 +60,16 @@ const audits = computed<Audit<ItemsCollectionItem>[]>(() => {
 // Actions
 // ----------------------
 
-/**
- * Report generation (placeholder)
- */
-const isGenerating = ref(false)
-const { generateReport } = useReportGenerator()
-const toast = useToast()
+const { openReportConfig } = useReportConfig()
 
-function startReportGeneration() {
+function openReportGeneration() {
 	if (!data.value) return
-	isGenerating.value = true
-	try {
-		generateReport({
-			title: 'Test',
-			audits: audits.value,
+	openReportConfig({
+		data: {
 			averages: getAverages(data.value, state.audit),
-		})
-	} catch {
-		toast.add({
-			icon: getIcon('error'),
-			title: 'Fout bij het genereren van het rapport',
-			color: 'error',
-			duration: 6000,
-		})
-	} finally {
-		isGenerating.value = false
-	}
+			audits: audits.value,
+		},
+	})
 }
 
 /**
@@ -143,13 +127,12 @@ async function handleClear(): Promise<void> {
 				@click="handleClear"
 			/>
 			<UButton
-				:disabled="isGenerating || audits.length === 0"
-				:loading="isGenerating"
+				:disabled="audits.length === 0"
 				color="success"
 				variant="subtle"
 				:icon="getIcon('add')"
 				label="Genereer rapportage"
-				@click="startReportGeneration"
+				@click="openReportGeneration"
 			/>
 		</template>
 	</USlideover>
