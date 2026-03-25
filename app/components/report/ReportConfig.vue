@@ -148,6 +148,7 @@ async function navigateToHelp() {
 					/>
 				</p>
 				<UFormField
+					v-if="state.aiWebsiteAnalysis"
 					name="url"
 					label="Website URL"
 					description="Voer de URL van je website in voor analyse."
