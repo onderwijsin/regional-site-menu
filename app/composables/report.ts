@@ -1,4 +1,7 @@
-import { Report } from '#components'
+import type { ItemsCollectionItem } from '@nuxt/content'
+import type { Audit, PillarAverage } from '~~/shared/types/audit'
+
+import { Report, ReportConfig } from '#components'
 
 type ReportProps = {
 	title?: string
@@ -23,5 +26,31 @@ export const useReport = (props?: ReportProps) => {
 	return {
 		openReport,
 		closeReport,
+	}
+}
+
+type ReportConfigProps = {
+	data: {
+		averages: PillarAverage<ItemsCollectionItem['pillar']>[]
+		audits: Audit<ItemsCollectionItem>[]
+	}
+}
+
+export const useReportConfig = () => {
+	const overlay = useOverlay()
+
+	const slideover = overlay.create(ReportConfig)
+
+	function openReportConfig(props: ReportConfigProps) {
+		slideover.open(props)
+	}
+
+	function closeReportConfig() {
+		slideover.close()
+	}
+
+	return {
+		openReportConfig,
+		closeReportConfig,
 	}
 }
