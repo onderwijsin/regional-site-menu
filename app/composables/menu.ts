@@ -1,27 +1,37 @@
 import type { NavigationMenuItem } from '@nuxt/ui'
 
 export const useMenu = () => {
+	const { getIcon } = useIcons()
+
+	// In the app header and footer we want a trailing icon for this item
 	const externalSite: NavigationMenuItem = {
 		label: 'onderwijsregio.nl',
 		to: 'https://www.onderwijsregio.nl/',
-		trailingIcon: 'lucide:arrow-up-right',
+		trailingIcon: getIcon('external'),
 		color: 'neutral',
 		variant: 'ghost',
 	}
 
+	// In the vertical navigation, we want a leading icon
 	const externalSiteMenuLink: NavigationMenuItem = {
 		...externalSite,
 		trailingIcon: null,
-		icon: 'lucide:arrow-up-right',
+		icon: getIcon('external'),
 	}
 
 	const help = {
 		label: 'Help',
-		icon: 'i-lucide-circle-help',
+		icon: getIcon('help'),
 		to: '/help',
 	} satisfies NavigationMenuItem
 
-	const staticNavigation: NavigationMenuItem[] = [externalSiteMenuLink, help]
+	const extras = {
+		label: "Extra's",
+		icon: getIcon('gift'),
+		to: '/extras',
+	}
 
-	return { externalSite, staticNavigation, help }
+	const staticNavigation: NavigationMenuItem[] = [extras, help, externalSiteMenuLink]
+
+	return { externalSite, staticNavigation, help, extras }
 }

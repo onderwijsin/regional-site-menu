@@ -1,4 +1,6 @@
-<script lang="ts" setup></script>
+<script lang="ts" setup>
+const { getIcon } = useIcons()
+</script>
 
 <template>
 	<section class="space-y-8">
@@ -7,7 +9,7 @@
 				size="lg"
 				variant="outline"
 				placeholder="Doorzoek het menu"
-				icon="lucide:search"
+				:icon="getIcon('search')"
 				class="grow"
 				disabled
 			/>

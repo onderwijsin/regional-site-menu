@@ -6,6 +6,7 @@ const props = defineProps<AuditProps>()
 
 const { score, comment, description, currentScoreColor, currentScoreLabel } = useAudit(props)
 const editComment = useComment()
+const { getIcon } = useIcons()
 
 const actions = computed<ButtonProps[]>(() => {
 	const items: ButtonProps[] = [
@@ -13,7 +14,7 @@ const actions = computed<ButtonProps[]>(() => {
 			label: !comment.value ? 'Voeg opmerking toe' : 'Bewerk opmerking',
 			variant: 'subtle',
 			color: 'neutral',
-			icon: 'lucide:notebook-pen',
+			icon: getIcon('edit'),
 			onClick: async () => {
 				const result = await editComment({ initialValue: comment.value ?? '' })
 				if (!result) return

@@ -4,6 +4,7 @@ const { data: navigation } = await useAsyncData('navigation', () => {
 })
 
 const { staticNavigation } = useMenu()
+const { getIcon } = useIcons()
 
 const route = useRoute()
 const isExplorer = computed(() => route.path === '/')
@@ -15,7 +16,7 @@ const isExplorer = computed(() => route.path === '/')
 			<template #left>
 				<UPageAside :ui="{ root: 'md:block' }">
 					<UButton
-						icon="lucide:layout-dashboard"
+						:icon="getIcon('dashboard')"
 						variant="ghost"
 						label="Het menu"
 						:color="isExplorer ? 'primary' : 'neutral'"
@@ -28,7 +29,6 @@ const isExplorer = computed(() => route.path === '/')
 						highlight
 						type="single"
 						default-open
-						class="w-80"
 					/>
 					<USeparator class="mt-4 mb-3" />
 					<UNavigationMenu

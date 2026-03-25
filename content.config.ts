@@ -8,8 +8,10 @@ export default defineContentConfig({
 		items: defineCollection({
 			type: 'page',
 			source: {
-				include: '**',
+				include: 'items/**',
 				exclude: [],
+				// Drops the leading /items prefix in path. We only use that for organisation; it should not have an effect on front end routing!
+				prefix: '/',
 			},
 			schema: z.object({
 				title: z.string(),
@@ -25,6 +27,22 @@ export default defineContentConfig({
 						description: z.string().optional(),
 					})
 					.optional(),
+			}),
+		}),
+		extras: defineCollection({
+			type: 'page',
+			source: {
+				include: 'extras/**/*.md',
+				exclude: [],
+			},
+			schema: z.object({
+				title: z.string(),
+				description: z.string(),
+				date: z.iso.date(),
+				fee: z.string(),
+				category: z.enum(['tool', 'data', 'media']),
+				link: z.url().nullable(),
+				download: z.url().nullable(),
 			}),
 		}),
 	},

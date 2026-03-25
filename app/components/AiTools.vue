@@ -7,6 +7,7 @@ withDefaults(defineProps<Omit<ButtonProps, 'icon' | 'aria-label'>>(), {
 })
 const site = useSiteConfig()
 const { trackEvent } = useTracking()
+const { getIcon } = useIcons()
 
 const prompt = computed(
 	() => `Lees deze documentatie ${site.url}/llms-full.txt zodat we erover kunnen sparren. 
@@ -20,7 +21,7 @@ website van een regionaal onderwijsloket zou moeten /kunnen bevatten om hun doel
 const items: DropdownMenuItem[] = [
 	{
 		label: 'Sparren met ChatGPT',
-		icon: 'i-simple-icons:openai',
+		icon: getIcon('chatgpt'),
 		target: '_blank',
 		to: `https://chatgpt.com/?hints=search&q=${encodeURIComponent(prompt.value)}`,
 		onSelect: () => {
@@ -33,7 +34,7 @@ const items: DropdownMenuItem[] = [
 	},
 	{
 		label: 'Sparren met Claude',
-		icon: 'i-simple-icons:anthropic',
+		icon: getIcon('claude'),
 		target: '_blank',
 		to: `https://claude.ai/new?q=${encodeURIComponent(prompt.value)}`,
 		onSelect: () => {
@@ -60,11 +61,7 @@ const items: DropdownMenuItem[] = [
 		}"
 	>
 		<UTooltip text="Spar over deze tool met AI">
-			<UButton
-				icon="hugeicons:artificial-intelligence-04"
-				aria-label="Open AI menu"
-				v-bind="$props"
-			/>
+			<UButton :icon="getIcon('ai')" aria-label="Open AI menu" v-bind="$props" />
 		</UTooltip>
 	</UDropdownMenu>
 </template>

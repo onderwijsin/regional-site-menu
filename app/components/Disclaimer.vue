@@ -1,9 +1,11 @@
-<script lang="ts" setup></script>
+<script lang="ts" setup>
+const { getIcon } = useIcons()
+</script>
 
 <template>
-	<UContainer class="grid h-[calc(100vh-calc(2*var(--ui-header-height)))]">
+	<UContainer class="grid" style="height: calc(100vh - 2 * var(--ui-header-height))">
 		<UEmpty
-			icon="lucide:fullscreen"
+			:icon="getIcon('screensize')"
 			title="Niet beschikbaar"
 			description="Deze app is momenteel alleen beschikbaar op grotere schermen."
 			variant="naked"

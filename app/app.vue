@@ -1,12 +1,7 @@
 <script setup>
 import { nl } from '@nuxt/ui/locale'
-import { siteDescription, siteTitle } from '~~/config/indentity'
 
 useSeoMeta({
-	title: siteTitle,
-	description: siteDescription,
-	ogTitle: siteTitle,
-	ogDescription: siteDescription,
 	ogImage: '/ogimage.png',
 	twitterImage: '/ogimage.png',
 	twitterCard: 'summary_large_image',
@@ -16,7 +11,8 @@ const { mode } = storeToRefs(useStateStore())
 const { externalSite } = useMenu()
 
 const { openSuggestion } = useSuggestion()
-const { openCart } = useCart()
+const { openReport } = useReport()
+const { getIcon } = useIcons()
 </script>
 
 <template>
@@ -34,7 +30,7 @@ const { openCart } = useCart()
 					<div class="relative flex items-center gap-4">
 						<UTooltip text="Doe een suggestie">
 							<UButton
-								icon="lucide:circle-fading-plus"
+								:icon="getIcon('suggestion')"
 								aria-label="Doe een suggestie"
 								color="neutral"
 								variant="ghost"
@@ -48,11 +44,11 @@ const { openCart } = useCart()
 							text="Bekijk je beoordelingen en genereer rapportages"
 						>
 							<UButton
-								icon="lucide:file-badge"
+								:icon="getIcon('report')"
 								aria-label="Rapportage"
 								color="primary"
 								variant="subtle"
-								@click="openCart"
+								@click="openReport"
 							/>
 						</UTooltip>
 						<ViewMode />
@@ -80,7 +76,11 @@ const { openCart } = useCart()
 			</template>
 
 			<template #right>
-				<UButton aria-label="Onderwijsregio" v-bind="externalSite" />
+				<UButton
+					aria-label="Onderwijsregio"
+					v-bind="externalSite"
+					:ui="{ trailingIcon: 'size-4' }"
+				/>
 			</template>
 		</UFooter>
 	</UApp>

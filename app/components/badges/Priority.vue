@@ -10,6 +10,8 @@ const props = withDefaults(
 	},
 )
 
+const { getIcon } = useIcons()
+
 const hint = computed(() => {
 	if (props.value === 'Must have') {
 		return 'Dit element is essentieel voor de gebruiker.'
@@ -29,7 +31,7 @@ const hint = computed(() => {
 
 <template>
 	<UPopover mode="hover" :ui="{ content: 'max-w-sm px-3 py-2' }">
-		<UBadge v-bind="$props" :label="value" icon="heroicons:fire-16-solid" />
+		<UBadge v-bind="$props" :label="value" :icon="getIcon('priority')" />
 		<template #content>
 			<p class="text-muted text-xs leading-relaxed">{{ hint }}</p>
 		</template>

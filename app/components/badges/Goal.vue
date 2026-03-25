@@ -6,10 +6,12 @@ const props = withDefaults(
 	defineProps<Omit<BadgeProps, 'label'> & { value: ItemsCollectionItem['goals'][number] }>(),
 	{
 		variant: 'subtle',
-		icon: 'lucide:goal',
 		color: 'secondary',
 	},
 )
+
+const { getIcon } = useIcons()
+const icon = computed(() => props.icon ?? getIcon('goal'))
 
 const hint = computed(() => {
 	if (props.value === 'Informeren') {
@@ -30,7 +32,7 @@ const hint = computed(() => {
 
 <template>
 	<UPopover mode="hover" :ui="{ content: 'max-w-sm px-3 py-2' }">
-		<UBadge v-bind="$props" :label="value" />
+		<UBadge v-bind="$props" :label="value" :icon="icon" />
 		<template #content>
 			<p class="text-muted text-xs leading-relaxed">{{ hint }}</p>
 		</template>

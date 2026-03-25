@@ -6,6 +6,7 @@ const props = defineProps<{ item: Audit<ItemsCollectionItem> }>()
 const { item } = props.item
 
 const state = useStateStore()
+const { getIcon } = useIcons()
 const confirm = useConfirmDialog()
 
 const score = computed(() => state.getAuditScore(props.item.id))
@@ -52,7 +53,7 @@ async function handleDelete() {
 						<template #default>
 							<UTooltip text="Bewerk beoordeling">
 								<UButton
-									icon="lucide:file-pen"
+									:icon="getIcon('edit')"
 									aria-label="Bewerk beoordeling"
 									color="neutral"
 									variant="subtle"
@@ -63,7 +64,7 @@ async function handleDelete() {
 					</AuditModal>
 					<UTooltip text="Verwijder beoordeling">
 						<UButton
-							icon="lucide:trash"
+							:icon="getIcon('delete')"
 							aria-label="Verwijder beoordeling"
 							color="neutral"
 							variant="subtle"

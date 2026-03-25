@@ -1,6 +1,6 @@
 <script lang="ts" setup>
-definePageMeta({
-	indexable: false,
+defineRouteRules({
+	robots: false,
 })
 </script>
 

@@ -45,6 +45,9 @@
 		"@semantic-release/npm": "catalog:",
 		"@semantic-release/release-notes-generator": "catalog:",
 		"@tailwindcss/typography": "catalog:",
+		"@tiptap/html": "catalog:",
+		"@tiptap/markdown": "catalog:",
+		"@tiptap/starter-kit": "catalog:",
 		"@types/node": "catalog:",
 		"@vueuse/core": "catalog:",
 		"@vueuse/nuxt": "catalog:",
@@ -54,6 +57,7 @@
 		"eslint-config-prettier": "catalog:",
 		"fuse.js": "catalog:",
 		"husky": "catalog:",
+		"jspdf": "catalog:",
 		"nuxt": "catalog:",
 		"nuxt-llms": "catalog:",
 		"nuxt-site-config": "catalog:",
@@ -70,5 +74,14 @@
 		"vue-tsc": "catalog:",
 		"wrangler": "catalog:",
 		"zod": "catalog:"
+	},
+	"pnpm": {
+		"overrides": {
+			"@tiptap/core": "3.20.5",
+			"@tiptap/pm": "3.20.5",
+			"@tiptap/html": "3.20.5",
+			"@tiptap/starter-kit": "3.20.5",
+			"@tiptap/*": "3.20.5"
+		}
 	}
 }

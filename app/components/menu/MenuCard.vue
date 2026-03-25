@@ -6,6 +6,7 @@ const props = defineProps<{ item: ItemsCollectionItem }>()
 const state = useStateStore()
 const { mode } = storeToRefs(state)
 const { getScoreColor, getScoreLabel } = useAuditUtils()
+const { getIcon } = useIcons()
 
 const score = computed(() => state.getAuditScore(props.item.id))
 </script>
@@ -56,7 +57,7 @@ const score = computed(() => state.getAuditScore(props.item.id))
 								"
 							>
 								<UButton
-									icon="lucide:file-badge"
+									:icon="getIcon('report')"
 									aria-label="Voeg beoordeling toe"
 									color="neutral"
 									variant="subtle"

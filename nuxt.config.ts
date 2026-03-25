@@ -50,6 +50,10 @@ export default defineNuxtConfig({
 
 	css: ['~/assets/css/main.css'],
 
+	experimental: {
+		inlineRouteRules: true,
+	},
+
 	$development: {
 		routeRules: {
 			'/**': { cache: false },
@@ -89,6 +93,10 @@ export default defineNuxtConfig({
 				'fuse.js',
 				'@vueuse/integrations/useFuse',
 				'zod',
+				'jspdf',
+				'@tiptap/core',
+				'@tiptap/starter-kit',
+				'@tiptap/markdown',
 			],
 		},
 	},
@@ -170,10 +178,6 @@ export default defineNuxtConfig({
 			apiToken: process.env.CLOUDFLARE_API_TOKEN,
 			cacheNamespaceId: process.env.CLOUDFLARE_CACHE_NAMESPACE_ID,
 		},
-		github: {
-			org: process.env.GH_ORG,
-			repo: process.env.GH_REPO,
-		},
 		datahub: {
 			url: process.env.DATAHUB_URL,
 			token: process.env.DATAHUB_TOKEN,
@@ -242,7 +246,7 @@ export default defineNuxtConfig({
 		titleSeparator: '|',
 		defaultLocale: 'nl', // not needed if you have @nuxtjs/i18n installed
 		language: 'nl_NL',
-		// indexable: !isDev,
+		indexable: isProd,
 		trailingSlash: false,
 	},
 
@@ -251,10 +255,27 @@ export default defineNuxtConfig({
 	llms: {
 		domain: process.env.APP_URL,
 		title: siteTitle,
-		description: siteDescription,
+		description:
+			"Een interactieve tool en gids voor het ontwerpen, evalueren en verbeteren van websites van regionale onderwijsloket. Het doel van de tool is om regionale onderwijsloketten nóg beter in de behoefte van hun doelgroepen te laten voorzien. De tool biedt regio's inspiratie en handige voorbeelden, concrete auditing tools en instrumenten om rapportages en breifing te genereren. De kern van de tool is de menukaart: deze biedt een overzicht van alle verschillende elementen die de website van een regionaal onderwijsloket zou moeten bevatten.",
 		full: {
-			title: `${siteTitle} - Full Documentation`,
-			description: `${siteDescription} - Full documentation of the application`,
+			title: 'Volledige documentatie',
+			description:
+				'Alle inhoud van de tool voor het ontwerpen, evalueren en verbeteren van websites van regionale onderwijsloket, gebundeld in één document.',
 		},
+
+		sections: [
+			{
+				title: 'Menukaart items',
+				description:
+					'De verschillende elementen die de website van een regionaal onderwijsloket zou kunnen bevatten.',
+				contentCollection: 'items',
+			},
+			{
+				title: "Extra's voor de website",
+				description:
+					'Handige resources, tools en content die je gratis in kunt zetten voor de website van een regionaal onderwijsloket.',
+				contentCollection: 'extras',
+			},
+		],
 	},
 })

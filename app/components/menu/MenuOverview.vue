@@ -4,8 +4,12 @@ import type { ButtonProps, TabsItem } from '@nuxt/ui'
 
 import { useFuse } from '@vueuse/integrations/useFuse'
 
+/**
+ * Props
+ */
 const props = withDefaults(
 	defineProps<{
+		/** Persist filter state to global store */
 		persist?: boolean
 	}>(),
 	{
@@ -13,24 +17,52 @@ const props = withDefaults(
 	},
 )
 
+// ----------------------
+// Dependencies
+// ----------------------
+
 const state = useStateStore()
 const { openSuggestion } = useSuggestion()
 const { openWelcome, showWelcome } = useWelcome()
+const { getIcon } = useIcons()
 
+// ----------------------
+// State
+// ----------------------
+
+/** Search query */
 const query = ref('')
+
+/**
+ * Internal filter state
+ *
+ * Initialized from store when persistence is enabled
+ */
 const _filter = ref<ItemsCollectionItem['goals'][number] | 'all'>(
 	props.persist ? state.filter : 'all',
 )
+
+/**
+ * Public filter with optional persistence
+ */
 const filter = computed({
 	get: () => _filter.value,
-	set: (value) => {
+	set: (value: ItemsCollectionItem['goals'][number] | 'all') => {
 		_filter.value = value
+
 		if (props.persist) {
 			state.filter = value
 		}
 	},
 })
 
+// ----------------------
+// UI config
+// ----------------------
+
+/**
+ * Filter tabs
+ */
 const tabs: TabsItem[] = [
 	{ label: 'Alle doelen', value: 'all' },
 	{ label: 'Enthousiasmeren', value: 'Enthousiasmeren' },
@@ -38,14 +70,23 @@ const tabs: TabsItem[] = [
 	{ label: 'Activeren', value: 'Activeren' },
 ]
 
+// ----------------------
+// Data fetching
+// ----------------------
+
+/**
+ * Fetch menu items (filtered server-side)
+ *
+ * NOTE:
+ * - Refetches when filter changes
+ * - Keeps dataset small before fuzzy search
+ */
 const { data } = await useAsyncData(
 	`menu-overview-${filter.value}`,
 	async () => {
 		const items = await queryCollection('items').where('extension', '=', 'md').all()
 
-		if (filter.value === 'all') {
-			return items
-		}
+		if (filter.value === 'all') return items
 
 		return items.filter((item) =>
 			item.goals.includes(filter.value as (typeof item.goals)[number]),
@@ -56,11 +97,18 @@ const { data } = await useAsyncData(
 	},
 )
 
+// ----------------------
+// Search (Fuse.js)
+// ----------------------
+
 /**
- * Fuse needs an array, and data.value can be undefined
+ * Fuse requires a defined array
  */
 const searchableData = computed(() => data.value ?? [])
 
+/**
+ * Fuzzy search results
+ */
 const { results } = useFuse(query, searchableData, {
 	fuseOptions: {
 		keys: [
@@ -73,6 +121,7 @@ const { results } = useFuse(query, searchableData, {
 			{ name: 'scope', weight: 0.6 },
 			{ name: 'priority', weight: 0.4 },
 
+			// Lowest weight → full-text fallback
 			{ name: 'body.value', weight: 0.2 },
 		],
 		threshold: 0.2,
@@ -80,6 +129,20 @@ const { results } = useFuse(query, searchableData, {
 	matchAllWhenSearchEmpty: true,
 })
 
+// ----------------------
+// Derived UI state
+// ----------------------
+
+/**
+ * Whether any filtering is applied
+ */
+const hasFilterApplied = computed(() => {
+	return !!query.value || filter.value !== 'all'
+})
+
+/**
+ * Description shown when no results are found
+ */
 const noResultsDescription = computed(() => {
 	if (!query.value && filter.value === 'all') {
 		return 'We hebben geen items gevonden in de menukaart. Probeer het later opnieuw.'
@@ -92,35 +155,46 @@ const noResultsDescription = computed(() => {
 	return 'We hebben geen items gevonden voor de filterselectie. Ontbreekt er een item? Doe een suggestie!'
 })
 
-const hasFilterApplied = computed(() => {
-	return query.value || filter.value !== 'all'
-})
-
-function clear() {
+/**
+ * Reset search + filters
+ */
+function clear(): void {
 	query.value = ''
 	filter.value = 'all'
 }
 
+/**
+ * Actions shown when no results are found
+ */
 const noResultActions = computed<ButtonProps[]>(() => {
-	const base: ButtonProps[] = [
+	const actions: ButtonProps[] = [
 		{
-			icon: 'lucide:circle-fading-plus',
+			icon: getIcon('suggestion'),
 			label: 'Doe een suggestie',
 			onClick: openSuggestion,
 		},
 	]
+
 	if (hasFilterApplied.value) {
-		base.push({
-			icon: 'lucide:refresh-cw',
+		actions.push({
+			icon: getIcon('refresh'),
 			label: 'Wis filters',
 			color: 'neutral',
 			variant: 'subtle',
 			onClick: clear,
 		})
 	}
-	return base
+
+	return actions
 })
 
+// ----------------------
+// Lifecycle
+// ----------------------
+
+/**
+ * Show welcome modal on first load
+ */
 onNuxtReady(() => {
 	if (showWelcome.value) {
 		openWelcome()
@@ -136,7 +210,7 @@ onNuxtReady(() => {
 				size="lg"
 				variant="outline"
 				placeholder="Doorzoek het menu"
-				icon="lucide:search"
+				:icon="getIcon('search')"
 				class="grow"
 			/>
 			<UTabs
@@ -152,7 +226,7 @@ onNuxtReady(() => {
 		</UPageColumns>
 		<UEmpty
 			v-else
-			icon="lucide:file"
+			:icon="getIcon('document')"
 			title="Geen items gevonden"
 			:description="noResultsDescription"
 			:actions="noResultActions"

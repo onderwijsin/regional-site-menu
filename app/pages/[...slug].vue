@@ -14,6 +14,13 @@ if (!page.value) {
 	})
 }
 
+useSeoMeta({
+	title: `${page.value.title} | ${page.value.pillar}`,
+	description: page.value.description,
+	ogTitle: `${page.value.title} | ${page.value.pillar}`,
+	ogDescription: page.value.description,
+})
+
 const { data: surround } = await useAsyncData(`${route.path}-surround`, () => {
 	return queryCollectionItemSurroundings('items', route.path, {
 		fields: ['description'],
@@ -43,11 +50,16 @@ const score = computed(() => state.getAuditScore(page.value!.id))
 				</div>
 			</template>
 			<template #links>
-				<PageHeaderLinks
-					:item-id="page.id"
-					:item-title="page.title"
-					:description="page.audit?.description"
-				/>
+				<PageHeaderLinks>
+					<ClientOnly>
+						<AuditModal
+							v-if="state.mode === 'edit'"
+							:item-id="page.id"
+							:item-title="page.title"
+							:description="page.audit?.description"
+						/>
+					</ClientOnly>
+				</PageHeaderLinks>
 			</template>
 		</UPageHeader>
 		<ContentRenderer v-if="page" :value="page" />
@@ -60,7 +72,7 @@ const score = computed(() => state.getAuditScore(page.value!.id))
 			/>
 		</ClientOnly>
 		<div class="space-y-8 pt-16 pb-8">
-			<USeparator label="Verder lezen" />
+			<USeparator label="Ontdek meer elementen" />
 			<UContentSurround :surround="surround" />
 		</div>
 	</NuxtLayout>

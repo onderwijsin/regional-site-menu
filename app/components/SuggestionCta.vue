@@ -1,5 +1,6 @@
 <script lang="ts" setup>
 const { openSuggestion } = useSuggestion()
+const { getIcon } = useIcons()
 </script>
 
 <template>
@@ -11,7 +12,7 @@ const { openSuggestion } = useSuggestion()
 		:links="[
 			{
 				label: 'Doe een suggestie',
-				trailingIcon: 'lucide:circle-fading-plus',
+				trailingIcon: getIcon('suggestion'),
 				color: 'primary',
 				onClick: openSuggestion,
 			},
