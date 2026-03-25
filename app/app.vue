@@ -1,12 +1,7 @@
 <script setup>
 import { nl } from '@nuxt/ui/locale'
-import { siteDescription, siteTitle } from '~~/config/indentity'
 
 useSeoMeta({
-	title: siteTitle,
-	description: siteDescription,
-	ogTitle: siteTitle,
-	ogDescription: siteDescription,
 	ogImage: '/ogimage.png',
 	twitterImage: '/ogimage.png',
 	twitterCard: 'summary_large_image',
@@ -81,7 +76,11 @@ const { getIcon } = useIcons()
 			</template>
 
 			<template #right>
-				<UButton aria-label="Onderwijsregio" v-bind="externalSite" />
+				<UButton
+					aria-label="Onderwijsregio"
+					v-bind="externalSite"
+					:ui="{ trailingIcon: 'size-4' }"
+				/>
 			</template>
 		</UFooter>
 	</UApp>

@@ -12,29 +12,6 @@ const appConfig = useAppConfig()
 const { trackEvent } = useTracking()
 const { getIcon } = useIcons()
 
-/**
- * Props
- */
-const props = defineProps<{
-	/** Unique identifier of the item */
-	itemId: string
-
-	/** Display title of the item */
-	itemTitle: string
-
-	/** Optional description used in audit modal */
-	description?: string
-}>()
-
-// ----------------------
-// State
-// ----------------------
-
-/**
- * Global application state
- */
-const state = useStateStore()
-
 // ----------------------
 // Computed
 // ----------------------
@@ -142,14 +119,7 @@ const items = computed<DropdownMenuItem[]>(() => [
 
 <template>
 	<div class="flex gap-2">
-		<ClientOnly>
-			<AuditModal
-				v-if="state.mode === 'edit'"
-				:item-id="props.itemId"
-				:item-title="props.itemTitle"
-				:description="props.description"
-			/>
-		</ClientOnly>
+		<slot />
 		<UFieldGroup>
 			<UButton
 				label="Kopieer"

@@ -29,7 +29,6 @@ const isExplorer = computed(() => route.path === '/')
 						highlight
 						type="single"
 						default-open
-						class="w-80"
 					/>
 					<USeparator class="mt-4 mb-3" />
 					<UNavigationMenu

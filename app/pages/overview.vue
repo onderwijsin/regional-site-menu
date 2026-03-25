@@ -1,4 +1,17 @@
 <script lang="ts" setup>
+import { siteDescription, siteTitle } from '~~/config/indentity'
+
+defineRouteRules({
+	robots: false,
+})
+
+useSeoMeta({
+	title: siteTitle,
+	description: siteDescription,
+	ogTitle: siteTitle,
+	ogDescription: siteDescription,
+})
+
 /**
  * Since this route does not use localStorage persistence, it's safe to use in SSR mode
  * It's main purpose is to provide a single entrypoint where Nitro Prerender can discover

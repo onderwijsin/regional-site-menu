@@ -2,6 +2,7 @@ const icons = {
 	// State
 	warn: 'lucide:message-square-warning',
 	success: 'lucide:badge-check',
+	error: 'lucide:triangle-alert',
 
 	// Featurtes
 	suggestion: 'lucide:circle-fading-plus',
@@ -20,6 +21,11 @@ const icons = {
 	priority: 'heroicons:fire-16-solid',
 	scope: 'lucide:square-dashed-mouse-pointer',
 
+	tool: 'lucide:hammer',
+	media: 'lucide:image-play',
+	data: 'lucide:database',
+	price: 'lucide:euro',
+
 	// Actions
 	edit: 'lucide:notebook-pen',
 	delete: 'lucide:trash',
@@ -31,6 +37,8 @@ const icons = {
 	copied: 'lucide:copy-check',
 	add: 'lucide:plus',
 	send: 'lucide:send',
+	email: 'lucide:mail',
+	download: 'lucide:cloud-download',
 
 	// Editor
 	paragraph: 'lucide:type',

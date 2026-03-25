@@ -36,9 +36,21 @@ const state = reactive<Submission>({
 	title: '',
 	description: '',
 	body: DEFAULT_BODY,
-	pillar: 'Inzicht & Overzicht',
+	category: 'Inzicht & Overzicht',
+	email: undefined,
 	goals: [],
 	exampleUrl: '',
+})
+
+const email = computed({
+	get: () => state.email,
+	set: (value: string) => {
+		if (value.trim() === '') {
+			state.email = undefined
+		} else {
+			state.email = value
+		}
+	},
 })
 
 const goalOptions: { label: string; value: Submission['goals'][number] }[] = [
@@ -47,11 +59,12 @@ const goalOptions: { label: string; value: Submission['goals'][number] }[] = [
 	{ label: 'Activeren', value: 'Activeren' },
 ]
 
-const pillarOptions: { label: string; value: Submission['pillar'] }[] = [
+const categoryOptions: { label: string; value: Submission['category'] }[] = [
 	{ label: 'Inzicht & Overzicht', value: 'Inzicht & Overzicht' },
 	{ label: 'Verdieping & Ervaring', value: 'Verdieping & Ervaring' },
 	{ label: 'Activatie & Deelname', value: 'Activatie & Deelname' },
 	{ label: 'Ondersteuning & Contact', value: 'Ondersteuning & Contact' },
+	{ label: 'Handige extra', value: 'extra' },
 ]
 
 const isSubmitting = ref(false)
@@ -120,16 +133,16 @@ async function onSubmit(event: FormSubmitEvent<Submission>) {
 					/>
 				</UFormField>
 				<UFormField
-					name="pillar"
+					name="category"
 					label="Categorie"
 					description="In welke categorie valt dit onderdeel?"
 				>
 					<USelectMenu
-						v-model="state.pillar"
+						v-model="state.category"
 						size="lg"
 						value-key="value"
 						label-key="label"
-						:items="pillarOptions"
+						:items="categoryOptions"
 						placeholder="Kies een categorie"
 					/>
 				</UFormField>
@@ -159,6 +172,19 @@ async function onSubmit(event: FormSubmitEvent<Submission>) {
 						type="url"
 						:icon="getIcon('url')"
 						placeholder="https://voorbeeld.nl"
+					/>
+				</UFormField>
+				<UFormField
+					name="email"
+					label="E-mailadres"
+					description="Je e-mailadres (optioneel). Handig voor als we aanvullende vragen hebben over je suggestie."
+				>
+					<UInput
+						v-model="email"
+						size="lg"
+						type="email"
+						:icon="getIcon('email')"
+						placeholder="voorbeeld@domein.nl"
 					/>
 				</UFormField>
 				<UFormField

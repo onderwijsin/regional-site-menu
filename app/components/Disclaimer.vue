@@ -3,7 +3,7 @@ const { getIcon } = useIcons()
 </script>
 
 <template>
-	<UContainer class="grid h-[calc(100vh-calc(2*var(--ui-header-height)))]">
+	<UContainer class="grid" style="height: calc(100vh - 2 * var(--ui-header-height))">
 		<UEmpty
 			:icon="getIcon('screensize')"
 			title="Niet beschikbaar"

@@ -50,9 +50,9 @@ export default defineAppConfig({
 		},
 		page: {
 			slots: {
-				root: 'md:grid md:grid-cols-10 md:gap-8',
-				left: 'md:col-span-3',
-				center: 'md:col-span-7',
+				root: 'md:grid md:grid-cols-10 lg:grid-cols-12 md:gap-8',
+				left: 'md:col-span-3 lg:col-span-3',
+				center: 'md:col-span-7 lg:col-span-9',
 			},
 		},
 

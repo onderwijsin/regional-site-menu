@@ -3,22 +3,22 @@
  *
  * Responsibilities:
  * - Map scores → labels + colors
+ * - Compute averages per pillar
  * - Provide reactive audit bindings per item
  */
 
+import type { ItemsCollectionItem } from '@nuxt/content'
 import type { BadgeProps } from '@nuxt/ui'
-import type { AuditProps } from '~~/shared/types/audit'
+import type { AuditAverage, AuditEntry, AuditProps, PillarAverage } from '~~/shared/types/audit'
 
 // ----------------------
 // Constants
 // ----------------------
 
 /**
- * Score → label mapping
+ * Explicit mapping for score → label
  *
- * NOTE:
- * Explicit mapping is used instead of ranges to allow
- * fine-grained control over wording.
+ * Using a fixed map instead of ranges allows precise wording control.
  */
 const SCORE_LABELS: Record<number, string> = {
 	1: 'Zeer slecht (1/10)',
@@ -33,18 +33,30 @@ const SCORE_LABELS: Record<number, string> = {
 	10: 'Perfect (10/10)',
 } as const
 
+/**
+ * All known pillars (single source of truth)
+ */
+const PILLARS: readonly ItemsCollectionItem['pillar'][] = [
+	'Inzicht & Overzicht',
+	'Verdieping & Ervaring',
+	'Activatie & Deelname',
+	'Ondersteuning & Contact',
+] as const
+
 // ----------------------
 // Utils
 // ----------------------
 
 export const useAuditUtils = () => {
+	const { getIcon } = useIcons()
+
 	/**
-	 * Map score → UI color
+	 * Map score → UI color token
 	 *
 	 * @param score - Numeric score (1–10)
-	 * @returns semantic color token
+	 * @returns Semantic color used by UI components
 	 */
-	function getScoreColor(score: number | undefined): BadgeProps['color'] {
+	const getScoreColor = (score: number | undefined): BadgeProps['color'] => {
 		if (score === undefined) return 'secondary'
 		if (score >= 8) return 'success'
 		if (score >= 5) return 'warning'
@@ -55,22 +67,98 @@ export const useAuditUtils = () => {
 	 * Map score → human-readable label
 	 *
 	 * @param score - Numeric score (1–10)
-	 * @returns descriptive label
+	 * @returns Localized label
 	 */
-	function getScoreLabel(score: number | undefined): string {
+	const getScoreLabel = (score: number | undefined): string => {
 		if (score === undefined) return 'Nog geen score'
 		return SCORE_LABELS[score] ?? 'Nog geen score'
+	}
+
+	/**
+	 * Calculate average score for a given pillar
+	 *
+	 * @param data - All content items
+	 * @param audit - Audit state indexed by item id
+	 * @param pillar - Target pillar
+	 * @returns Average score + count or undefined when no valid scores exist
+	 */
+	const calculateAverageForPillar = (
+		data: ItemsCollectionItem[],
+		audit: Record<string, AuditEntry>,
+		pillar: ItemsCollectionItem['pillar'],
+	): { score: number; count: number } | undefined => {
+		const scores = data
+			.filter((item) => item.pillar === pillar)
+			.map((item) => audit[item.id]?.score)
+			.filter((score): score is number => score !== undefined)
+
+		if (scores.length === 0) return undefined
+
+		const total = scores.reduce((acc, score) => acc + score, 0)
+
+		return {
+			score: Math.round(total / scores.length),
+			count: scores.length,
+		}
+	}
+
+	/**
+	 * Create a UI-ready average object for a pillar
+	 *
+	 * @param data - All content items
+	 * @param audit - Audit state
+	 * @param pillar - Target pillar
+	 * @returns Fully enriched average object
+	 */
+	const assembleAverage = (
+		data: ItemsCollectionItem[],
+		audit: Record<string, AuditEntry>,
+		pillar: ItemsCollectionItem['pillar'],
+	): AuditAverage => {
+		const result = calculateAverageForPillar(data, audit, pillar)
+
+		return {
+			score: result?.score,
+			count: result?.count,
+			label: getScoreLabel(result?.score),
+			color: getScoreColor(result?.score),
+		}
+	}
+
+	/**
+	 * Compute averages for all pillars
+	 *
+	 * @param data - All content items
+	 * @param audit - Audit state
+	 * @returns List of pillar averages with UI metadata
+	 */
+	const getAverages = (
+		data: ItemsCollectionItem[],
+		audit: Record<string, AuditEntry>,
+	): PillarAverage<ItemsCollectionItem['pillar']>[] => {
+		return PILLARS.map((pillar) => ({
+			pillar,
+			icon: getIcon(
+				pillar === 'Inzicht & Overzicht'
+					? 'inzicht'
+					: pillar === 'Verdieping & Ervaring'
+						? 'verdieping'
+						: pillar === 'Activatie & Deelname'
+							? 'activatie'
+							: 'ondersteuning',
+			),
+			...assembleAverage(data, audit, pillar),
+		}))
 	}
 
 	return {
 		getScoreColor,
 		getScoreLabel,
+		calculateAverageForPillar,
+		assembleAverage,
+		getAverages,
 	}
 }
-
-// ----------------------
-// Composable
-// ----------------------
 
 /**
  * Audit composable for a single item
