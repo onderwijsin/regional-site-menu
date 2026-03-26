@@ -4,7 +4,7 @@
 	"type": "module",
 	"scripts": {
 		"dev": "nuxt dev",
-		"build": "nuxt build",
+		"build": "NODE_OPTIONS=\"--max-old-space-size=8192\"  nuxt build",
 		"postinstall": "nuxt prepare",
 		"preview": "nuxt preview",
 		"analyze": "nuxt analyze",
@@ -62,6 +62,7 @@
 		"nuxt": "catalog:",
 		"nuxt-llms": "catalog:",
 		"nuxt-site-config": "catalog:",
+		"nuxt-studio": "catalog:",
 		"ofetch": "catalog:",
 		"openai": "catalog:",
 		"pinia": "catalog:",
@@ -84,6 +85,9 @@
 			"@tiptap/html": "3.20.5",
 			"@tiptap/starter-kit": "3.20.5",
 			"@tiptap/*": "3.20.5"
+		},
+		"patchedDependencies": {
+			"nuxt-studio@1.5.1": "patches/nuxt-studio@1.5.1.patch"
 		}
 	}
 }

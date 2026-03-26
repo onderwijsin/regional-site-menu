@@ -4,6 +4,7 @@ name: Release and Deploy
 on:
   push:
     branches:
+      - main
       - next
   workflow_dispatch:
     inputs:
@@ -31,6 +32,49 @@ permissions:
   packages: write
 
 jobs:
+  changes:
+    runs-on: ubuntu-latest
+    outputs:
+      content_changes:
+        ${{ steps.filter.outputs.content_changes || steps.nonpush.outputs.content_changes }}
+      public_changes:
+        ${{ steps.filter.outputs.public_changes || steps.nonpush.outputs.public_changes }}
+      other_changes:
+        ${{ steps.filter.outputs.other_changes || steps.nonpush.outputs.other_changes }}
+    steps:
+      - name: Checkout
+        if: ${{ github.event_name == 'push' }}
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - name: Detect changed paths
+        id: filter
+        if: ${{ github.event_name == 'push' }}
+        uses: dorny/paths-filter@v4
+        with:
+          # On long-lived branches, compare with the previous commit on the same branch.
+          base: ${{ github.ref }}
+          predicate-quantifier: every
+          filters: |
+            content_changes:
+              - 'content/**'
+            public_changes:
+              - 'public/**'
+            other_changes:
+              - '**'
+              - '!content/**'
+              - '!public/**'
+
+      - name: Set defaults for manual runs
+        id: nonpush
+        if: ${{ github.event_name != 'push' }}
+        shell: bash
+        run: |
+          echo "content_changes=true" >> "$GITHUB_OUTPUT"
+          echo "public_changes=true" >> "$GITHUB_OUTPUT"
+          echo "other_changes=false" >> "$GITHUB_OUTPUT"
+
   release:
     # Only trigger release workflow if the "release" input is set to true, and if the branch is "main"
     if: ${{ github.event.inputs.release == 'true' && github.ref == 'refs/heads/main' }}
@@ -45,6 +89,21 @@ jobs:
       RELEASE_APP_PRIVATE_KEY: ${{ secrets.RELEASE_APP_PRIVATE_KEY }}
 
   deploy:
+    needs:
+      - changes
+    if: >-
+      ${{
+        github.event_name == 'workflow_dispatch'
+        || github.ref == 'refs/heads/next'
+        || (
+          github.ref == 'refs/heads/main'
+          && (
+            needs.changes.outputs.content_changes == 'true'
+            || needs.changes.outputs.public_changes == 'true'
+          )
+          && needs.changes.outputs.other_changes == 'false'
+        )
+      }}
     uses: ./.github/workflows/deploy_worker.yml
     with:
       runner: blacksmith-8vcpu-ubuntu-2404
