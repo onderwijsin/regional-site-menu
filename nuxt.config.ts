@@ -33,6 +33,7 @@ export default defineNuxtConfig({
 		'@nuxtjs/robots',
 		'@nuxt/content',
 		'nuxt-llms',
+		'nuxt-studio',
 	],
 
 	devtools: {
@@ -156,6 +157,13 @@ export default defineNuxtConfig({
 					searchDepth: 1,
 				},
 			},
+		},
+	},
+
+	studio: {
+		route: '/studio',
+		i18n: {
+			defaultLocale: 'nl',
 		},
 	},
 

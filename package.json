@@ -62,6 +62,7 @@
 		"nuxt": "catalog:",
 		"nuxt-llms": "catalog:",
 		"nuxt-site-config": "catalog:",
+		"nuxt-studio": "catalog:",
 		"ofetch": "catalog:",
 		"openai": "catalog:",
 		"pinia": "catalog:",
