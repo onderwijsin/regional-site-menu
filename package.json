@@ -62,6 +62,7 @@
 		"nuxt-llms": "catalog:",
 		"nuxt-site-config": "catalog:",
 		"ofetch": "catalog:",
+		"openai": "catalog:",
 		"pinia": "catalog:",
 		"pinia-plugin-persistedstate": "catalog:",
 		"prettier": "catalog:",

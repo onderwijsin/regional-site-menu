@@ -183,6 +183,9 @@ export default defineNuxtConfig({
 			url: process.env.DATAHUB_URL,
 			token: process.env.DATAHUB_TOKEN,
 		},
+		openai: {
+			token: process.env.OPENAI_API_KEY,
+		},
 		public: {
 			siteUrl: process.env.APP_URL,
 			titleSeparator: '|',
