@@ -1,6 +1,8 @@
 import type { ReportConfig } from '~~/schema/reportConfig'
 import type { PdfRenderContext } from '../pdf'
 
+import { PILLARS } from '~/composables/content-taxonomy'
+
 import { renderSectionTitle, writeWrappedText } from '../pdf'
 import { renderBulletList, renderSubheading, writeRichText } from './shared'
 
@@ -48,16 +50,7 @@ export function renderIntroductionPage(ctx: PdfRenderContext, config: ReportConf
 	})
 
 	y += 4
-	y = renderBulletList(
-		ctx,
-		[
-			'Inzicht & Overzicht',
-			'Verdieping & Ervaring',
-			'Activatie & Deelname',
-			'Ondersteuning & Contact',
-		],
-		y,
-	)
+	y = renderBulletList(ctx, [...PILLARS], y)
 
 	y += 2
 	y = writeWrappedText(doc, {

@@ -4,6 +4,8 @@ import type { PillarAverage } from '~~/shared/types/audit'
 import type { PdfRenderContext } from '../pdf'
 import type { ReportData } from '../types'
 
+import { PILLARS } from '~/composables/content-taxonomy'
+
 import {
 	mapScoreColor,
 	renderSectionTitle,
@@ -13,25 +15,6 @@ import {
 	writeWrappedText,
 } from '../pdf'
 import { writeRichText } from './shared'
-
-const PILLAR_DESCRIPTIONS = [
-	{
-		title: 'Inzicht & Overzicht',
-		body: 'De website maakt snel duidelijk waar de regio voor staat, wat het aanbod is en helpt de gebruiker op weg in de oriëntatie.',
-	},
-	{
-		title: 'Verdieping & Ervaring',
-		body: 'De website helpt de gebruiker om zich te verdiepen en een goed beeld te krijgen van opleidingen, beroepen en ervaringen.',
-	},
-	{
-		title: 'Activatie & Deelname',
-		body: 'De website biedt de gebruiker concrete handvatten en vervolgacties om verder te komen in zijn stap naar het onderwijs.',
-	},
-	{
-		title: 'Ondersteuning & Contact',
-		body: 'De website maakt duidelijk welke ondersteuning beschikbaar is en biedt toegankelijke manieren om contact op te nemen.',
-	},
-] as const
 
 /**
  * Draws a detailed average card for a single pillar.
@@ -265,8 +248,8 @@ export function renderAveragesSection(
 
 	y += 6
 
-	for (const pillar of PILLAR_DESCRIPTIONS) {
-		y = renderPillarDescription(ctx, pillar.title, pillar.body, y)
+	for (const pillar of PILLARS) {
+		y = renderPillarDescription(ctx, pillar, getPillarHint(pillar), y)
 	}
 
 	y += 6

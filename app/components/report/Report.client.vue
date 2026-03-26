@@ -1,6 +1,5 @@
 <script lang="ts" setup>
-import type { ItemsCollectionItem } from '@nuxt/content'
-import type { Audit } from '~~/shared/types/audit'
+import { buildReportAudits } from '~/composables/report/audits'
 
 /**
  * Utilities
@@ -34,27 +33,7 @@ const { data } = await useAsyncData('menu-overview', () =>
  * - Filters out items without score
  * - Joins audit data with actual content items
  */
-const audits = computed<Audit<ItemsCollectionItem>[]>(() => {
-	if (!data.value) return []
-
-	return (
-		Object.entries(state.audit)
-			// Only keep scored entries
-			.filter(([, value]) => value.score !== undefined)
-			.map(([id, value]) => {
-				const item = data.value!.find((item) => item.id === id)
-
-				return {
-					id,
-					score: value.score,
-					comment: value.comment,
-					item,
-				}
-			})
-			// Remove broken references (shouldn't happen, but defensive)
-			.filter((audit): audit is Audit<ItemsCollectionItem> => !!audit.item)
-	)
-})
+const audits = computed(() => buildReportAudits(data.value, state.audit))
 
 // ----------------------
 // Actions
