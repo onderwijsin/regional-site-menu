@@ -1,7 +1,6 @@
 import type { jsPDF } from 'jspdf'
 
 import { Editor } from '@tiptap/core'
-import Underline from '@tiptap/extension-underline'
 import { Markdown } from '@tiptap/markdown'
 import StarterKit from '@tiptap/starter-kit'
 import { z } from 'zod'
@@ -30,6 +29,24 @@ export type RichTextSegment = {
 }
 
 /**
+ * PDF-friendly list item model.
+ */
+export type MarkdownListItem = {
+	/**
+	 * Text content of the list item itself.
+	 */
+	segments: RichTextSegment[]
+
+	/**
+	 * Nested child blocks within this list item.
+	 *
+	 * @remarks
+	 * This is primarily used for nested bullet and ordered lists.
+	 */
+	children?: MarkdownBlock[]
+}
+
+/**
  * PDF-friendly block model derived from TipTap JSON.
  */
 export type MarkdownBlock =
@@ -44,11 +61,11 @@ export type MarkdownBlock =
 	  }
 	| {
 			type: 'bulletList'
-			items: RichTextSegment[][]
+			items: MarkdownListItem[]
 	  }
 	| {
 			type: 'orderedList'
-			items: RichTextSegment[][]
+			items: MarkdownListItem[]
 	  }
 	| {
 			type: 'blockquote'
@@ -83,6 +100,24 @@ type TiptapDoc = {
 	type: 'doc'
 	content?: TiptapNode[]
 }
+
+/**
+ * Default top margin used when markdown rendering spills to a new page.
+ *
+ * @remarks
+ * This mirrors the PDF layout margins used elsewhere in the report renderer.
+ * It is defined locally so the markdown renderer can paginate independently.
+ */
+const MARKDOWN_PAGE_MARGIN_TOP = 18
+
+/**
+ * Default bottom margin used when markdown rendering spills to a new page.
+ *
+ * @remarks
+ * This mirrors the PDF layout margins used elsewhere in the report renderer.
+ * It is defined locally so the markdown renderer can paginate independently.
+ */
+const MARKDOWN_PAGE_MARGIN_BOTTOM = 18
 
 /**
  * Zod schema for a minimal TipTap mark.
@@ -120,7 +155,7 @@ const TiptapDocSchema: z.ZodType<TiptapDoc> = z.object({
  */
 export function markdownToTiptapDoc(markdown: string): z.infer<typeof TiptapDocSchema> {
 	const editor = new Editor({
-		extensions: [StarterKit, Markdown, Underline],
+		extensions: [StarterKit, Markdown],
 		content: '',
 	})
 
@@ -204,30 +239,42 @@ function extractTextSegments(node: z.infer<typeof TiptapNodeSchema>): RichTextSe
 }
 
 /**
- * Extracts list item text segments from a list item node.
+ * Extracts a structured list item from a TipTap list item node.
  *
  * @param node - TipTap list item node.
- * @returns Segments for that item.
+ * @returns Structured list item.
  */
-function extractListItemSegments(node: z.infer<typeof TiptapNodeSchema>): RichTextSegment[] {
+function extractListItem(node: z.infer<typeof TiptapNodeSchema>): MarkdownListItem | null {
 	if (!node.content?.length) {
-		return []
+		return null
 	}
 
 	const segments: RichTextSegment[] = []
+	const children: MarkdownBlock[] = []
 
 	for (const child of node.content) {
-		if (child.type === 'paragraph') {
+		if (child.type === 'paragraph' || child.type === 'text') {
 			segments.push(...extractTextSegments(child))
 			continue
 		}
 
-		if (child.type === 'text') {
-			segments.push(...extractTextSegments(child))
+		if (
+			child.type === 'bulletList' ||
+			child.type === 'orderedList' ||
+			child.type === 'blockquote'
+		) {
+			children.push(...tiptapNodeToBlocks(child))
 		}
 	}
 
-	return segments
+	if (!segments.length && !children.length) {
+		return null
+	}
+
+	return {
+		segments,
+		children: children.length > 0 ? children : undefined,
+	}
 }
 
 /**
@@ -275,8 +322,8 @@ function tiptapNodeToBlocks(node: z.infer<typeof TiptapNodeSchema>): MarkdownBlo
 			const items =
 				node.content
 					?.filter((child) => child.type === 'listItem')
-					.map((child) => extractListItemSegments(child))
-					.filter((segments) => segments.length > 0) ?? []
+					.map((child) => extractListItem(child))
+					.filter((item): item is MarkdownListItem => item !== null) ?? []
 
 			if (!items.length) {
 				return []
@@ -294,8 +341,8 @@ function tiptapNodeToBlocks(node: z.infer<typeof TiptapNodeSchema>): MarkdownBlo
 			const items =
 				node.content
 					?.filter((child) => child.type === 'listItem')
-					.map((child) => extractListItemSegments(child))
-					.filter((segments) => segments.length > 0) ?? []
+					.map((child) => extractListItem(child))
+					.filter((item): item is MarkdownListItem => item !== null) ?? []
 
 			if (!items.length) {
 				return []
@@ -392,20 +439,31 @@ export function measureMarkdownBlocksHeight(
 
 			case 'bulletList':
 				for (const item of block.items) {
-					height +=
-						measureWrappedTextHeight(doc, `• ${segmentsToPlainText(item)}`, maxWidth) +
-						1.5
+					const itemText = segmentsToPlainText(item.segments)
+
+					if (itemText) {
+						height += measureWrappedTextHeight(doc, `• ${itemText}`, maxWidth) + 1.5
+					}
+
+					if (item.children?.length) {
+						height += measureMarkdownBlocksHeight(doc, item.children, maxWidth - 4)
+					}
 				}
 				break
 
 			case 'orderedList':
 				block.items.forEach((item, index) => {
-					height +=
-						measureWrappedTextHeight(
-							doc,
-							`${index + 1}. ${segmentsToPlainText(item)}`,
-							maxWidth,
-						) + 1.5
+					const itemText = segmentsToPlainText(item.segments)
+
+					if (itemText) {
+						height +=
+							measureWrappedTextHeight(doc, `${index + 1}. ${itemText}`, maxWidth) +
+							1.5
+					}
+
+					if (item.children?.length) {
+						height += measureMarkdownBlocksHeight(doc, item.children, maxWidth - 4)
+					}
 				})
 				break
 
@@ -420,6 +478,37 @@ export function measureMarkdownBlocksHeight(
 	}
 
 	return height
+}
+
+/**
+ * Returns the current page height from the jsPDF instance.
+ *
+ * @param doc - PDF document.
+ * @returns Page height in the current unit.
+ */
+function getPageHeight(doc: jsPDF): number {
+	return doc.internal.pageSize.getHeight()
+}
+
+/**
+ * Ensures there is enough room for the next markdown block.
+ *
+ * @param doc - PDF document.
+ * @param currentY - Current Y cursor.
+ * @param requiredHeight - Height needed for the next block.
+ * @returns Safe Y cursor, possibly moved to a new page.
+ */
+function ensureMarkdownPageSpace(doc: jsPDF, currentY: number, requiredHeight: number): number {
+	const pageHeight = getPageHeight(doc)
+	const pageLimit = pageHeight - MARKDOWN_PAGE_MARGIN_BOTTOM
+
+	if (currentY + requiredHeight <= pageLimit) {
+		return currentY
+	}
+
+	doc.addPage()
+
+	return MARKDOWN_PAGE_MARGIN_TOP
 }
 
 /**
@@ -486,6 +575,137 @@ function renderSegments(
 }
 
 /**
+ * Renders a single markdown block.
+ *
+ * @param doc - PDF document.
+ * @param block - Block to render.
+ * @param x - Start X.
+ * @param y - Start Y.
+ * @param maxWidth - Available width.
+ * @returns Next cursor Y.
+ */
+function renderMarkdownBlock(
+	doc: jsPDF,
+	block: MarkdownBlock,
+	x: number,
+	y: number,
+	maxWidth: number,
+): number {
+	let cursorY = y
+
+	switch (block.type) {
+		case 'paragraph':
+			cursorY = renderSegments(doc, block.segments, x, cursorY, maxWidth, 10)
+			cursorY += 1.5
+			break
+
+		case 'heading':
+			cursorY = renderSegments(
+				doc,
+				block.segments,
+				x,
+				cursorY,
+				maxWidth,
+				block.level === 1 ? 13 : block.level === 2 ? 12 : 11,
+			)
+			cursorY += 1.5
+			break
+
+		case 'bulletList':
+			for (const item of block.items) {
+				const itemText = segmentsToPlainText(item.segments)
+				const itemHeight = measureWrappedTextHeight(doc, `• ${itemText}`, maxWidth) + 1.5
+
+				cursorY = ensureMarkdownPageSpace(doc, cursorY, itemHeight)
+
+				if (itemText) {
+					cursorY = writeWrappedText(doc, {
+						text: `• ${itemText}`,
+						x,
+						y: cursorY,
+						maxWidth,
+						fontSize: 10,
+						fontStyle: 'normal',
+						color: PDF_COLORS.text,
+					})
+					cursorY += 1
+				}
+
+				if (item.children?.length) {
+					cursorY = renderMarkdownBlocks(doc, item.children, x + 4, cursorY, maxWidth - 4)
+				}
+			}
+			break
+
+		case 'orderedList':
+			block.items.forEach((item, index) => {
+				const itemText = segmentsToPlainText(item.segments)
+				const itemHeight =
+					measureWrappedTextHeight(doc, `${index + 1}. ${itemText}`, maxWidth) + 1.5
+
+				cursorY = ensureMarkdownPageSpace(doc, cursorY, itemHeight)
+
+				if (itemText) {
+					cursorY = writeWrappedText(doc, {
+						text: `${index + 1}. ${itemText}`,
+						x,
+						y: cursorY,
+						maxWidth,
+						fontSize: 10,
+						fontStyle: 'normal',
+						color: PDF_COLORS.text,
+					})
+					cursorY += 1
+				}
+
+				if (item.children?.length) {
+					cursorY = renderMarkdownBlocks(doc, item.children, x + 4, cursorY, maxWidth - 4)
+				}
+			})
+			break
+
+		case 'blockquote': {
+			const blockquoteStartY = cursorY
+
+			cursorY = renderMarkdownBlocks(doc, block.blocks, x + 4, cursorY + 1, maxWidth - 4)
+
+			doc.setDrawColor(180, 180, 180)
+			doc.setLineWidth(0.8)
+			doc.line(x, blockquoteStartY, x, cursorY)
+
+			cursorY += 1
+			break
+		}
+
+		case 'horizontalRule': {
+			/**
+			 * Space AFTER divider only.
+			 *
+			 * @remarks
+			 * We intentionally avoid top spacing so the divider stays visually
+			 * connected to the preceding content, while creating breathing room
+			 * before the next section.
+			 */
+			const spacingBottom = 10
+
+			const totalHeight = spacingBottom
+
+			cursorY = ensureMarkdownPageSpace(doc, cursorY, totalHeight)
+
+			doc.setDrawColor(220, 220, 220)
+			doc.setLineWidth(0.4)
+			doc.line(x, cursorY, x + maxWidth, cursorY)
+
+			cursorY += spacingBottom
+
+			break
+		}
+	}
+
+	return cursorY
+}
+
+/**
  * Renders markdown blocks.
  *
  * @param doc - PDF document.
@@ -494,6 +714,11 @@ function renderSegments(
  * @param y - Start Y.
  * @param maxWidth - Available width.
  * @returns Next cursor Y.
+ *
+ * @remarks
+ * This renderer is pagination-aware. Before each block is rendered, it checks
+ * whether the block still fits on the current page. If not, a new page is
+ * added automatically and rendering continues from the configured top margin.
  */
 export function renderMarkdownBlocks(
 	doc: jsPDF,
@@ -505,75 +730,15 @@ export function renderMarkdownBlocks(
 	let cursorY = y
 
 	for (const block of blocks) {
-		switch (block.type) {
-			case 'paragraph':
-				cursorY = renderSegments(doc, block.segments, x, cursorY, maxWidth, 10)
-				cursorY += 1.5
-				break
+		const isSplittable = block.type === 'paragraph'
 
-			case 'heading':
-				cursorY = renderSegments(
-					doc,
-					block.segments,
-					x,
-					cursorY,
-					maxWidth,
-					block.level === 1 ? 13 : block.level === 2 ? 12 : 11,
-				)
-				cursorY += 1.5
-				break
+		if (!isSplittable) {
+			const blockHeight = measureMarkdownBlocksHeight(doc, [block], maxWidth)
 
-			case 'bulletList':
-				for (const item of block.items) {
-					cursorY = writeWrappedText(doc, {
-						text: `• ${segmentsToPlainText(item)}`,
-						x,
-						y: cursorY,
-						maxWidth,
-						fontSize: 10,
-						fontStyle: 'normal',
-						color: PDF_COLORS.text,
-					})
-					cursorY += 1
-				}
-				break
-
-			case 'orderedList':
-				block.items.forEach((item, index) => {
-					cursorY = writeWrappedText(doc, {
-						text: `${index + 1}. ${segmentsToPlainText(item)}`,
-						x,
-						y: cursorY,
-						maxWidth,
-						fontSize: 10,
-						fontStyle: 'normal',
-						color: PDF_COLORS.text,
-					})
-					cursorY += 1
-				})
-				break
-
-			case 'blockquote':
-				doc.setDrawColor(180, 180, 180)
-				doc.setLineWidth(0.8)
-				doc.line(
-					x,
-					cursorY,
-					x,
-					cursorY + measureMarkdownBlocksHeight(doc, block.blocks, maxWidth - 4),
-				)
-
-				cursorY = renderMarkdownBlocks(doc, block.blocks, x + 4, cursorY + 1, maxWidth - 4)
-				cursorY += 1
-				break
-
-			case 'horizontalRule':
-				doc.setDrawColor(220, 220, 220)
-				doc.setLineWidth(0.4)
-				doc.line(x, cursorY, x + maxWidth, cursorY)
-				cursorY += 4
-				break
+			cursorY = ensureMarkdownPageSpace(doc, cursorY, blockHeight)
 		}
+
+		cursorY = renderMarkdownBlock(doc, block, x, cursorY, maxWidth)
 	}
 
 	return cursorY

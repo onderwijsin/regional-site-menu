@@ -17,14 +17,12 @@ withDefaults(
 		placeholder?: string
 	}>(),
 	{
-		placeholder: 'Typ / voor opties en acties',
+		placeholder: 'Voeg jouw tekst toe...',
 	},
 )
 const model = defineModel<string>()
 
-const { suggestions, tools } = useEditorConfig()
-
-const appendToBody = import.meta.client ? () => document.body : undefined
+const { tools } = useEditorConfig()
 </script>
 
 <template>
@@ -50,6 +48,5 @@ const appendToBody = import.meta.client ? () => document.body : undefined
 			</template>
 		</UEditorToolbar>
 		<UEditorDragHandle :editor="editor" />
-		<UEditorSuggestionMenu :editor="editor" :items="suggestions" :append-to="appendToBody" />
 	</UEditor>
 </template>

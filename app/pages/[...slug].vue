@@ -46,7 +46,9 @@ const score = computed(() => state.getAuditScore(page.value!.id))
 					<Goal v-for="item in page.goals" :key="item" :value="item" />
 					<Priority :value="page.priority" />
 					<Scope :value="page.scope" />
-					<Score v-if="state.mode === 'edit'" :value="score" />
+					<ClientOnly>
+						<Score v-if="state.mode === 'edit'" :value="score" />
+					</ClientOnly>
 				</div>
 			</template>
 			<template #links>
