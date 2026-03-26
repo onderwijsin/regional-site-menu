@@ -182,6 +182,11 @@ overrides:
   '@tiptap/starter-kit': 3.20.5
   '@tiptap/*': 3.20.5
 
+patchedDependencies:
+  nuxt-studio@1.5.1:
+    hash: 5f02fff238b6e9fd630ae77a5164c8dafbecb9b0d587fb85c79c1e12a73b7ac9
+    path: patches/nuxt-studio@1.5.1.patch
+
 importers:
 
   .:
@@ -317,7 +322,7 @@ importers:
         version: 3.2.21(magicast@0.5.2)(vite@7.3.1(@types/node@25.5.0)(jiti@2.6.1)(lightningcss@1.32.0)(terser@5.46.0)(yaml@2.8.2))(vue@3.5.30(typescript@5.9.3))
       nuxt-studio:
         specifier: 'catalog:'
-        version: 1.5.1(db0@0.3.4(better-sqlite3@12.8.0))(ioredis@5.10.0)(magicast@0.5.2)(vue@3.5.30(typescript@5.9.3))
+        version: 1.5.1(patch_hash=5f02fff238b6e9fd630ae77a5164c8dafbecb9b0d587fb85c79c1e12a73b7ac9)(db0@0.3.4(better-sqlite3@12.8.0))(ioredis@5.10.0)(magicast@0.5.2)(vue@3.5.30(typescript@5.9.3))
       ofetch:
         specifier: 'catalog:'
         version: 1.5.1
@@ -15316,7 +15321,7 @@ snapshots:
       - vite
       - vue
 
-  nuxt-studio@1.5.1(db0@0.3.4(better-sqlite3@12.8.0))(ioredis@5.10.0)(magicast@0.5.2)(vue@3.5.30(typescript@5.9.3)):
+  nuxt-studio@1.5.1(patch_hash=5f02fff238b6e9fd630ae77a5164c8dafbecb9b0d587fb85c79c1e12a73b7ac9)(db0@0.3.4(better-sqlite3@12.8.0))(ioredis@5.10.0)(magicast@0.5.2)(vue@3.5.30(typescript@5.9.3)):
     dependencies:
       '@ai-sdk/gateway': 3.0.80(zod@4.3.6)
       '@ai-sdk/vue': 3.0.138(vue@3.5.30(typescript@5.9.3))(zod@4.3.6)
