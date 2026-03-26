@@ -1,10 +1,11 @@
 import type { jsPDF } from 'jspdf'
 
 /**
- * Loads a font file and returns base64 content.
+ * Loads a font file and converts it into base64 content for jsPDF VFS usage.
  *
  * @param url - Font URL.
- * @returns Base64 string.
+ * @returns Base64-encoded font content.
+ * @throws {Error} When the font cannot be fetched.
  */
 async function loadFont(url: string): Promise<string> {
 	const res = await fetch(url)
@@ -33,10 +34,17 @@ async function loadFont(url: string): Promise<string> {
 }
 
 /**
- * Registers all Rijksoverheid fonts.
+ * Registers all Rijksoverheid body and heading fonts on a jsPDF instance.
  *
  * @param doc - jsPDF instance.
  * @returns Nothing.
+ * @throws {Error} When one or more font assets cannot be loaded.
+ *
+ * @example
+ * ```ts
+ * const doc = new jsPDF()
+ * await registerFonts(doc)
+ * ```
  */
 export async function registerFonts(doc: jsPDF): Promise<void> {
 	const [bodyRegular, bodyBold, bodyItalic, headingRegular, headingBold, headingItalic] =
@@ -49,7 +57,7 @@ export async function registerFonts(doc: jsPDF): Promise<void> {
 			loadFont('/fonts/Rijksoverheid-Heading-italic.ttf'),
 		])
 
-	// Body fonts
+	// Register body fonts first because most helpers assume this family exists.
 	doc.addFileToVFS('Rijksoverheid-Regular.ttf', bodyRegular)
 	doc.addFont('Rijksoverheid-Regular.ttf', 'Rijksoverheid', 'normal')
 
@@ -59,7 +67,8 @@ export async function registerFonts(doc: jsPDF): Promise<void> {
 	doc.addFileToVFS('Rijksoverheid-Italic.ttf', bodyItalic)
 	doc.addFont('Rijksoverheid-Italic.ttf', 'Rijksoverheid', 'italic')
 
-	// Heading fonts
+	// Heading fonts are kept as a separate family so sections can opt into a
+	// clearer visual hierarchy without reconfiguring shared text helpers.
 	doc.addFileToVFS('Rijksoverheid-Heading-Regular.ttf', headingRegular)
 	doc.addFont('Rijksoverheid-Heading-Regular.ttf', 'RijksoverheidHeading', 'normal')
 

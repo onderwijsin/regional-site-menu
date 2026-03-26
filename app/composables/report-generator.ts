@@ -39,9 +39,13 @@ export const useReportGenerator = () => {
 	 */
 	async function generateReport(config: ReportConfig, data: ReportData): Promise<void> {
 		try {
+			// Create all runtime state up front so rendering helpers can stay pure-ish
+			// and operate only on the shared context plus report inputs.
 			const filename = createDefaultFilename(config.region)
 			const ctx = await createRenderContext()
 
+			// Rendering mutates the jsPDF instance page by page. Saving is kept as a
+			// separate final step so orchestration stays obvious.
 			await renderReportDocument(ctx, config, data)
 			savePdf(ctx.doc, filename)
 		} catch (error: unknown) {

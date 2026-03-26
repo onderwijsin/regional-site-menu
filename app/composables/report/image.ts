@@ -1,8 +1,9 @@
 /**
- * Loads an image and converts it to base64.
+ * Loads an image asset and converts it to a data URL for jsPDF.
  *
  * @param url - Image URL.
- * @returns Base64 string.
+ * @returns Base64 data URL string.
+ * @throws {Error} When the image cannot be fetched.
  */
 export async function loadImageAsBase64(url: string): Promise<string> {
 	const res = await fetch(url)
