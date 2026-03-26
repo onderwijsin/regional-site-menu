@@ -6,7 +6,7 @@ withDefaults(defineProps<Omit<ButtonProps, 'icon' | 'aria-label'>>(), {
 	color: 'neutral',
 })
 const site = useSiteConfig()
-const { trackEvent } = useTracking()
+const { trackAiAction } = useTracking()
 const { getIcon } = useIcons()
 
 const prompt = computed(
@@ -25,10 +25,9 @@ const items: DropdownMenuItem[] = [
 		target: '_blank',
 		to: `https://chatgpt.com/?hints=search&q=${encodeURIComponent(prompt.value)}`,
 		onSelect: () => {
-			trackEvent('ai_action', {
-				event_category: 'engagement',
-				event_label: 'chatgpt',
-				event_value: 'sparren',
+			trackAiAction({
+				label: 'chatgpt',
+				value: 'sparren',
 			})
 		},
 	},
@@ -38,10 +37,9 @@ const items: DropdownMenuItem[] = [
 		target: '_blank',
 		to: `https://claude.ai/new?q=${encodeURIComponent(prompt.value)}`,
 		onSelect: () => {
-			trackEvent('ai_action', {
-				event_category: 'engagement',
-				event_label: 'claude',
-				event_value: 'sparren',
+			trackAiAction({
+				label: 'claude',
+				value: 'sparren',
 			})
 		},
 	},

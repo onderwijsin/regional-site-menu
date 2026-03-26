@@ -156,6 +156,7 @@ export const useAuditUtils = () => {
  */
 export const useAudit = (props: AuditProps) => {
 	const { getScoreColor, getScoreLabel } = useAuditUtils()
+	const { trackAuditScore } = useTracking()
 
 	const { getAuditScore, setAuditScore, getAuditComment, setAuditComment } = useStateStore()
 
@@ -168,7 +169,19 @@ export const useAudit = (props: AuditProps) => {
 	 */
 	const score = computed({
 		get: () => getAuditScore(props.itemId),
-		set: (value: number) => setAuditScore(props.itemId, value),
+		set: (value: number) => {
+			const previousScore = getAuditScore(props.itemId)
+			setAuditScore(props.itemId, value)
+
+			if (previousScore === value) {
+				return
+			}
+
+			trackAuditScore({
+				itemId: props.itemId,
+				score: value,
+			})
+		},
 	})
 
 	/**

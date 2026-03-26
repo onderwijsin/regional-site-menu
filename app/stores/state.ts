@@ -28,6 +28,7 @@ export const useStateStore = defineStore(
 
 		/** Current application mode */
 		const mode = ref<ViewMode>('explore')
+		const { trackModeSwitch } = useTracking()
 
 		/** Active goal filter */
 		const filter = ref<ItemsCollectionItem['goals'][number] | 'all'>('all')
@@ -124,6 +125,30 @@ export const useStateStore = defineStore(
 		}
 
 		/**
+		 * Switches between explore and edit mode.
+		 *
+		 * @param nextMode - Target mode.
+		 * @param source - UI source that triggered the switch.
+		 */
+		function setMode(
+			nextMode: ViewMode,
+			source: 'header_tabs' | 'welcome_modal' = 'header_tabs',
+		): void {
+			const previousMode = mode.value
+
+			if (previousMode === nextMode) {
+				return
+			}
+
+			mode.value = nextMode
+			trackModeSwitch({
+				from: previousMode,
+				to: nextMode,
+				source,
+			})
+		}
+
+		/**
 		 * Remove audit entry for a specific item
 		 *
 		 * NOTE:
@@ -154,6 +179,7 @@ export const useStateStore = defineStore(
 		return {
 			// UI
 			mode,
+			setMode,
 			filter,
 			suggestionOpen,
 			hideWelcome,
