@@ -2,8 +2,8 @@
 import { nl } from '@nuxt/ui/locale'
 
 useSeoMeta({
-	ogImage: '/ogimage.png',
-	twitterImage: '/ogimage.png',
+	ogImage: '/images/ogimage.png',
+	twitterImage: '/images/ogimage.png',
 	twitterCard: 'summary_large_image',
 })
 
