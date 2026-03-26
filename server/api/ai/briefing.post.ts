@@ -22,7 +22,7 @@ const BriefingOutputSchema = z.object({
  *
  * Flow:
  * 1. Parse and validate the inbound payload with Zod.
- * 2. Resolve the editable system prompt from Nuxt Content (`content/prompts`).
+ * 2. Resolve the editable system prompt from the server prompt registry.
  * 3. Build model input and request structured output from OpenAI.
  * 4. Normalize markdown text and compute word count.
  * 5. Validate and return the public API response shape.
@@ -37,7 +37,7 @@ export default defineEventHandler(async (event) => {
 	const body = await readBody(event)
 	const input = AiBriefingRequestSchema.parse(body)
 
-	// 2) Load system prompt from content so editors can tune it without code changes.
+	// 2) Load system prompt from server-side prompt content.
 	const systemPrompt = await getAiSystemPrompt(event, 'ai-briefing-system')
 
 	// 3) Compose model input from validated request data.

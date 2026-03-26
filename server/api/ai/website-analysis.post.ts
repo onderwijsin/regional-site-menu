@@ -44,7 +44,7 @@ export default defineEventHandler(async (event) => {
 		})
 	}
 
-	// 3) Resolve editable prompt + reference context.
+	// 3) Resolve system prompt + reference context.
 	const systemPrompt = await getAiSystemPrompt(event, 'ai-website-analysis-system')
 	const referenceDocument = await fetchLlmsFullReferenceDocument(event)
 	const userPrompt = formatWebsiteAnalysisInput({
