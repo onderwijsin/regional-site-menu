@@ -64,6 +64,7 @@ const url = computed({
 
 const isGenerating = ref(false)
 const { generateReport } = useReportGenerator()
+const { trackReportGenerated } = useTracking()
 const toast = useToast()
 const { getIcon } = useIcons()
 
@@ -74,6 +75,9 @@ async function startReportGeneration(): Promise<void> {
 		await generateReport(state, {
 			audits: props.data.audits,
 			averages: props.data.averages,
+		})
+		trackReportGenerated({
+			scoredElementsCount: props.data.audits.length,
 		})
 
 		emit('close')

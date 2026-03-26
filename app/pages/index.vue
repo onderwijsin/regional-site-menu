@@ -11,12 +11,9 @@ useSeoMeta({
 
 <template>
 	<NuxtLayout name="menu">
-		<ClientOnly>
+		<AsyncMenuBoundary>
 			<MenuOverview persist />
 			<SuggestionCta />
-			<template #fallback>
-				<SkeletonMenu />
-			</template>
-		</ClientOnly>
+		</AsyncMenuBoundary>
 	</NuxtLayout>
 </template>

@@ -3,6 +3,7 @@ import type { FormSubmitEvent } from '@nuxt/ui'
 import type { Submission } from '@schema/submission'
 
 import { SubmissionSchema } from '@schema/submission'
+import { GOALS, PILLARS } from '~/composables/content-taxonomy'
 
 const toast = useToast()
 const form = useTemplateRef('form')
@@ -36,7 +37,7 @@ const state = reactive<Submission>({
 	title: '',
 	description: '',
 	body: DEFAULT_BODY,
-	category: 'Inzicht & Overzicht',
+	category: PILLARS[0],
 	email: undefined,
 	goals: [],
 	exampleUrl: '',
@@ -53,17 +54,16 @@ const email = computed({
 	},
 })
 
-const goalOptions: { label: string; value: Submission['goals'][number] }[] = [
-	{ label: 'Enthousiasmeren', value: 'Enthousiasmeren' },
-	{ label: 'Informeren', value: 'Informeren' },
-	{ label: 'Activeren', value: 'Activeren' },
-]
+const goalOptions: { label: string; value: Submission['goals'][number] }[] = GOALS.map((goal) => ({
+	label: goal,
+	value: goal,
+}))
 
 const categoryOptions: { label: string; value: Submission['category'] }[] = [
-	{ label: 'Inzicht & Overzicht', value: 'Inzicht & Overzicht' },
-	{ label: 'Verdieping & Ervaring', value: 'Verdieping & Ervaring' },
-	{ label: 'Activatie & Deelname', value: 'Activatie & Deelname' },
-	{ label: 'Ondersteuning & Contact', value: 'Ondersteuning & Contact' },
+	...PILLARS.map((pillar) => ({
+		label: pillar,
+		value: pillar,
+	})),
 	{ label: 'Handige extra', value: 'extra' },
 ]
 

@@ -3,6 +3,7 @@ import type { ItemsCollectionItem } from '@nuxt/content'
 import type { ButtonProps, TabsItem } from '@nuxt/ui'
 
 import { useFuse } from '@vueuse/integrations/useFuse'
+import { GOALS } from '~/composables/content-taxonomy'
 
 /**
  * Props
@@ -65,9 +66,10 @@ const filter = computed({
  */
 const tabs: TabsItem[] = [
 	{ label: 'Alle doelen', value: 'all' },
-	{ label: 'Enthousiasmeren', value: 'Enthousiasmeren' },
-	{ label: 'Informeren', value: 'Informeren' },
-	{ label: 'Activeren', value: 'Activeren' },
+	...GOALS.map((goal) => ({
+		label: goal,
+		value: goal,
+	})),
 ]
 
 // ----------------------

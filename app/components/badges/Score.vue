@@ -1,6 +1,8 @@
 <script lang="ts" setup>
 import type { BadgeProps } from '@nuxt/ui'
 
+import HintPopover from './HintPopover.vue'
+
 const props = withDefaults(
 	defineProps<Omit<BadgeProps, 'label' | 'color'> & { value: number | undefined }>(),
 	{
@@ -22,7 +24,7 @@ const hint = computed(() => {
 </script>
 
 <template>
-	<UPopover mode="hover" :ui="{ content: 'max-w-sm px-3 py-2' }">
+	<HintPopover :hint="hint">
 		<UBadge
 			v-bind="$props"
 			:label="getScoreLabel(value)"
@@ -30,10 +32,5 @@ const hint = computed(() => {
 			:icon="icon"
 			class="font-bold"
 		/>
-		<template #content>
-			<p class="text-muted text-xs leading-relaxed">
-				{{ hint }}
-			</p>
-		</template>
-	</UPopover>
+	</HintPopover>
 </template>

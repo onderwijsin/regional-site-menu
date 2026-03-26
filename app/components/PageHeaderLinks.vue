@@ -9,7 +9,7 @@ const toast = useToast()
 const { copy, copied } = useClipboard()
 const site = useSiteConfig()
 const appConfig = useAppConfig()
-const { trackEvent } = useTracking()
+const { trackAiAction } = useTracking()
 const { getIcon } = useIcons()
 
 // ----------------------
@@ -39,21 +39,6 @@ Meer informatie en content items kun je ontdekken via ${site.url}/llms-full.txt
 })
 
 // ----------------------
-// Helpers
-// ----------------------
-
-/**
- * Standardized tracking wrapper for AI-related actions
- */
-function trackAiAction(label: string, value: string): void {
-	trackEvent('ai_action', {
-		event_category: 'engagement',
-		event_label: label,
-		event_value: value,
-	})
-}
-
-// ----------------------
 // Actions
 // ----------------------
 
@@ -79,7 +64,10 @@ const items = computed<DropdownMenuItem[]>(() => [
 		onSelect() {
 			copy(mdPath.value)
 
-			trackAiAction('markdown', 'copy')
+			trackAiAction({
+				label: 'markdown',
+				value: 'copy',
+			})
 
 			toast.add({
 				title: 'Gekopieerd naar klembord',
@@ -93,7 +81,10 @@ const items = computed<DropdownMenuItem[]>(() => [
 		target: '_blank',
 		to: `/raw${route.path}.md`,
 		onSelect() {
-			trackAiAction('markdown', 'view')
+			trackAiAction({
+				label: 'markdown',
+				value: 'view',
+			})
 		},
 	},
 	{
@@ -102,7 +93,10 @@ const items = computed<DropdownMenuItem[]>(() => [
 		target: '_blank',
 		to: `https://chatgpt.com/?hints=search&q=${encodeURIComponent(prompt.value)}`,
 		onSelect() {
-			trackAiAction('chatgpt', 'open_item')
+			trackAiAction({
+				label: 'chatgpt',
+				value: 'open_item',
+			})
 		},
 	},
 	{
@@ -111,7 +105,10 @@ const items = computed<DropdownMenuItem[]>(() => [
 		target: '_blank',
 		to: `https://claude.ai/new?q=${encodeURIComponent(prompt.value)}`,
 		onSelect() {
-			trackAiAction('claude', 'open_item')
+			trackAiAction({
+				label: 'claude',
+				value: 'open_item',
+			})
 		},
 	},
 ])

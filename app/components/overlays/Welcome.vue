@@ -8,13 +8,13 @@ const emit = defineEmits<{
 }>()
 
 function handleSelect(value: ViewMode) {
-	state.mode = value
+	state.setMode(value, 'welcome_modal')
 	emit('close')
 	return navigateTo('/')
 }
 
 function setMode(mode: ViewMode) {
-	state.mode = mode
+	state.setMode(mode, 'welcome_modal')
 }
 
 const { help } = useMenu()

@@ -11,6 +11,8 @@ import type { ItemsCollectionItem } from '@nuxt/content'
 import type { BadgeProps } from '@nuxt/ui'
 import type { AuditAverage, AuditEntry, AuditProps, PillarAverage } from '~~/shared/types/audit'
 
+import { getPillarIconName, PILLARS } from '~/composables/content-taxonomy'
+
 // ----------------------
 // Constants
 // ----------------------
@@ -32,16 +34,6 @@ const SCORE_LABELS: Record<number, string> = {
 	9: 'Uitstekend (9/10)',
 	10: 'Perfect (10/10)',
 } as const
-
-/**
- * All known pillars (single source of truth)
- */
-const PILLARS: readonly ItemsCollectionItem['pillar'][] = [
-	'Inzicht & Overzicht',
-	'Verdieping & Ervaring',
-	'Activatie & Deelname',
-	'Ondersteuning & Contact',
-] as const
 
 // ----------------------
 // Utils
@@ -138,15 +130,7 @@ export const useAuditUtils = () => {
 	): PillarAverage<ItemsCollectionItem['pillar']>[] => {
 		return PILLARS.map((pillar) => ({
 			pillar,
-			icon: getIcon(
-				pillar === 'Inzicht & Overzicht'
-					? 'inzicht'
-					: pillar === 'Verdieping & Ervaring'
-						? 'verdieping'
-						: pillar === 'Activatie & Deelname'
-							? 'activatie'
-							: 'ondersteuning',
-			),
+			icon: getIcon(getPillarIconName(pillar)),
 			...assembleAverage(data, audit, pillar),
 		}))
 	}
@@ -172,6 +156,7 @@ export const useAuditUtils = () => {
  */
 export const useAudit = (props: AuditProps) => {
 	const { getScoreColor, getScoreLabel } = useAuditUtils()
+	const { trackAuditScore } = useTracking()
 
 	const { getAuditScore, setAuditScore, getAuditComment, setAuditComment } = useStateStore()
 
@@ -184,7 +169,19 @@ export const useAudit = (props: AuditProps) => {
 	 */
 	const score = computed({
 		get: () => getAuditScore(props.itemId),
-		set: (value: number) => setAuditScore(props.itemId, value),
+		set: (value: number) => {
+			const previousScore = getAuditScore(props.itemId)
+			setAuditScore(props.itemId, value)
+
+			if (previousScore === value) {
+				return
+			}
+
+			trackAuditScore({
+				itemId: props.itemId,
+				score: value,
+			})
+		},
 	})
 
 	/**
