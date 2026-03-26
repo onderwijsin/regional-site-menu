@@ -20,9 +20,17 @@ export type PdfRenderContext = {
 }
 
 /**
- * Creates a new rendering context for a PDF document.
+ * Creates a new PDF rendering context with document instance, layout metrics,
+ * and shared color tokens.
  *
  * @returns Initialized rendering context.
+ * @throws {Error} When font registration fails.
+ *
+ * @example
+ * ```ts
+ * const ctx = await createRenderContext()
+ * ctx.doc.text('Hello', 20, 20)
+ * ```
  */
 export async function createRenderContext(): Promise<PdfRenderContext> {
 	const doc = new jsPDF({
@@ -81,7 +89,7 @@ export function setPdfFillColor(doc: jsPDF, color: PdfColor): void {
 }
 
 /**
- * Maps a semantic score color to a safe PDF RGB value.
+ * Maps a semantic score token to the centralized PDF color palette.
  *
  * @param color - Semantic color token.
  * @returns RGB tuple.
@@ -106,10 +114,10 @@ export function mapScoreColor(color: ScoreColor): PdfColor {
 }
 
 /**
- * Creates a filesystem-safe filename fragment.
+ * Sanitizes free text so it can be safely embedded in a generated filename.
  *
  * @param value - Raw filename input.
- * @returns Sanitized fragment.
+ * @returns Sanitized filename fragment.
  */
 export function sanitizeFilename(value: string): string {
 	return value
@@ -121,22 +129,22 @@ export function sanitizeFilename(value: string): string {
 }
 
 /**
- * Creates a default filename for a report.
+ * Creates the default filename used for report downloads.
  *
  * @param region - Region name.
- * @returns Filename.
+ * @returns Filename ending in `.pdf`.
  */
 export function createDefaultFilename(region: string): string {
 	return `rapport_${sanitizeFilename(region)}_${Date.now()}.pdf`
 }
 
 /**
- * Ensures there is room for the next block, otherwise adds a page.
+ * Ensures there is enough vertical space for the next content block.
  *
  * @param ctx - Rendering context.
  * @param cursorY - Current Y cursor.
  * @param requiredHeight - Height needed for the next block.
- * @returns Safe Y cursor.
+ * @returns Safe Y cursor, reset to the top margin when a new page is added.
  */
 export function ensurePageSpace(
 	ctx: PdfRenderContext,
@@ -155,7 +163,7 @@ export function ensurePageSpace(
 }
 
 /**
- * Measures wrapped text height.
+ * Measures the height of wrapped text without mutating the document.
  *
  * @param doc - PDF document.
  * @param text - Text to measure.
@@ -174,11 +182,24 @@ export function measureWrappedTextHeight(
 }
 
 /**
- * Writes wrapped text.
+ * Writes wrapped text and handles page breaks while drawing.
  *
  * @param doc - PDF document.
  * @param args - Text rendering arguments.
  * @returns Next cursor Y position.
+ *
+ * @example
+ * ```ts
+ * const nextY = writeWrappedText(doc, {
+ *   text: 'Long body copy',
+ *   x: 16,
+ *   y: 24,
+ *   maxWidth: 178,
+ *   fontSize: 11,
+ *   fontStyle: 'normal',
+ *   color: [17, 17, 17],
+ * })
+ * ```
  */
 export function writeWrappedText(
 	doc: jsPDF,
@@ -215,6 +236,8 @@ export function writeWrappedText(
 	const pageHeight = doc.internal.pageSize.getHeight()
 	const pageLimit = pageHeight - PDF_LAYOUT.marginBottom
 
+	// Render line by line so we can carry the same text block across pages
+	// without forcing callers to split content manually.
 	for (const line of lines) {
 		if (cursorY + lineHeight > pageLimit) {
 			doc.addPage()
@@ -229,7 +252,7 @@ export function writeWrappedText(
 }
 
 /**
- * Draws a horizontal divider.
+ * Draws the standard horizontal divider used under report section titles.
  *
  * @param ctx - Rendering context.
  * @param y - Y position.
@@ -242,7 +265,7 @@ export function drawSectionDivider(ctx: PdfRenderContext, y: number): void {
 }
 
 /**
- * Renders a section heading with divider.
+ * Renders a section heading and its divider using the shared report styles.
  *
  * @param ctx - Rendering context.
  * @param title - Section title.
@@ -264,7 +287,7 @@ export function renderSectionTitle(ctx: PdfRenderContext, title: string, startY:
 }
 
 /**
- * Saves a PDF to the browser as a download.
+ * Saves the PDF document to the browser with a normalized filename.
  *
  * @param doc - PDF document.
  * @param filename - Desired filename.
