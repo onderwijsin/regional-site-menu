@@ -2,7 +2,7 @@ import type { ItemsCollectionItem } from '@nuxt/content'
 import type { Audit, PillarAverage } from '~~/shared/types/audit'
 import type { Pillar } from '~~/shared/types/primitives'
 
-import { Report, ReportConfig } from '#components'
+import { Report, ReportGenerationFlow } from '#components'
 
 type ReportProps = {
 	title?: string
@@ -63,9 +63,9 @@ type ReportConfigProps = {
 }
 
 /**
- * Creates a slideover controller for the report configuration form.
+ * Creates a slideover controller for the report generation flow.
  *
- * @returns Functions for opening and closing the report configuration slideover.
+ * @returns Functions for opening and closing the report generation slideover.
  *
  * @example
  * ```ts
@@ -82,12 +82,12 @@ type ReportConfigProps = {
 export const useReportConfig = () => {
 	const overlay = useOverlay()
 
-	const slideover = overlay.create(ReportConfig)
+	const slideover = overlay.create(ReportGenerationFlow)
 
 	/**
-	 * Opens the report configuration slideover with the current report data.
+	 * Opens the report generation slideover with the current report data.
 	 *
-	 * @param props - Data required by the configuration form and downstream PDF generator.
+	 * @param props - Data required by the generation flow and downstream PDF generator.
 	 * @returns Nothing.
 	 */
 	function openReportConfig(props: ReportConfigProps) {
@@ -95,7 +95,7 @@ export const useReportConfig = () => {
 	}
 
 	/**
-	 * Closes the report configuration slideover.
+	 * Closes the report generation slideover.
 	 *
 	 * @returns Nothing.
 	 */

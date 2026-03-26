@@ -4,35 +4,42 @@ This document describes the AI integration currently implemented in `regional-si
 
 ## Scope
 
-Implemented so far:
+Implemented:
 
 - AI **website analysis** endpoint
 - AI **briefing generation** endpoint
 - Staged client orchestration (analysis first, briefing second)
+- Multi-stage report generation UI (`config -> ai-loading -> briefing-review`)
+- Editable AI briefing before final PDF generation
 - Prompt management via **Nuxt Content** collection
 - PDF inclusion of AI sections
 - Traceability metadata for analysed/source URLs
-
-Not implemented yet:
-
-- dedicated intermediate review UI where users can edit AI output before PDF generation
 
 ## High-Level Flow
 
 Current report flow with AI enabled:
 
-1. User audits the site and opens report generation config.
-2. User enables AI options.
-3. Client calls `generateAiInsights()` before PDF rendering:
+1. User audits the site and opens report generation.
+2. User sets config options (region, notes, optional AI toggles/url).
+3. If AI is enabled, client runs `generateAiInsights()` before PDF rendering:
    - stage 1: website analysis
    - stage 2: briefing (optionally using analysis context)
-4. Generated AI output is passed into the report data object.
-5. PDF generator renders AI sections.
+4. Loading stage shows incremental progress using `UChatTool` entries.
+5. If briefing is enabled, user reviews/edits briefing in an editor.
+6. PDF generation starts and includes AI content.
+
+UX behavior:
+
+- AI results are cached in reactive state for the active slideover session.
+- Going back to config does **not** trigger new AI calls if relevant input did not change.
+- Closing while generation is ongoing (or when unprocessed AI output exists) shows a confirmation
+  guard.
 
 Relevant files:
 
-- [ReportConfig.vue](../../app/components/report/ReportConfig.vue)
+- [ReportGenerationFlow.vue](../../app/components/report/ReportGenerationFlow.vue)
 - [report-ai.ts](../../app/composables/report-ai.ts)
+- [report-generation-flow.ts](../../app/composables/report-generation-flow.ts)
 - [sections/ai.ts](../../app/composables/report/sections/ai.ts)
 
 ## Server Endpoints
@@ -46,17 +53,17 @@ Purpose:
 What the route does:
 
 1. Validates input with Zod (`schema/reportAi.ts`).
-2. Loads system prompt from content collection (`content/prompts`).
-3. Fetches reference criteria from `/llms-full.txt` (fallback `/llms.txt`).
-4. Calls OpenAI Responses API using web-search tooling.
-5. Extracts analysed pages and source URLs from tool-call output.
-6. Rejects response if no verifiable source URLs are present.
-7. Returns typed response payload.
+2. Crawls the requested domain server-side (capped, same-domain).
+3. Loads system prompt from content collection (`content/prompts`).
+4. Fetches reference criteria from `/llms-full.txt` (fallback `/llms.txt`).
+5. Sends crawled context + reference to OpenAI.
+6. Returns typed response payload with `analysis`, `analysedPages`, and `usedSources`.
 
 Controller + helpers:
 
 - [website-analysis.post.ts](../../server/api/ai/website-analysis.post.ts)
 - [analysis.ts](../../server/utils/ai/analysis.ts)
+- [crawl.ts](../../server/utils/ai/crawl.ts)
 - [reference.ts](../../server/utils/ai/reference.ts)
 
 ### `POST /api/ai/briefing`
@@ -113,7 +120,12 @@ Key behavior:
 
 - sequential stages (analysis, then briefing)
 - briefing can include analysis context (`websiteAnalysisContext`)
-- exposes reactive `progress: Ref<string[]>` to support richer loading UIs
+- exposes reactive `progress: Ref<AiProgressItem[]>`
+  - `text` (stage label)
+  - `reasoning` (expanded context)
+  - `status` (`running`/`completed`)
+- progress timing is configurable via `AI_PROGRESS_CONFIG`
+- if the backend finishes early, remaining visual stages are fast-forwarded sequentially
 - logs full analysis payload in browser console for debugging
 
 ## Data Contracts
@@ -139,21 +151,22 @@ AI output is added to report data and rendered into dedicated PDF pages.
 Additional behavior:
 
 - analysis section appends a Dutch list of analysed URLs after the generated analysis text
+- introduction section explicitly distinguishes user-entered audit content vs AI-generated sections
 
 ## Verification and Anti-Hallucination Measures
 
 Implemented safeguards:
 
 - strict input/output Zod validation on both endpoints
-- structured output parsing with OpenAI SDK
-- domain-constrained web search configuration for analysis
-- extraction of tool-call evidence URLs
-- hard failure when no evidence URLs are present
+- server-side same-domain crawl with page caps
+- llms-full reference criteria included in analysis prompt
+- explicit source URL traceability in API response and PDF output
+- browser debug log of raw analysis payload for quality tuning
 
 Remaining risk:
 
-- model may still over-generalize within analysed sources
-- review UI and human approval step should remain part of final workflow
+- model output may still over-generalize relative to crawled excerpts
+- users should review AI output before finalizing PDF
 
 ## Runtime and Config
 
@@ -169,7 +182,7 @@ Environment:
 
 ## Suggested Next Steps
 
-1. Implement review/edit UI step between AI generation and PDF generation.
-2. Surface `progress`, `analysedPages`, and `usedSources` in that UI.
-3. Add per-stage retry behavior (retry analysis only, retry briefing only).
-4. Add integration tests for endpoint shape + failure cases.
+1. Add explicit per-stage retry actions in UI (retry analysis only / briefing only).
+2. Add integration tests for endpoint shape + failure cases.
+3. Add quality telemetry (e.g. user edits ratio on AI briefing).
+4. Consider extracting AI progress config to a dedicated app config file for non-dev tuning.

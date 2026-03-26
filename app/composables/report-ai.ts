@@ -11,6 +11,124 @@ import {
 
 import { ReportGenerationError } from './report/errors'
 
+type AiProgressItemStatus = 'running' | 'completed'
+
+export type AiProgressItem = {
+	id: string
+	text: string
+	reasoning: string
+	status: AiProgressItemStatus
+}
+
+type AiProgressStageDefinition = {
+	id: string
+	text: string
+	reasoning: string
+	/**
+	 * Preferred visible duration for this stage while the async task is pending.
+	 */
+	durationMs: number
+}
+
+type AiProgressScenario = {
+	/**
+	 * Ordered list of visual progress stages.
+	 *
+	 * Add/remove/reorder stages here to tune UX timing and step granularity.
+	 */
+	stages: AiProgressStageDefinition[]
+	/**
+	 * Speed used to quickly finish remaining stages when the underlying task has
+	 * already completed earlier than expected.
+	 */
+	fastForwardMs: number
+}
+
+const AI_PROGRESS_CONFIG: Record<'analysis' | 'briefing', AiProgressScenario> = {
+	analysis: {
+		fastForwardMs: 240,
+		stages: [
+			{
+				id: 'analysis-start',
+				text: 'AI-analyse starten...',
+				reasoning: 'De aanvraag wordt voorbereid en de websitegegevens worden gevalideerd.',
+				durationMs: 4500,
+			},
+			{
+				id: 'analysis-crawl',
+				text: "Websitepagina's verzamelen...",
+				reasoning:
+					'De server verzamelt relevante pagina’s van je website als context voor de analyse.',
+				durationMs: 15000,
+			},
+			{
+				id: 'analysis-interpret',
+				text: 'Inhoud interpreteren...',
+				reasoning:
+					'De server interpreteert de verzamelde inhoud om inzichten te genereren.',
+				durationMs: 15000,
+			},
+			{
+				id: 'analysis-criteria',
+				text: 'Criteria toepassen op content...',
+				reasoning: 'De verzamelde inhoud wordt getoetst aan de richtlijnen en criteria.',
+				durationMs: 8000,
+			},
+			{
+				id: 'analysis-finalize',
+				text: 'Website-analyse afronden...',
+				reasoning:
+					'De uitkomst wordt gestructureerd en klaargezet voor opname in het rapport.',
+				durationMs: 6000,
+			},
+		],
+	},
+	briefing: {
+		fastForwardMs: 220,
+		stages: [
+			{
+				id: 'briefing-start',
+				text: 'AI-briefing starten...',
+				reasoning:
+					'De briefing-aanvraag wordt opgebouwd met auditresultaten en opgegeven context.',
+				durationMs: 1000,
+			},
+			{
+				id: 'briefing-synthesis',
+				text: 'Inzichten combineren...',
+				reasoning:
+					'Zelfevaluatie, opmerkingen en eventuele website-analyse worden samengebracht.',
+				durationMs: 3000,
+			},
+			{
+				id: 'briefing-generate',
+				text: 'Briefing genereren...',
+				reasoning:
+					'De server genereert de briefing op basis van de verzamelde inzichten en context.',
+				durationMs: 2000,
+			},
+			{
+				id: 'briefing-finalize',
+				text: 'Briefing afronden...',
+				reasoning: 'De briefing wordt concreet geformuleerd voor gebruik in de rapportage.',
+				durationMs: 2000,
+			},
+		],
+	},
+}
+
+/**
+ * Sleep helper used by staged progress timing.
+ *
+ * @param ms - Delay in milliseconds.
+ * @returns Promise that resolves after the delay.
+ */
+function wait(ms: number): Promise<void> {
+	return new Promise((resolve) => {
+		setTimeout(resolve, ms)
+	})
+}
+
 /**
  * Normalizes the report form + audits into the briefing endpoint payload.
  *
@@ -43,51 +161,129 @@ function createBriefingPayload(
 }
 
 export const useReportAi = () => {
-	const progress = ref<string[]>([])
+	const progress = ref<AiProgressItem[]>([])
 	const { trackAiInsight } = useTracking()
 
 	/**
-	 * Adds a progress line for staged AI generation.
+	 * Adds one progress item in running state.
 	 *
-	 * @param message - User-facing progress message.
-	 * @returns Nothing.
+	 * @param stage - Stage metadata.
+	 * @returns Index of the inserted progress entry.
 	 */
-	function pushProgress(message: string): void {
-		progress.value.push(message)
+	function pushProgressStage(stage: AiProgressStageDefinition): number {
+		progress.value.push({
+			id: `${stage.id}-${progress.value.length + 1}`,
+			text: stage.text,
+			reasoning: stage.reasoning,
+			status: 'running',
+		})
+
+		return progress.value.length - 1
 	}
 
 	/**
-	 * Runs an async task while appending predefined progress messages over time.
+	 * Marks a previously inserted progress entry as completed.
 	 *
-	 * @param states - Ordered progress states.
-	 * @param task - Async task to execute.
-	 * @param intervalMs - Interval between state updates while pending.
+	 * @param index - Progress entry index.
+	 * @returns Nothing.
+	 */
+	function completeProgressStage(index: number): void {
+		const item = progress.value[index]
+		if (!item) {
+			return
+		}
+
+		item.status = 'completed'
+	}
+
+	/**
+	 * Runs one async task with configurable staged progress.
+	 *
+	 * Behavior:
+	 * - While task is pending, stages are shown using configured durations.
+	 * - If task completes early, remaining stages are fast-forwarded sequentially.
+	 *
+	 * @param scenario - Stage scenario key.
+	 * @param task - Async task.
 	 * @returns Task result.
 	 */
-	async function runWithProgress<T>(
-		states: string[],
+	async function runWithProgressScenario<T>(
+		scenario: keyof typeof AI_PROGRESS_CONFIG,
 		task: () => Promise<T>,
-		intervalMs = 1800,
 	): Promise<T> {
-		if (states.length > 0) {
-			pushProgress(states[0]!)
+		const config = AI_PROGRESS_CONFIG[scenario]
+		if (config.stages.length === 0) {
+			return await task()
 		}
 
-		let stateIndex = 1
-		const timer = setInterval(() => {
-			if (stateIndex >= states.length) {
-				return
+		let taskResult: T | undefined
+		let taskError: unknown
+		let taskSettled = false
+
+		const taskPromise = task()
+			.then((result) => {
+				taskResult = result
+			})
+			.catch((error: unknown) => {
+				taskError = error
+			})
+			.finally(() => {
+				taskSettled = true
+			})
+
+		const taskSettledPromise = taskPromise.then(() => 'task_settled' as const)
+
+		let stageIndex = 0
+		let activeProgressIndex = pushProgressStage(config.stages[stageIndex]!)
+		let stageStartedAt = Date.now()
+
+		while (!taskSettled) {
+			const activeStage = config.stages[stageIndex]
+			if (!activeStage) {
+				break
 			}
 
-			pushProgress(states[stateIndex]!)
-			stateIndex += 1
-		}, intervalMs)
+			const elapsedMs = Date.now() - stageStartedAt
+			const waitMs = Math.max(activeStage.durationMs - elapsedMs, 0)
+			const raceResult = await Promise.race([
+				wait(waitMs).then(() => 'timer_elapsed' as const),
+				taskSettledPromise,
+			])
 
-		try {
-			return await task()
-		} finally {
-			clearInterval(timer)
+			if (raceResult === 'task_settled') {
+				break
+			}
+
+			if (stageIndex < config.stages.length - 1) {
+				completeProgressStage(activeProgressIndex)
+				stageIndex += 1
+				activeProgressIndex = pushProgressStage(config.stages[stageIndex]!)
+				stageStartedAt = Date.now()
+				continue
+			}
+
+			// Keep the final stage active until the task truly settles.
+			// We intentionally do not mark it as completed here.
+			stageStartedAt = Date.now()
 		}
+
+		await taskPromise
+
+		completeProgressStage(activeProgressIndex)
+
+		// Fast-forward any stages not yet shown when task finishes early.
+		for (let nextIndex = stageIndex + 1; nextIndex < config.stages.length; nextIndex += 1) {
+			const nextStage = config.stages[nextIndex]!
+			const insertedIndex = pushProgressStage(nextStage)
+			await wait(config.fastForwardMs)
+			completeProgressStage(insertedIndex)
+		}
+
+		if (taskError) {
+			throw taskError
+		}
+
+		return taskResult as T
 	}
 
 	/**
@@ -112,14 +308,8 @@ export const useReportAi = () => {
 		if (config.aiWebsiteAnalysis && config.url) {
 			let analysisResult: AiWebsiteAnalysisResponse
 			try {
-				analysisResult = await runWithProgress(
-					[
-						'AI analyse starten...',
-						"Websitepagina's verzamelen via server-crawl...",
-						'llms-full criteria toepassen op verzamelde content...',
-						'Analyse structureren en afronden...',
-					],
-					() => generateWebsiteAnalysis(config),
+				analysisResult = await runWithProgressScenario('analysis', () =>
+					generateWebsiteAnalysis(config),
 				)
 			} catch (error: unknown) {
 				throw new ReportGenerationError('AI_WEBSITE_ANALYSIS_FAILED', error)
@@ -128,28 +318,18 @@ export const useReportAi = () => {
 			websiteAnalysis = analysisResult.analysis
 			websiteAnalysisUrls = analysisResult.analysedPages.map((page) => page.url)
 			websiteAnalysisSources = analysisResult.usedSources
-			pushProgress('AI website-analyse afgerond.')
 		}
 
 		// Stage 2: create briefing, optionally enriched with analysis context.
 		let briefing: string | undefined
 		if (config.aiBriefing) {
 			try {
-				briefing = await runWithProgress(
-					[
-						'AI briefing starten...',
-						'Auditresultaten en context combineren...',
-						'Concrete briefing opstellen voor webbureau...',
-					],
-					() => generateBriefing(config, data, websiteAnalysis),
+				briefing = await runWithProgressScenario('briefing', () =>
+					generateBriefing(config, data, websiteAnalysis),
 				)
 			} catch (error: unknown) {
 				throw new ReportGenerationError('AI_BRIEFING_FAILED', error)
 			}
-		}
-
-		if (briefing) {
-			pushProgress('AI briefing afgerond.')
 		}
 
 		return {
