@@ -59,7 +59,7 @@ const AI_PROGRESS_CONFIG: Record<'analysis' | 'briefing', AiProgressScenario> = 
 				text: "Websitepagina's verzamelen...",
 				reasoning:
 					'De server verzamelt relevante pagina’s van je website als context voor de analyse.',
-				durationMs: 15000,
+				durationMs: 20000,
 			},
 			{
 				id: 'analysis-interpret',

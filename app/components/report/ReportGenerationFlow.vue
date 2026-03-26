@@ -162,7 +162,7 @@ function showGenerationErrorToast(error: unknown): void {
 		title: 'Rapport genereren mislukt',
 		description: getReportFailureDescription(error),
 		color: 'error',
-		duration: 6000,
+		duration: 10000,
 	})
 }
 

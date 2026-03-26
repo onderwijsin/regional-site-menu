@@ -88,5 +88,10 @@ export default defineAppConfig({
 				label: 'font-bold',
 			},
 		},
+		alert: {
+			slots: {
+				title: 'font-bold',
+			},
+		},
 	},
 })
