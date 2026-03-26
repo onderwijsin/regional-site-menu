@@ -2,12 +2,14 @@
 import type { ItemsCollectionItem } from '@nuxt/content'
 import type { ReportConfig } from '~~/schema/reportConfig'
 import type { Audit, PillarAverage } from '~~/shared/types/audit'
+import type { Pillar } from '~~/shared/types/primitives'
 
+import { ReportGenerationError } from '~/composables/report/errors'
 import { ReportConfigSchema } from '~~/schema/reportConfig'
 
 type ReportConfigProps = {
 	data: {
-		averages: PillarAverage<ItemsCollectionItem['pillar']>[]
+		averages: PillarAverage<Pillar>[]
 		audits: Audit<ItemsCollectionItem>[]
 	}
 }
@@ -64,27 +66,59 @@ const url = computed({
 
 const isGenerating = ref(false)
 const { generateReport } = useReportGenerator()
+const { generateAiInsights } = useReportAi()
 const { trackReportGenerated } = useTracking()
 const toast = useToast()
 const { getIcon } = useIcons()
+
+/**
+ * Maps generation failures to user-facing Dutch copy.
+ *
+ * @param error - Unknown thrown value from generation flow.
+ * @returns Description for toast message.
+ */
+function getReportFailureDescription(error: unknown): string {
+	if (error instanceof ReportGenerationError) {
+		switch (error.code) {
+			case 'AI_WEBSITE_ANALYSIS_FAILED':
+				return 'Het lukte niet op de opgegeven website te analyseren'
+			case 'AI_BRIEFING_FAILED':
+				return 'Het lukte niet om een briefing te genereren'
+			default:
+				return 'Het lukte niet om je audit te verwerken'
+		}
+	}
+
+	return 'Het lukte niet om je audit te verwerken'
+}
 
 async function startReportGeneration(): Promise<void> {
 	isGenerating.value = true
 
 	try {
-		await generateReport(state, {
+		const reportData = {
 			audits: props.data.audits,
 			averages: props.data.averages,
+		}
+		const aiInsights = await generateAiInsights(state, reportData)
+
+		await generateReport(state, {
+			...reportData,
+			aiInsights,
 		})
+
 		trackReportGenerated({
 			scoredElementsCount: props.data.audits.length,
 		})
 
 		emit('close')
-	} catch {
+	} catch (error: unknown) {
+		console.error('Rapport generatie mislukt', error)
+
 		toast.add({
 			icon: getIcon('error'),
-			title: 'Fout bij het genereren van het rapport',
+			title: 'Rapport genereren mislukt',
+			description: getReportFailureDescription(error),
 			color: 'error',
 			duration: 6000,
 		})

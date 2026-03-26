@@ -7,6 +7,38 @@ import { renderSectionTitle, writeWrappedText } from '../pdf'
 import { renderBulletList, renderSubheading, writeRichText } from './shared'
 
 /**
+ * Builds a clear provenance list so readers can distinguish human-entered
+ * audit data from optional AI-generated sections.
+ *
+ * @param config - Report configuration with AI opt-in flags.
+ * @param region - Region name shown in the report copy.
+ * @returns Ordered bullet list describing source ownership per section.
+ */
+function buildContentProvenanceBullets(config: ReportConfig, region: string): string[] {
+	const bullets = [
+		`Scores en toelichtingen op deze scores per auditonderdeel zijn ingevuld door ${region} (zelfevaluatie).`,
+	]
+
+	if (config.aiWebsiteAnalysis) {
+		bullets.push(
+			'De website-analyse in dit rapport is met AI gegenereerd op basis van de richtlijnen en criteria zoals de tool ze definieert. Let op: de AI kan fouten maken in de analyse.',
+		)
+	}
+
+	if (config.aiBriefing) {
+		bullets.push(
+			'De briefing in dit rapport is met AI gegenereerd op basis van de zelfevaluatie en context die door de regio is aangeleverd.',
+		)
+	}
+
+	if (!config.aiWebsiteAnalysis && !config.aiBriefing) {
+		bullets.push('Er zijn geen AI-gegenereerde onderdelen opgenomen.')
+	}
+
+	return bullets
+}
+
+/**
  * Renders the static introduction page that explains the report structure.
  *
  * @param ctx - Shared PDF render context.
@@ -100,12 +132,26 @@ export function renderIntroductionPage(ctx: PdfRenderContext, config: ReportConf
 	y = writeRichText(
 		ctx,
 		[
-			{ text: 'De scores en toelichtingen in dit rapport zijn dus een weergave van hoe ' },
+			{ text: 'De scores en toelichtingen in de audits zijn dus een weergave van hoe ' },
 			{ text: region, style: 'bold' },
-			{ text: 'de eigen website op dit moment beoordeelt.' },
+			{ text: ' de eigen website op dit moment beoordeelt.' },
 		],
 		y,
 	)
+
+	// Make source ownership explicit when AI sections are enabled.
+	y = writeWrappedText(doc, {
+		text: 'Herkomst van de inhoud in dit rapport:',
+		x: layout.marginLeft,
+		y: y + 2,
+		maxWidth: page.contentWidth,
+		fontSize: 11,
+		fontStyle: 'normal',
+		color: colors.text,
+	})
+
+	y += 4
+	y = renderBulletList(ctx, buildContentProvenanceBullets(config, region), y)
 
 	y += 8
 	y = renderSubheading(ctx, 'Hoe gebruik je dit rapport?', y)

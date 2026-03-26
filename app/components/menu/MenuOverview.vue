@@ -1,6 +1,6 @@
 <script lang="ts" setup>
-import type { ItemsCollectionItem } from '@nuxt/content'
 import type { ButtonProps, TabsItem } from '@nuxt/ui'
+import type { Goal } from '~~/shared/types/primitives'
 
 import { useFuse } from '@vueuse/integrations/useFuse'
 import { GOALS } from '~/composables/content-taxonomy'
@@ -39,16 +39,14 @@ const query = ref('')
  *
  * Initialized from store when persistence is enabled
  */
-const _filter = ref<ItemsCollectionItem['goals'][number] | 'all'>(
-	props.persist ? state.filter : 'all',
-)
+const _filter = ref<Goal | 'all'>(props.persist ? state.filter : 'all')
 
 /**
  * Public filter with optional persistence
  */
 const filter = computed({
 	get: () => _filter.value,
-	set: (value: ItemsCollectionItem['goals'][number] | 'all') => {
+	set: (value: Goal | 'all') => {
 		_filter.value = value
 
 		if (props.persist) {

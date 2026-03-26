@@ -38,6 +38,7 @@ catalog:
   fuse.js: 7.1.0
   husky: 9.1.7
   jspdf: 4.2.1
+  minimark: 1.0.0
   nuxt: 4.4.2
   nuxt-llms: 0.2.0
   nuxt-site-config: 3.2.21

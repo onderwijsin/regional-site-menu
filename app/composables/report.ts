@@ -1,5 +1,6 @@
 import type { ItemsCollectionItem } from '@nuxt/content'
 import type { Audit, PillarAverage } from '~~/shared/types/audit'
+import type { Pillar } from '~~/shared/types/primitives'
 
 import { Report, ReportConfig } from '#components'
 
@@ -56,7 +57,7 @@ export const useReport = (props?: ReportProps) => {
 
 type ReportConfigProps = {
 	data: {
-		averages: PillarAverage<ItemsCollectionItem['pillar']>[]
+		averages: PillarAverage<Pillar>[]
 		audits: Audit<ItemsCollectionItem>[]
 	}
 }

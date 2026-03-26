@@ -2,7 +2,7 @@ import type { jsPDF } from 'jspdf'
 import type { MarkdownBlock, RichTextMark, RichTextSegment } from './types'
 
 import { PDF_COLORS } from '../constants'
-import { measureWrappedTextHeight, writeWrappedText } from '../pdf'
+import { writeWrappedText } from '../pdf'
 import { measureMarkdownBlocksHeight, segmentsToPlainText } from './measure'
 
 const MARKDOWN_PAGE_MARGIN_TOP = 18
@@ -134,13 +134,9 @@ function renderMarkdownBlock(
 			break
 
 		case 'bulletList':
-			// Each list item is measured and paginated separately so a long list can
-			// flow across pages without forcing the whole list onto one page.
+			// Keep list items splittable: writeWrappedText paginates line-by-line.
 			for (const item of block.items) {
 				const itemText = segmentsToPlainText(item.segments)
-				const itemHeight = measureWrappedTextHeight(doc, `• ${itemText}`, maxWidth) + 1.5
-
-				cursorY = ensureMarkdownPageSpace(doc, cursorY, itemHeight)
 
 				if (itemText) {
 					cursorY = writeWrappedText(doc, {
@@ -164,10 +160,6 @@ function renderMarkdownBlock(
 		case 'orderedList':
 			block.items.forEach((item, index) => {
 				const itemText = segmentsToPlainText(item.segments)
-				const itemHeight =
-					measureWrappedTextHeight(doc, `${index + 1}. ${itemText}`, maxWidth) + 1.5
-
-				cursorY = ensureMarkdownPageSpace(doc, cursorY, itemHeight)
 
 				if (itemText) {
 					cursorY = writeWrappedText(doc, {
@@ -244,10 +236,16 @@ export function renderMarkdownBlocks(
 ): number {
 	let cursorY = y
 
-	// Paragraphs can be split naturally by writeWrappedText, but most other block
-	// types are treated as atomic so the visual structure stays intact.
+	// Render splittable blocks line-by-line to avoid large empty page gaps.
+	// Keep only the truly structural blocks as atomic.
 	for (const block of blocks) {
-		const isSplittable = block.type === 'paragraph'
+		// Lists are rendered item-by-item and each item uses line-level pagination
+		// via writeWrappedText, so pre-paginating the full list block causes large
+		// empty areas and should be avoided.
+		const isSplittable =
+			block.type === 'paragraph' ||
+			block.type === 'bulletList' ||
+			block.type === 'orderedList'
 
 		if (!isSplittable) {
 			const blockHeight = measureMarkdownBlocksHeight(doc, [block], maxWidth)

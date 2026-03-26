@@ -58,6 +58,7 @@
 		"fuse.js": "catalog:",
 		"husky": "catalog:",
 		"jspdf": "catalog:",
+		"minimark": "catalog:",
 		"nuxt": "catalog:",
 		"nuxt-llms": "catalog:",
 		"nuxt-site-config": "catalog:",

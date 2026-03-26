@@ -1,3 +1,4 @@
+export { renderAiInsightsSection } from './sections/ai'
 export { createCommentBlockMap, drawAuditSectionItem, renderAuditSection } from './sections/audit'
 export { drawAverageCard, getScoreColorKey, renderAveragesSection } from './sections/averages'
 export { renderCoverPage } from './sections/cover'

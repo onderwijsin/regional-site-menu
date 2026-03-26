@@ -185,6 +185,7 @@ export default defineNuxtConfig({
 		},
 		openai: {
 			token: process.env.OPENAI_API_KEY,
+			model: process.env.OPENAI_MODEL || 'gpt-4.1-mini',
 		},
 		public: {
 			siteUrl: process.env.APP_URL,

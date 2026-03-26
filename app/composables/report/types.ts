@@ -1,5 +1,7 @@
 import type { ItemsCollectionItem } from '@nuxt/content'
+import type { ReportAiInsights } from '~~/schema/reportAi'
 import type { Audit, PillarAverage } from '~~/shared/types/audit'
+import type { Pillar } from '~~/shared/types/primitives'
 
 /**
  * Supported PDF font styles.
@@ -40,10 +42,15 @@ export type ReportData = {
 	/**
 	 * Average scores per pillar.
 	 */
-	averages: PillarAverage<ItemsCollectionItem['pillar']>[]
+	averages: PillarAverage<Pillar>[]
 
 	/**
 	 * Detailed audit entries.
 	 */
 	audits: Audit<ItemsCollectionItem>[]
+
+	/**
+	 * Optional AI-generated content that can be injected into the report.
+	 */
+	aiInsights?: ReportAiInsights
 }
