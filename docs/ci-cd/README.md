@@ -114,3 +114,8 @@ Manual dispatch in `deploy.yml` can override environment selection.
 2. Preview uploads are restricted to preview environment.
 3. `APP_URL` is required for non-preview deployments.
 4. Worker deployment status is reflected via GitHub deployment status updates.
+
+## Known Build Workaround
+
+- Nuxt Studio has a temporary Cloudflare edge build patch in this repo:
+  - `docs/ci-cd/nuxt-studio-cloudflare-patch.md`

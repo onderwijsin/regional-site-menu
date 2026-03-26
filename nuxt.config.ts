@@ -33,6 +33,7 @@ export default defineNuxtConfig({
 		'@nuxtjs/robots',
 		'@nuxt/content',
 		'nuxt-llms',
+		'nuxt-studio',
 	],
 
 	devtools: {
@@ -54,6 +55,8 @@ export default defineNuxtConfig({
 		inlineRouteRules: true,
 	},
 
+	image: { provider: 'none' },
+
 	$development: {
 		routeRules: {
 			'/**': { cache: false },
@@ -63,6 +66,9 @@ export default defineNuxtConfig({
 	$production: {
 		routeRules: {
 			'/**': { prerender: true },
+		},
+		image: {
+			provider: 'cloudflare',
 		},
 	},
 
@@ -132,6 +138,11 @@ export default defineNuxtConfig({
 	},
 
 	hub: {
+		blob: {
+			driver: 'cloudflare-r2',
+			bucketName: process.env.CLOUDFLARE_R2_BUCKET,
+			binding: 'BLOB',
+		},
 		/**
 		 * There is a weird error in local development if we define the cache driver, where the binding is undefined
 		 * We can only resolve the issue by adding the binding in a wrangler.json file, which we don't want to add
@@ -155,6 +166,28 @@ export default defineNuxtConfig({
 				toc: {
 					searchDepth: 1,
 				},
+			},
+		},
+	},
+
+	studio: {
+		route: '/studio',
+		i18n: {
+			defaultLocale: 'nl',
+		},
+		repository: {
+			provider: 'github',
+			owner: 'onderwijsin',
+			repo: 'regional-site-menu',
+			branch: 'main',
+		},
+		media: {
+			external: true,
+		},
+		auth: {
+			github: {
+				clientId: process.env.STUDIO_GITHUB_CLIENT_ID,
+				clientSecret: process.env.STUDIO_GITHUB_CLIENT_SECRET,
 			},
 		},
 	},

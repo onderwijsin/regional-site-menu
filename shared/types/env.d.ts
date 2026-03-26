@@ -27,7 +27,7 @@ declare global {
 			CLOUDFLARE_ACCOUNT_ID?: string
 			CLOUDFLARE_API_TOKEN?: string
 			CLOUDFLARE_CACHE_NAMESPACE_ID: string
-			CLOUDFLARE_DATABASE_ID: string
+			CLOUDFLARE_R2_BUCKET: string
 
 			/**
 			 * GitHub
@@ -40,6 +40,12 @@ declare global {
 			 */
 			PLAUSIBLE_DOMAIN: string
 			DISABLE_TRACKING?: 'true' | 'false'
+
+			/**
+			 * OpenAI integration
+			 */
+			OPENAI_API_KEY: string
+			OPENAI_MODEL: string
 
 			/**
 			 * Datahub

@@ -137,6 +137,16 @@ Use `.example.env` as template.
 - `DATAHUB_URL`
 - `DATAHUB_TOKEN`
 
+### OpenAI
+
+- `OPENAI_API_KEY`
+- `OPENAI_MODEL`
+
+### Nuxt Studio
+
+- `STUDIO_GITHUB_CLIENT_ID`
+- `STUDIO_GITHUB_CLIENT_SECRET`
+
 ### Git hooks toggles
 
 - `DISABLE_PRE_COMMIT_FORMAT`
@@ -156,6 +166,7 @@ Defined in `content.config.ts`:
 
 - `items` — main menu content
 - `extras` — additional tools/resources
+- `prompts` - system prompts used in AI integrations
 
 ### Databaseless architecture
 
@@ -175,6 +186,30 @@ Result:
 
 - No D1 binding required
 - Local warnings about missing bindings can be ignored (if no actual errors)
+
+## Nuxt Studio
+
+To make the content managable outside of the codebase, the application leverages the
+[Nuxt Studio](https://nuxt.studio/) module. This module integrates seamlessly with Nuxt Content and
+provides a visual editing experience for the various content collections.
+
+Editor can log in to the studio with their Github Account. Any changes made in the content files (or
+the media) are directly committed to the `main` branch.
+
+The ci/cd pipeline will notice a change to either the `public` or `content` directories and trigger
+a rebuild. (This is the only case where a production deployment triggers automatically. In all other
+cases, a manual deploy is required).
+
+For the current temporary Cloudflare Workers build workaround (Nuxt Studio + `sharp`), see:
+
+- `docs/ci-cd/nuxt-studio-cloudflare-patch.md`
+
+### Requirements
+
+- Users that wish to edit content through Nuxt Studio must have a Github Account with access to the
+  repo
+- A valid Github OAuth app must be configured, and the `STUDIO_GITHUB_CLIENT_ID` and
+  `STUDIO_GITHUB_CLIENT_SECRET` environment variables must be set.
 
 ---
 
