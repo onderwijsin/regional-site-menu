@@ -2,8 +2,8 @@
 import { nl } from '@nuxt/ui/locale'
 
 useSeoMeta({
-	ogImage: '/ogimage.png',
-	twitterImage: '/ogimage.png',
+	ogImage: '/images/ogimage.png',
+	twitterImage: '/images/ogimage.png',
 	twitterCard: 'summary_large_image',
 })
 
@@ -20,7 +20,7 @@ const { getIcon } = useIcons()
 		<UHeader :toggle="false" :ui="{ right: 'hidden md:flex' }">
 			<template #left>
 				<NuxtLink to="/" class="flex items-center gap-2">
-					<NuxtImg src="logo.png" width="40" alt="Onderwijsregio's logo" />
+					<NuxtImg src="/images/logo.png" width="40" alt="Onderwijsregio's logo" />
 					<span class="text-lg font-bold">Onderwijsregio's</span>
 				</NuxtLink>
 			</template>
