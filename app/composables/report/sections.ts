@@ -12,7 +12,6 @@ import { markdownToBlocks, measureMarkdownBlocksHeight, renderMarkdownBlocks } f
 import {
 	ensurePageSpace,
 	mapScoreColor,
-	measureWrappedTextHeight,
 	renderSectionTitle,
 	setPdfDrawColor,
 	setPdfFillColor,
@@ -296,6 +295,45 @@ export function renderIntroductionPage(ctx: PdfRenderContext, config: ReportConf
 		fontStyle: 'normal',
 		color: colors.text,
 	})
+}
+
+/**
+ * Renders the general notes section (if provided).
+ *
+ * @param ctx - Rendering context.
+ * @param config - Report configuration.
+ */
+export function renderNotesSection(ctx: PdfRenderContext, config: ReportConfig): void {
+	const raw = config.notes?.trim()
+
+	// guard: nothing to render
+	if (!raw) return
+
+	const { doc, layout, page } = ctx
+
+	doc.addPage()
+
+	let y = layout.marginTop
+
+	// ----------------------
+	// Title
+	// ----------------------
+
+	y = renderSectionTitle(ctx, 'Algemene opmerkingen van regio', y)
+
+	// ----------------------
+	// Markdown → blocks
+	// ----------------------
+
+	const blocks = markdownToBlocks(raw)
+
+	// ----------------------
+	// Render
+	// ----------------------
+
+	y += 4
+
+	renderMarkdownBlocks(doc, blocks, layout.marginLeft, y, page.contentWidth)
 }
 
 /**
@@ -673,164 +711,206 @@ function writeRichText(ctx: PdfRenderContext, segments: RichSegment[], y: number
 }
 
 /**
- * Draws a single audit card.
+ * Renders a single audit item as an editorial-style section.
  *
  * @param ctx - Rendering context.
- * @param audit - Audit entry.
- * @param commentBlocks - Parsed comment blocks.
- * @param startY - Start Y.
- * @returns Next cursor Y.
+ * @param audit - Audit entry containing score and metadata.
+ * @param commentBlocks - Parsed markdown blocks for the comment.
+ * @param startY - Start Y position.
+ * @returns Next cursor Y position after rendering the section.
+ *
+ * @remarks
+ * This renderer uses a flowing layout instead of card-based UI.
+ *
+ * Key features:
+ * - Score aligned with title baseline
+ * - Clean typographic spacing
+ * - Per-section vertical rule
+ * - Multi-page support: vertical rule continues across pages
+ *
+ * Implementation detail:
+ * The vertical rule is rendered per-page by tracking page segments
+ * during rendering. This ensures correct rendering when content
+ * overflows onto subsequent pages.
  */
-export function drawAuditCard(
+export function drawAuditSectionItem(
 	ctx: PdfRenderContext,
 	audit: Audit<ItemsCollectionItem>,
 	commentBlocks: MarkdownBlock[],
 	startY: number,
 ): number {
-	const cardX = ctx.layout.marginLeft
-	const cardWidth = ctx.page.contentWidth
-	const innerWidth = cardWidth - ctx.layout.cardPadding * 2
+	const { doc, layout, page, colors } = ctx
 
-	const metaText = `${audit.item.pillar} • ${audit.item.priority}`
-	const scoreText = audit.score !== undefined ? `${audit.score}/10` : 'Geen score'
-	const descriptionText = audit.item.audit?.description?.trim() ?? ''
+	const x = layout.marginLeft
+	const width = page.contentWidth
 
-	const titleHeight = measureWrappedTextHeight(ctx.doc, audit.item.title, innerWidth)
-	const metaHeight = measureWrappedTextHeight(ctx.doc, metaText, innerWidth)
-	const scoreHeight = measureWrappedTextHeight(ctx.doc, scoreText, innerWidth)
-	const descriptionHeight = descriptionText
-		? measureWrappedTextHeight(ctx.doc, descriptionText, innerWidth)
-		: 0
+	const innerX = x + 6
+	const innerWidth = width - 6
 
-	const commentTitleHeight = commentBlocks.length > 0 ? 5 : 0
-	const commentContentHeight =
-		commentBlocks.length > 0
-			? measureMarkdownBlocksHeight(ctx.doc, commentBlocks, innerWidth - 6)
-			: 0
-	const commentBoxHeight =
-		commentBlocks.length > 0 ? commentTitleHeight + commentContentHeight + 6 : 0
+	let y = startY
+
+	// ----------------------
+	// Ensure space (rough estimate)
+	// ----------------------
 
 	const estimatedHeight =
-		6 +
-		titleHeight +
-		2 +
-		metaHeight +
-		2 +
-		scoreHeight +
-		(descriptionText ? 3 + descriptionHeight : 0) +
-		(commentBlocks.length > 0 ? 5 + commentBoxHeight : 0) +
-		5
+		40 +
+		(commentBlocks.length > 0
+			? measureMarkdownBlocksHeight(doc, commentBlocks, innerWidth - 4)
+			: 0)
 
-	const y = ensurePageSpace(ctx, startY, estimatedHeight)
+	y = ensurePageSpace(ctx, y, estimatedHeight)
 
-	setPdfFillColor(ctx.doc, ctx.colors.soft)
-	setPdfDrawColor(ctx.doc, ctx.colors.border)
-	ctx.doc.roundedRect(
-		cardX,
-		y,
-		cardWidth,
-		estimatedHeight,
-		ctx.layout.borderRadius,
-		ctx.layout.borderRadius,
-		'FD',
-	)
+	// ----------------------
+	// Track page segments for vertical rule
+	// ----------------------
 
-	let cursorY = y + ctx.layout.cardPadding + 1
+	const startPage = doc.getCurrentPageInfo().pageNumber
+	const pageSegments: { page: number; startY: number; endY?: number }[] = [
+		{ page: startPage, startY: y - 2 },
+	]
 
-	cursorY = writeWrappedText(ctx.doc, {
+	const trackPageBreak = () => {
+		const currentPage = doc.getCurrentPageInfo().pageNumber
+		const lastSegment = pageSegments[pageSegments.length - 1]!
+
+		if (currentPage !== lastSegment.page) {
+			// close previous segment at bottom margin
+			lastSegment.endY = doc.internal.pageSize.getHeight() - layout.marginBottom
+
+			// start new segment
+			pageSegments.push({
+				page: currentPage,
+				startY: layout.marginTop - 5,
+			})
+		}
+	}
+
+	let cursorY = y + 2
+
+	// ----------------------
+	// Title
+	// ----------------------
+
+	const titleStartY = cursorY
+
+	cursorY = writeWrappedText(doc, {
 		text: audit.item.title,
-		x: cardX + ctx.layout.cardPadding,
+		x: innerX,
 		y: cursorY,
-		maxWidth: innerWidth,
-		fontSize: 12,
-		fontStyle: 'bold',
-		color: ctx.colors.text,
-	})
-
-	cursorY += 1
-
-	cursorY = writeWrappedText(ctx.doc, {
-		text: metaText,
-		x: cardX + ctx.layout.cardPadding,
-		y: cursorY,
-		maxWidth: innerWidth,
-		fontSize: 9,
-		fontStyle: 'normal',
-		color: ctx.colors.muted,
-	})
-
-	cursorY += 1
-
-	cursorY = writeWrappedText(ctx.doc, {
-		text: scoreText,
-		x: cardX + ctx.layout.cardPadding,
-		y: cursorY,
-		maxWidth: innerWidth,
+		maxWidth: innerWidth - 30,
 		fontSize: 13,
 		fontStyle: 'bold',
-		color: audit.score !== undefined ? ctx.colors.primary : ctx.colors.muted,
+		color: colors.heading,
 	})
 
-	if (descriptionText) {
-		cursorY += 1.5
+	trackPageBreak()
 
-		cursorY = writeWrappedText(ctx.doc, {
-			text: descriptionText,
-			x: cardX + ctx.layout.cardPadding,
-			y: cursorY,
-			maxWidth: innerWidth,
-			fontSize: 10,
-			fontStyle: 'normal',
-			color: ctx.colors.text,
-		})
-	}
+	// ----------------------
+	// Score (aligned with title)
+	// ----------------------
+
+	const scoreText = audit.score !== undefined ? `${audit.score} uit 10` : 'Geen score'
+
+	doc.setFont('RijksoverheidHeading', 'bold')
+	doc.setFontSize(14)
+
+	setPdfTextColor(
+		doc,
+		audit.score !== undefined ? mapScoreColor(getScoreColorKey(audit.score)) : colors.muted,
+	)
+
+	const scoreWidth = doc.getTextWidth(scoreText)
+
+	doc.text(scoreText, x + width - scoreWidth, titleStartY)
+
+	// ----------------------
+	// Meta
+	// ----------------------
+
+	cursorY += 1
+
+	const meta = [audit.item.pillar, audit.item.priority, ...audit.item.goals].join(' • ')
+
+	cursorY = writeWrappedText(doc, {
+		text: meta,
+		x: innerX,
+		y: cursorY,
+		maxWidth: innerWidth,
+		fontSize: 10,
+		fontStyle: 'normal',
+		color: colors.secondary,
+	})
+
+	trackPageBreak()
+
+	// ----------------------
+	// Description
+	// ----------------------
+
+	cursorY += 2
+
+	cursorY = writeWrappedText(doc, {
+		text: audit.item.description,
+		x: innerX,
+		y: cursorY,
+		maxWidth: innerWidth,
+		fontSize: 11,
+		fontStyle: 'normal',
+		color: colors.text,
+	})
+
+	trackPageBreak()
+
+	// ----------------------
+	// Comment (markdown)
+	// ----------------------
 
 	if (commentBlocks.length > 0) {
-		cursorY += 2.5
+		cursorY += 4
 
-		setPdfFillColor(ctx.doc, ctx.colors.commentBg)
-		setPdfDrawColor(ctx.doc, ctx.colors.secondary)
-		ctx.doc.roundedRect(
-			cardX + ctx.layout.cardPadding,
-			cursorY,
-			innerWidth,
-			commentBoxHeight,
-			ctx.layout.borderRadius,
-			ctx.layout.borderRadius,
-			'FD',
-		)
-
-		ctx.doc.setLineWidth(0.8)
-		setPdfDrawColor(ctx.doc, ctx.colors.secondary)
-		ctx.doc.line(
-			cardX + ctx.layout.cardPadding,
-			cursorY,
-			cardX + ctx.layout.cardPadding,
-			cursorY + commentBoxHeight,
-		)
-
-		let commentY = cursorY + 5
-		const commentX = cardX + ctx.layout.cardPadding + 4
-
-		commentY = writeWrappedText(ctx.doc, {
+		cursorY = writeWrappedText(doc, {
 			text: 'Toelichting',
-			x: commentX,
-			y: commentY,
-			maxWidth: innerWidth - 6,
-			fontSize: 10,
+			x: innerX,
+			y: cursorY,
+			maxWidth: innerWidth,
+			fontSize: 11,
 			fontStyle: 'bold',
-			color: ctx.colors.text,
+			color: colors.heading,
 		})
 
-		commentY += 1
+		trackPageBreak()
 
-		// eslint-disable-next-line
-		commentY = renderMarkdownBlocks(ctx.doc, commentBlocks, commentX, commentY, innerWidth - 6)
-		// eslint-disable-next-line
-		cursorY += commentBoxHeight
+		cursorY += 2
+
+		cursorY = renderMarkdownBlocks(doc, commentBlocks, innerX, cursorY, innerWidth)
+
+		trackPageBreak()
 	}
 
-	return y + estimatedHeight + ctx.layout.cardGap
+	// ----------------------
+	// Finalize last segment
+	// ----------------------
+
+	pageSegments[pageSegments.length - 1]!.endY = cursorY - 2
+
+	// ----------------------
+	// Draw vertical rule per page
+	// ----------------------
+
+	for (const segment of pageSegments) {
+		doc.setPage(segment.page)
+
+		doc.setLineWidth(0.8)
+		setPdfDrawColor(doc, colors.border)
+
+		doc.line(x, segment.startY, x, segment.endY!)
+	}
+
+	// restore page (important!)
+	doc.setPage(pageSegments[pageSegments.length - 1]!.page)
+
+	return cursorY + 8
 }
 
 /**
@@ -843,17 +923,32 @@ export function drawAuditCard(
 export function renderAuditSection(
 	ctx: PdfRenderContext,
 	audits: Audit<ItemsCollectionItem>[],
+	config: ReportConfig,
 ): void {
 	ctx.doc.addPage()
 
 	let y = ctx.layout.marginTop
 	y = renderSectionTitle(ctx, 'Details per onderdeel', y)
 
+	y += 6
+
+	y = writeWrappedText(ctx.doc, {
+		text: `Onderstaand worden de individuele elementen uitgelicht die zijn beoordeeld door ${config.region}. Hier tref je per onderdeel de gegeven score en de eventueel gegeven toelichting daarbij.`,
+		x: ctx.layout.marginLeft,
+		y,
+		maxWidth: ctx.page.contentWidth,
+		fontSize: 11,
+		fontStyle: 'normal',
+		color: ctx.colors.muted,
+	})
+
+	y += 8
+
 	const commentBlockMap = createCommentBlockMap(audits)
 
 	for (const audit of audits) {
 		const commentBlocks = commentBlockMap.get(audit.id) ?? []
-		y = drawAuditCard(ctx, audit, commentBlocks, y)
+		y = drawAuditSectionItem(ctx, audit, commentBlocks, y)
 	}
 }
 
@@ -872,6 +967,7 @@ export async function renderReportDocument(
 ): Promise<void> {
 	await renderCoverPage(ctx, config.region)
 	renderIntroductionPage(ctx, config)
+	renderNotesSection(ctx, config)
 	renderAveragesSection(ctx, data, config)
-	renderAuditSection(ctx, data.audits)
+	renderAuditSection(ctx, data.audits, config)
 }

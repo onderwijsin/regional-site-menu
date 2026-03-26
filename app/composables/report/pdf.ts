@@ -209,9 +209,23 @@ export function writeWrappedText(
 	setPdfTextColor(doc, color)
 
 	const lines = doc.splitTextToSize(text, maxWidth) as string[]
-	doc.text(lines, x, y)
 
-	return y + lines.length * lineHeight
+	let cursorY = y
+
+	const pageHeight = doc.internal.pageSize.getHeight()
+	const pageLimit = pageHeight - PDF_LAYOUT.marginBottom
+
+	for (const line of lines) {
+		if (cursorY + lineHeight > pageLimit) {
+			doc.addPage()
+			cursorY = PDF_LAYOUT.marginTop
+		}
+
+		doc.text(line, x, cursorY)
+		cursorY += lineHeight
+	}
+
+	return cursorY
 }
 
 /**

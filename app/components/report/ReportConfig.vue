@@ -169,7 +169,7 @@ async function navigateToHelp() {
 						v-model="notes"
 						class="mt-2"
 						outline
-						placeholder="Typ / voor opties..."
+						placeholder="Plaats jouw opmerkingen hier..."
 					/>
 				</UFormField>
 			</UForm>
