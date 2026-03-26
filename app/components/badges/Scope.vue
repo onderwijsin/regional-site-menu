@@ -1,18 +1,15 @@
 <script lang="ts" setup>
-import type { ItemsCollectionItem } from '@nuxt/content'
 import type { BadgeProps } from '@nuxt/ui'
+import type { Scope } from '~~/shared/types/primitives'
 
 import { getScopeHint } from '~/composables/content-taxonomy'
 
 import HintPopover from './HintPopover.vue'
 
-const props = withDefaults(
-	defineProps<Omit<BadgeProps, 'label' | 'icon'> & { value: ItemsCollectionItem['scope'] }>(),
-	{
-		variant: 'subtle',
-		color: 'neutral',
-	},
-)
+const props = withDefaults(defineProps<Omit<BadgeProps, 'label' | 'icon'> & { value: Scope }>(), {
+	variant: 'subtle',
+	color: 'neutral',
+})
 
 const { getIcon } = useIcons()
 

@@ -2,6 +2,7 @@ import type { ReportConfig } from '~~/schema/reportConfig'
 import type { PdfRenderContext } from '../pdf'
 import type { ReportData } from '../types'
 
+import { renderAiInsightsSection } from './ai'
 import { renderAuditSection } from './audit'
 import { renderAveragesSection } from './averages'
 import { renderCoverPage } from './cover'
@@ -35,6 +36,7 @@ export async function renderReportDocument(
 	await renderCoverPage(ctx, config.region)
 	renderIntroductionPage(ctx, config)
 	renderNotesSection(ctx, config)
+	renderAiInsightsSection(ctx, data)
 	renderAveragesSection(ctx, data, config)
 	renderAuditSection(ctx, data.audits, config)
 }

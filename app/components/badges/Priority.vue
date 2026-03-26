@@ -1,13 +1,13 @@
 <script lang="ts" setup>
-import type { ItemsCollectionItem } from '@nuxt/content'
 import type { BadgeProps } from '@nuxt/ui'
+import type { Priority } from '~~/shared/types/primitives'
 
 import { getPriorityHint } from '~/composables/content-taxonomy'
 
 import HintPopover from './HintPopover.vue'
 
 const props = withDefaults(
-	defineProps<Omit<BadgeProps, 'label' | 'icon'> & { value: ItemsCollectionItem['priority'] }>(),
+	defineProps<Omit<BadgeProps, 'label' | 'icon'> & { value: Priority }>(),
 	{
 		variant: 'subtle',
 		color: 'neutral',

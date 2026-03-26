@@ -151,7 +151,7 @@ Main files:
 - Shared rendering primitives: `app/composables/report/pdf.ts`
 - Markdown normalization/rendering: `app/composables/report/markdown/*`
 - Section renderers: `app/composables/report/sections/*`
-- Deep doc: `app/composables/report/README.md`
+- Deep doc: `docs/report-pdf/README.md`
 
 Rules when editing PDF code:
 

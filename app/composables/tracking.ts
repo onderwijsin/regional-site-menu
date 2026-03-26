@@ -2,6 +2,7 @@ import type { ViewMode } from '~~/shared/types/primitives'
 
 export type TrackingEvent =
 	| 'ai_action'
+	| 'ai_insight'
 	| 'search'
 	| 'filter'
 	| 'audit_score'
@@ -10,6 +11,7 @@ export type TrackingEvent =
 
 export type AiActionLabel = 'chatgpt' | 'claude' | 'markdown'
 export type AiActionValue = 'sparren' | 'open_item' | 'copy' | 'view'
+export type AiInsightTool = 'website_analysis' | 'briefing'
 
 export interface TrackEventParams {
 	event_category: 'engagement' | 'ui'
@@ -91,6 +93,23 @@ export const useTracking = () => {
 	}
 
 	/**
+	 * Track usage of report AI insight endpoints.
+	 *
+	 * This is intentionally emitted only when an actual AI endpoint call is made,
+	 * not when a user toggles switches in the UI.
+	 *
+	 * @param params - Endpoint call metadata.
+	 * @returns Nothing.
+	 */
+	const trackAiInsight = (params: { tool: AiInsightTool }): void => {
+		trackEvent('ai_insight', {
+			event_category: 'engagement',
+			event_label: params.tool,
+			event_value: 'endpoint_call',
+		})
+	}
+
+	/**
 	 * Track when a user assigns a score to a menu element.
 	 *
 	 * @param params - Scoring event payload.
@@ -153,6 +172,7 @@ export const useTracking = () => {
 	return {
 		trackEvent,
 		trackAiAction,
+		trackAiInsight,
 		trackAuditScore,
 		trackReportGenerated,
 		trackModeSwitch,

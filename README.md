@@ -45,11 +45,12 @@ If you are working on this codebase with an AI coding agent, read [`AGENTS.md`](
 ## Project Structure
 
 - `app/` — pages, layouts, components, composables, store, plugins
-- `content/` — markdown collections (`items`, `extras`)
+- `content/` — markdown collections (`items`, `extras`, `prompts`)
 - `schema/` — Zod schemas (forms, report config, enums)
 - `server/` — API routes (e.g. Datahub submission proxy)
 - `config/` — head, site, robots config
 - `shared/types/` — shared TypeScript types
+- `docs/` — technical documentation (AI, content, auditing, conventions, CI/CD, PDF pipeline)
 
 ---
 
@@ -195,6 +196,34 @@ To replace Datahub, update this endpoint.
 
 ---
 
+## AI Integration
+
+The app includes a partial AI integration for report generation:
+
+- AI website analysis (`POST /api/ai/website-analysis`)
+- AI briefing generation (`POST /api/ai/briefing`)
+- staged client orchestration before PDF generation
+- prompt management through Nuxt Content (`content/prompts/*`)
+- PDF sections for AI output
+
+Detailed integration documentation:
+
+- [AI Integration README](./docs/ai-integration/README.md)
+
+---
+
+## Documentation
+
+Additional technical docs:
+
+- [Nuxt Content Usage](./docs/content/README.md)
+- [Auditing Feature](./docs/auditing/README.md)
+- [Project Conventions](./docs/conventions/README.md)
+- [CI/CD](./docs/ci-cd/README.md)
+- [Report PDF Pipeline](./docs/report-pdf/README.md)
+
+---
+
 ## PDF Generation
 
 PDF generation is fully client-side using `jsPDF`.
@@ -230,7 +259,7 @@ If you touch this:
 For internals, see:
 
 ```txt
-app/composables/report/README.md
+docs/report-pdf/README.md
 ```
 
 ---

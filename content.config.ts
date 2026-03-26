@@ -1,7 +1,7 @@
 import { defineCollection, defineContentConfig } from '@nuxt/content'
 import { z } from 'zod'
 
-import { goal, pillar, priority, scope } from './schema/fields'
+import { aiPromptKey, goal, pillar, priority, scope } from './schema/fields'
 
 export default defineContentConfig({
 	collections: {
@@ -43,6 +43,18 @@ export default defineContentConfig({
 				category: z.enum(['tool', 'data', 'media']),
 				link: z.url().nullable(),
 				download: z.url().nullable(),
+			}),
+		}),
+		prompts: defineCollection({
+			type: 'page',
+			source: {
+				include: 'prompts/**/*.md',
+				exclude: [],
+			},
+			schema: z.object({
+				title: z.string(),
+				key: aiPromptKey,
+				description: z.string().optional(),
 			}),
 		}),
 	},

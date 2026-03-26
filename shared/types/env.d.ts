@@ -18,6 +18,8 @@ declare global {
 			 * API
 			 */
 			API_TOKEN: string
+			OPENAI_API_KEY: string
+			OPENAI_MODEL?: string
 
 			/**
 			 * Cloudflare

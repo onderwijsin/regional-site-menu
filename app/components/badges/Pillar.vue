@@ -1,18 +1,15 @@
 <script lang="ts" setup>
-import type { ItemsCollectionItem } from '@nuxt/content'
 import type { BadgeProps } from '@nuxt/ui'
+import type { Pillar } from '~~/shared/types/primitives'
 
 import { getPillarHint, getPillarIconName } from '~/composables/content-taxonomy'
 
 import HintPopover from './HintPopover.vue'
 
-const props = withDefaults(
-	defineProps<Omit<BadgeProps, 'label' | 'icon'> & { value: ItemsCollectionItem['pillar'] }>(),
-	{
-		variant: 'subtle',
-		color: 'primary',
-	},
-)
+const props = withDefaults(defineProps<Omit<BadgeProps, 'label' | 'icon'> & { value: Pillar }>(), {
+	variant: 'subtle',
+	color: 'primary',
+})
 
 const hint = computed(() => getPillarHint(props.value))
 

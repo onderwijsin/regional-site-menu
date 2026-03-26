@@ -7,12 +7,12 @@ catalog:
   '@ianvs/prettier-plugin-sort-imports': 4.7.1
   '@iconify-json/heroicons': 1.2.3
   '@iconify-json/hugeicons': 1.2.24
-  '@iconify-json/lucide': 1.2.98
-  '@iconify-json/simple-icons': 1.2.74
+  '@iconify-json/lucide': 1.2.99
+  '@iconify-json/simple-icons': 1.2.75
   '@nuxt/content': 3.12.0
   '@nuxt/eslint': 1.15.2
   '@nuxt/image': 2.0.0
-  '@nuxt/ui': 4.5.1
+  '@nuxt/ui': 4.6.0
   '@nuxthub/core': 0.10.7
   '@nuxtjs/eslint-module': 4.1.0
   '@nuxtjs/plausible': 3.0.2
@@ -38,10 +38,12 @@ catalog:
   fuse.js: 7.1.0
   husky: 9.1.7
   jspdf: 4.2.1
+  minimark: 1.0.0
   nuxt: 4.4.2
   nuxt-llms: 0.2.0
   nuxt-site-config: 3.2.21
   ofetch: 1.5.1
+  openai: 6.33.0
   pinia: 3.0.4
   pinia-plugin-persistedstate: 4.7.1
   prettier: 3.8.1
@@ -52,7 +54,7 @@ catalog:
   typescript: 5.9.3
   ufo: 1.6.3
   vue-tsc: 3.2.6
-  wrangler: 4.76.0
+  wrangler: 4.77.0
   zod: 4.3.6
 
 catalogMode: 'strict'

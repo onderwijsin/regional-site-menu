@@ -10,6 +10,7 @@
 import type { ItemsCollectionItem } from '@nuxt/content'
 import type { BadgeProps } from '@nuxt/ui'
 import type { AuditAverage, AuditEntry, AuditProps, PillarAverage } from '~~/shared/types/audit'
+import type { Pillar } from '~~/shared/types/primitives'
 
 import { getPillarIconName, PILLARS } from '~/composables/content-taxonomy'
 
@@ -77,7 +78,7 @@ export const useAuditUtils = () => {
 	const calculateAverageForPillar = (
 		data: ItemsCollectionItem[],
 		audit: Record<string, AuditEntry>,
-		pillar: ItemsCollectionItem['pillar'],
+		pillar: Pillar,
 	): { score: number; count: number } | undefined => {
 		const scores = data
 			.filter((item) => item.pillar === pillar)
@@ -105,7 +106,7 @@ export const useAuditUtils = () => {
 	const assembleAverage = (
 		data: ItemsCollectionItem[],
 		audit: Record<string, AuditEntry>,
-		pillar: ItemsCollectionItem['pillar'],
+		pillar: Pillar,
 	): AuditAverage => {
 		const result = calculateAverageForPillar(data, audit, pillar)
 
@@ -127,7 +128,7 @@ export const useAuditUtils = () => {
 	const getAverages = (
 		data: ItemsCollectionItem[],
 		audit: Record<string, AuditEntry>,
-	): PillarAverage<ItemsCollectionItem['pillar']>[] => {
+	): PillarAverage<Pillar>[] => {
 		return PILLARS.map((pillar) => ({
 			pillar,
 			icon: getIcon(getPillarIconName(pillar)),

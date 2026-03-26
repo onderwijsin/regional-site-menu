@@ -1,6 +1,6 @@
-import type { ItemsCollectionItem } from '@nuxt/content'
 import type { ReportConfig } from '~~/schema/reportConfig'
 import type { PillarAverage } from '~~/shared/types/audit'
+import type { Pillar } from '~~/shared/types/primitives'
 import type { PdfRenderContext } from '../pdf'
 import type { ReportData } from '../types'
 
@@ -30,7 +30,7 @@ export function drawAverageCard(
 		y: number
 		width: number
 		height: number
-		average: PillarAverage<ItemsCollectionItem['pillar']>
+		average: PillarAverage<Pillar>
 	},
 ): void {
 	const { x, y, width, height, average } = args
@@ -102,7 +102,7 @@ export function getScoreColorKey(score: number | null) {
 function renderAverageSummaryCard(
 	ctx: PdfRenderContext,
 	title: string,
-	data: PillarAverage<ItemsCollectionItem['pillar']>,
+	data: PillarAverage<Pillar>,
 	x: number,
 	y: number,
 	width: number,

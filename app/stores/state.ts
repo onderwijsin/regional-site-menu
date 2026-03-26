@@ -7,9 +7,8 @@
  * - Persistence of user preferences
  */
 
-import type { ItemsCollectionItem } from '@nuxt/content'
 import type { AuditEntry } from '~~/shared/types/audit'
-import type { ViewMode } from '~~/shared/types/primitives'
+import type { Goal, ViewMode } from '~~/shared/types/primitives'
 
 import { defineStore } from 'pinia'
 
@@ -31,7 +30,7 @@ export const useStateStore = defineStore(
 		const { trackModeSwitch } = useTracking()
 
 		/** Active goal filter */
-		const filter = ref<ItemsCollectionItem['goals'][number] | 'all'>('all')
+		const filter = ref<Goal | 'all'>('all')
 
 		/** Controls suggestion modal visibility */
 		const suggestionOpen = ref(false)

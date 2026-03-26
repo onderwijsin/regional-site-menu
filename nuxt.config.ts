@@ -183,6 +183,10 @@ export default defineNuxtConfig({
 			url: process.env.DATAHUB_URL,
 			token: process.env.DATAHUB_TOKEN,
 		},
+		openai: {
+			token: process.env.OPENAI_API_KEY,
+			model: process.env.OPENAI_MODEL || 'gpt-4.1-mini',
+		},
 		public: {
 			siteUrl: process.env.APP_URL,
 			titleSeparator: '|',
