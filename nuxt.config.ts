@@ -184,6 +184,12 @@ export default defineNuxtConfig({
 		media: {
 			external: true,
 		},
+		auth: {
+			github: {
+				clientId: process.env.STUDIO_GITHUB_CLIENT_ID,
+				clientSecret: process.env.STUDIO_GITHUB_CLIENT_SECRET,
+			},
+		},
 	},
 
 	debug: {
