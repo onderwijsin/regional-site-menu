@@ -100,7 +100,7 @@ export default defineNuxtConfig({
 		routeRules: {
 			'/**': { prerender: true },
 			'/_prompts/**': { prerender: false },
-			'/images/**': {
+			'/assets/**': {
 				ssr: false,
 				cache: false,
 			},
@@ -246,6 +246,7 @@ export default defineNuxtConfig({
 		},
 		media: {
 			external: true,
+			prefix: 'assets',
 		},
 		auth: {
 			github: {

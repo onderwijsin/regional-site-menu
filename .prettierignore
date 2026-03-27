@@ -7,3 +7,4 @@ dist
 nuxt/.nuxt
 .output
 node_modules
+content/
