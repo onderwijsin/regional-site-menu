@@ -3,6 +3,7 @@ import type { ReportConfig } from '~~/schema/reportConfig'
 import type { ReportData } from './report/types'
 
 import {
+	AI_WEBSITE_ANALYSIS_DEFAULT_PAGES,
 	AiBriefingRequestSchema,
 	AiBriefingResponseSchema,
 	AiWebsiteAnalysisRequestSchema,
@@ -43,6 +44,14 @@ type AiProgressScenario = {
 	 */
 	fastForwardMs: number
 }
+
+/**
+ * Tuning value for estimated crawl progress duration.
+ *
+ * Effective duration for the crawl stage is:
+ * `AI_ANALYSIS_CRAWL_STAGE_DURATION_PER_PAGE_MS * maxPages`.
+ */
+const AI_ANALYSIS_CRAWL_STAGE_DURATION_PER_PAGE_MS = 3_000
 
 const AI_PROGRESS_CONFIG: Record<'analysis' | 'briefing', AiProgressScenario> = {
 	analysis: {
@@ -114,6 +123,35 @@ const AI_PROGRESS_CONFIG: Record<'analysis' | 'briefing', AiProgressScenario> = 
 				durationMs: 2000
 			}
 		]
+	}
+}
+
+/**
+ * Resolves the crawl stage duration based on requested crawl depth.
+ *
+ * @param maxPages - Requested max pages for website analysis.
+ * @returns Duration in milliseconds for the crawl stage.
+ */
+function resolveAnalysisCrawlStageDurationMs(maxPages: number | undefined): number {
+	const safeMaxPages = Math.max(maxPages ?? AI_WEBSITE_ANALYSIS_DEFAULT_PAGES, 1)
+	return AI_ANALYSIS_CRAWL_STAGE_DURATION_PER_PAGE_MS * safeMaxPages
+}
+
+/**
+ * Creates analysis progress configuration with dynamic crawl-stage timing.
+ *
+ * @param maxPages - Requested max pages for website analysis.
+ * @returns Scenario with crawl stage duration adjusted to max pages.
+ */
+function createAnalysisProgressScenario(maxPages: number | undefined): AiProgressScenario {
+	const baseScenario = AI_PROGRESS_CONFIG.analysis
+	const crawlDurationMs = resolveAnalysisCrawlStageDurationMs(maxPages)
+
+	return {
+		...baseScenario,
+		stages: baseScenario.stages.map((stage) =>
+			stage.id === 'analysis-crawl' ? { ...stage, durationMs: crawlDurationMs } : stage
+		)
 	}
 }
 
@@ -208,10 +246,10 @@ export const useReportAi = () => {
 	 * @returns Task result.
 	 */
 	async function runWithProgressScenario<T>(
-		scenario: keyof typeof AI_PROGRESS_CONFIG,
+		scenario: keyof typeof AI_PROGRESS_CONFIG | AiProgressScenario,
 		task: () => Promise<T>
 	): Promise<T> {
-		const config = AI_PROGRESS_CONFIG[scenario]
+		const config = typeof scenario === 'string' ? AI_PROGRESS_CONFIG[scenario] : scenario
 		if (config.stages.length === 0) {
 			return await task()
 		}
@@ -309,8 +347,9 @@ export const useReportAi = () => {
 		if (config.aiWebsiteAnalysis && config.url) {
 			let analysisResult: AiWebsiteAnalysisResponse
 			try {
-				analysisResult = await runWithProgressScenario('analysis', () =>
-					generateWebsiteAnalysis(config)
+				analysisResult = await runWithProgressScenario(
+					createAnalysisProgressScenario(config.maxPages),
+					() => generateWebsiteAnalysis(config)
 				)
 			} catch (error: unknown) {
 				throw new ReportGenerationError('AI_WEBSITE_ANALYSIS_FAILED', error)
