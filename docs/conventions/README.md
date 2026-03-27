@@ -42,7 +42,7 @@ Reference:
 
 ## AI Conventions
 
-1. Keep prompts in content (`content/prompts`) with typed keys.
+1. Keep prompts in content (`content/_prompts`) with typed keys.
 2. Keep route files controller-level; move parsing/formatting helpers to `server/utils/ai`.
 3. Preserve strict request/response schema validation.
 4. Include analysis traceability metadata for verification.

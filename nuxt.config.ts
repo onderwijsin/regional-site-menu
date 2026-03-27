@@ -6,7 +6,7 @@ import { access, copyFile, mkdir, stat } from 'node:fs/promises'
 import { dirname, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
-import { parseURL } from 'ufo'
+import { joinURL, parseURL } from 'ufo'
 
 import { app } from './config/head'
 import { siteDescription, siteTitle } from './config/indentity'
@@ -99,10 +99,19 @@ export default defineNuxtConfig({
 	$production: {
 		routeRules: {
 			'/**': { prerender: true },
+			'/_prompts/**': { prerender: false },
+			'/images/**': {
+				ssr: false,
+				cache: false,
+			},
 		},
-		// image: {
-		// 	provider: 'cloudflare',
-		// },
+
+		image: {
+			provider: 'cloudflare',
+			cloudflare: {
+				baseURL: joinURL(process.env.APP_URL!),
+			},
+		},
 	},
 
 	routeRules: {
@@ -204,30 +213,13 @@ export default defineNuxtConfig({
 	},
 
 	hub: {
-		/**
-		 * There is a weird error in local development if we define CF resources in local dev, the binding is undefined
-		 * We can only resolve the issue by adding the binding in a wrangler.json file, which we don't want to add
-		 * specifically for this issue.
-		 *
-		 * Adding the binding to nitro.cloudflare.wrangler doesnt help, because that config does nothing in local dev.
-		 *
-		 * `Cache write error. [unstorage] [cloudflare] Invalid binding CACHE: undefined`
-		 */
-		// blob: isDev
-		// 	? {
-		// 			driver: 'cloudflare-r2',
-		// 			bucketName: process.env.CLOUDFLARE_R2_BUCKET,
-		// 			binding: 'BLOB',
-		// 		}
-		// 	: false,
-		blob: true,
+		// We dont need DB here, since nuxthub should not provision it (Nuxt Content will do that)
+		blob: {
+			driver: 'cloudflare-r2',
+			bucketName: process.env.CLOUDFLARE_R2_BUCKET,
+			binding: 'BLOB',
+		},
 
-		// cache: isDev
-		// 	? {
-		// 			driver: 'cloudflare-kv-binding',
-		// 			namespaceId: process.env.CLOUDFLARE_CACHE_NAMESPACE_ID,
-		// 		}
-		// 	: false,
 		cache: true,
 	},
 
@@ -252,9 +244,9 @@ export default defineNuxtConfig({
 			repo: 'regional-site-menu',
 			branch: 'main',
 		},
-		// media: {
-		// 	external: true,
-		// },
+		media: {
+			external: true,
+		},
 		auth: {
 			github: {
 				clientId: process.env.STUDIO_GITHUB_CLIENT_ID,

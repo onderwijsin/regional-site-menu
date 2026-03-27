@@ -21,7 +21,6 @@ export default defineContentConfig({
 				goals: z.array(goal),
 				scope,
 				priority,
-				exampleUrl: z.url().optional(),
 				audit: z
 					.object({
 						description: z.string().optional(),
@@ -45,10 +44,10 @@ export default defineContentConfig({
 				download: z.url().nullable(),
 			}),
 		}),
-		prompts: defineCollection({
+		_prompts: defineCollection({
 			type: 'page',
 			source: {
-				include: 'prompts/**/*.md',
+				include: '_prompts/**/*.md',
 				exclude: [],
 			},
 			schema: z.object({
