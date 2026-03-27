@@ -45,7 +45,7 @@ export default defineContentConfig({
 			}),
 		}),
 		prompts: defineCollection({
-			type: 'page',
+			type: 'data',
 			source: {
 				include: 'prompts/**/*.md',
 				exclude: [],
