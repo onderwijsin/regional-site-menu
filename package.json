@@ -5,7 +5,6 @@
 	"scripts": {
 		"dev": "nuxt dev",
 		"build": "NODE_OPTIONS=\"--max-old-space-size=8192\"  nuxt build",
-		"postbuild": "node ./scripts/build-ai-reference.mjs",
 		"postinstall": "nuxt prepare",
 		"preview": "nuxt preview",
 		"analyze": "nuxt analyze",
