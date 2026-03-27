@@ -11,14 +11,15 @@ import {
 	renderWebsiteAnalysisMarkdown,
 	WebsiteAnalysisOutputSchema
 } from '../../utils/ai/analysis-output'
-import {
-	getOpenAiClient,
-	getSupportedOpenAiValuesFromError,
-	isUnsupportedOpenAiParameterError,
-	pickFirstSupportedOpenAiValue
-} from '../../utils/ai/openai'
+import { getOpenAiClient } from '../../utils/ai/openai'
 import { getAiSystemPrompt } from '../../utils/ai/prompts'
 import { fetchLlmsFullReferenceDocument } from '../../utils/ai/reference'
+import {
+	extractResponseRefusalText,
+	readRecordField,
+	requestWithOpenAiCompatibility,
+	shouldRetryAfterTokenLimitIncomplete
+} from '../../utils/ai/response'
 import { countWords, sanitizeAiMarkdown } from '../../utils/ai/text'
 import { crawlWebsiteForAnalysis } from '../../utils/crawler/website'
 
@@ -93,58 +94,63 @@ export default defineEventHandler(async (event) => {
 		reasoningEffort: 'none' | 'minimal' | 'low' | 'medium' | 'high' | 'xhigh'
 		verbosity: 'low' | 'medium' | 'high'
 	}): Promise<Awaited<ReturnType<typeof client.responses.parse>>> => {
-		let includeReasoning = options.includeReasoning
-		let includeVerbosity = true
-		let reasoningEffort = options.reasoningEffort
-		let verbosity = options.verbosity
-		let useStructuredOutput = true
-
-		while (true) {
-			try {
-				if (useStructuredOutput) {
-					return await client.responses.parse(
-						{
-							model,
-							max_output_tokens: options.maxOutputTokens,
-							...(includeReasoning
-								? {
-										reasoning: {
-											effort: reasoningEffort
-										}
+		return await requestWithOpenAiCompatibility({
+			label: 'website-analysis',
+			maxOutputTokens: options.maxOutputTokens,
+			includeReasoning: options.includeReasoning,
+			reasoningEffort: options.reasoningEffort,
+			verbosity: options.verbosity,
+			requestStructured: async ({
+				maxOutputTokens,
+				includeReasoning,
+				reasoningEffort,
+				includeVerbosity,
+				verbosity
+			}) =>
+				await client.responses.parse(
+					{
+						model,
+						max_output_tokens: maxOutputTokens,
+						...(includeReasoning
+							? {
+									reasoning: {
+										effort: reasoningEffort
 									}
-								: {}),
-							text: {
-								...(includeVerbosity
-									? {
-											verbosity
-										}
-									: {}),
-								format: zodTextFormat(
-									WebsiteAnalysisOutputSchema,
-									'website_analysis_output'
-								)
-							},
-							input: [
-								{
-									role: 'system',
-									content: systemPrompt
-								},
-								{
-									role: 'user',
-									content: userPrompt
 								}
-							]
+							: {}),
+						text: {
+							...(includeVerbosity ? { verbosity } : {}),
+							format: zodTextFormat(
+								WebsiteAnalysisOutputSchema,
+								'website_analysis_output'
+							)
 						},
-						{
-							maxRetries: AI_OPENAI_CONFIG.analysisRequest.maxRetries
-						}
-					)
-				}
-
+						input: [
+							{
+								role: 'system',
+								content: systemPrompt
+							},
+							{
+								role: 'user',
+								content: userPrompt
+							}
+						]
+					},
+					{
+						maxRetries: AI_OPENAI_CONFIG.analysisRequest.maxRetries
+					}
+				),
+			requestPlain: async ({
+				maxOutputTokens,
+				includeReasoning,
+				reasoningEffort,
+				includeVerbosity,
+				verbosity
+			}) => {
 				const plainResponse = await client.responses.create(
 					{
 						model,
-						max_output_tokens: options.maxOutputTokens,
+						max_output_tokens: maxOutputTokens,
 						...(includeReasoning
 							? {
 									reasoning: {
@@ -173,83 +179,8 @@ export default defineEventHandler(async (event) => {
 					...plainResponse,
 					output_parsed: null
 				} as Awaited<ReturnType<typeof client.responses.parse>>
-			} catch (error: unknown) {
-				if (useStructuredOutput && isStructuredOutputJsonParseError(error)) {
-					useStructuredOutput = false
-					console.warn(
-						'[AI] website-analysis structured parse failed, retrying with plain-text response mode',
-						{ model }
-					)
-					continue
-				}
-
-				if (
-					includeReasoning &&
-					isUnsupportedOpenAiParameterError(error, 'reasoning.effort')
-				) {
-					const supportedValues = getSupportedOpenAiValuesFromError(error)
-					const reasoningFallback = pickFirstSupportedOpenAiValue(supportedValues, [
-						'high',
-						'medium',
-						'low',
-						'minimal',
-						'none'
-					])
-
-					if (reasoningFallback && reasoningFallback !== reasoningEffort) {
-						reasoningEffort = reasoningFallback as typeof reasoningEffort
-						console.warn(
-							'[AI] website-analysis retrying with fallback reasoning.effort value',
-							{
-								model,
-								reasoningEffort
-							}
-						)
-						continue
-					}
-
-					includeReasoning = false
-					console.warn(
-						'[AI] website-analysis retrying without reasoning.effort for model compatibility',
-						{ model }
-					)
-					continue
-				}
-
-				if (
-					includeVerbosity &&
-					isUnsupportedOpenAiParameterError(error, 'text.verbosity')
-				) {
-					const supportedValues = getSupportedOpenAiValuesFromError(error)
-					const verbosityFallback = pickFirstSupportedOpenAiValue(supportedValues, [
-						'high',
-						'medium',
-						'low'
-					])
-
-					if (verbosityFallback && verbosityFallback !== verbosity) {
-						verbosity = verbosityFallback as typeof verbosity
-						console.warn(
-							'[AI] website-analysis retrying with fallback text.verbosity value',
-							{
-								model,
-								verbosity
-							}
-						)
-						continue
-					}
-
-					includeVerbosity = false
-					console.warn(
-						'[AI] website-analysis retrying without text.verbosity for model compatibility',
-						{ model }
-					)
-					continue
-				}
-
-				throw error
 			}
-		}
+		})
 	}
 
 	let response = await requestWebsiteAnalysisResponse({
@@ -334,44 +265,6 @@ export default defineEventHandler(async (event) => {
 })
 
 /**
- * Returns true when model output is incomplete due output-token exhaustion.
- *
- * @param response - Responses API payload.
- * @returns Whether a higher-token retry is warranted.
- */
-function shouldRetryAfterTokenLimitIncomplete(response: unknown): boolean {
-	const status = readRecordField(response, 'status')
-	if (status !== 'incomplete') {
-		return false
-	}
-
-	const hasParsedOutput = Boolean(readRecordField(response, 'output_parsed'))
-	const outputText = readRecordField(response, 'output_text')
-	const hasOutputText = typeof outputText === 'string' && outputText.trim().length > 0
-	if (hasParsedOutput || hasOutputText) {
-		return false
-	}
-
-	const incompleteDetails = readRecordField(response, 'incomplete_details')
-	const reason = readRecordField(incompleteDetails, 'reason')
-	return reason === 'max_output_tokens'
-}
-
-/**
- * Returns true when the OpenAI SDK fails to parse structured JSON output text.
- *
- * @param error - Unknown thrown error.
- * @returns Whether this is a structured-output JSON parse failure.
- */
-function isStructuredOutputJsonParseError(error: unknown): boolean {
-	if (!(error instanceof SyntaxError)) {
-		return false
-	}
-
-	return error.message.toLowerCase().includes('json')
-}
-
-/**
  * Tries to parse structured analysis payload from a text response.
  *
  * @param text - Raw output text.
@@ -389,50 +282,4 @@ function tryParseWebsiteAnalysisOutputFromText(
 	} catch {
 		return null
 	}
-}
-
-/**
- * Best-effort extraction of refusal text from response output items.
- *
- * @param response - Parsed responses API payload.
- * @returns Refusal text when present.
- */
-function extractResponseRefusalText(response: unknown): string | null {
-	const outputItems = readRecordField(response, 'output')
-	if (!Array.isArray(outputItems)) {
-		return null
-	}
-
-	for (const item of outputItems) {
-		const content = readRecordField(item, 'content')
-		if (!Array.isArray(content)) {
-			continue
-		}
-
-		for (const part of content) {
-			if (readRecordField(part, 'type') === 'refusal') {
-				const refusal = readRecordField(part, 'refusal')
-				if (typeof refusal === 'string' && refusal.trim()) {
-					return refusal.trim()
-				}
-			}
-		}
-	}
-
-	return null
-}
-
-/**
- * Reads an object field safely from unknown values.
- *
- * @param value - Unknown value.
- * @param key - Field key.
- * @returns Field value or undefined.
- */
-function readRecordField(value: unknown, key: string): unknown {
-	if (!value || typeof value !== 'object') {
-		return undefined
-	}
-
-	return (value as Record<string, unknown>)[key]
 }

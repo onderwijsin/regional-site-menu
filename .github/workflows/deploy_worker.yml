@@ -94,8 +94,7 @@ jobs:
             echo "SENTRY_RELEASE=${{ steps.sentry.outputs.sentry-release }}" >> .env
           fi
 
-          echo "Generated .env:"
-          cat .env
+          echo "Generated .env with $(wc -l < .env) entries"
 
       - name: Build Nuxt Application
         run: pnpm build
