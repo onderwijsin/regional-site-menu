@@ -18,8 +18,6 @@ declare global {
 			 * API
 			 */
 			API_TOKEN: string
-			OPENAI_API_KEY: string
-			OPENAI_MODEL?: string
 
 			/**
 			 * Cloudflare
@@ -45,7 +43,7 @@ declare global {
 			 * OpenAI integration
 			 */
 			OPENAI_API_KEY: string
-			OPENAI_MODEL: string
+			OPENAI_MODEL?: string
 
 			/**
 			 * Datahub
