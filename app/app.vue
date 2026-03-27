@@ -63,7 +63,7 @@ const { getIcon } = useIcons()
 
 		<USeparator
 			:avatar="{
-				src: '/logo.png',
+				src: '/images/logo.png',
 				loading: 'lazy',
 			}"
 		/>

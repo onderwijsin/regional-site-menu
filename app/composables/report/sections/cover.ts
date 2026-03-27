@@ -26,7 +26,7 @@ export async function renderCoverPage(ctx: PdfRenderContext, title: string): Pro
 	doc.rect(0, 0, page.width, page.height, 'F')
 
 	try {
-		const logo = await loadImageAsBase64('/logo_with_text.png')
+		const logo = await loadImageAsBase64('/images/logo_with_text.png')
 		doc.addImage(logo, 'PNG', layout.marginLeft, layout.marginTop, 60, 0)
 	} catch {
 		// The logo is decorative; rendering should continue when it cannot be loaded.
