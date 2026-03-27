@@ -19,6 +19,8 @@ const DEFAULT_MAX_QUEUED_URLS = 500
 const MAX_SITEMAP_URLS = 200
 
 const SITEMAP_PATHS = ['/sitemap.xml', '/sitemap_index.xml']
+const HTML_LIKE_EXTENSIONS = new Set(['', 'html', 'htm', 'php', 'asp', 'aspx', 'jsp'])
+const SKIPPED_PATHS = new Set(['/llms.txt', '/llms-full.txt'])
 
 /**
  * Runs a lightweight same-domain crawl for AI analysis context.
@@ -69,6 +71,9 @@ export async function crawlWebsiteForAnalysis(
 		}
 
 		visited.add(currentUrl)
+		if (!isProbablyHtmlDocumentUrl(currentUrl)) {
+			continue
+		}
 
 		const fetched = await fetchHtmlPage(currentUrl, timeoutMs)
 		if (!fetched) {
@@ -129,6 +134,34 @@ function isAllowedUrl(url: string, allowedDomains: string[]): boolean {
 }
 
 /**
+ * Returns true when a URL likely points to an HTML page we should crawl.
+ *
+ * This avoids crawling known non-page endpoints (like llms txt routes or APIs)
+ * that can trigger server handlers not intended as crawl context.
+ *
+ * @param url - URL to test.
+ * @returns Whether the URL should be fetched by the crawler.
+ */
+function isProbablyHtmlDocumentUrl(url: string): boolean {
+	try {
+		const parsed = new URL(url)
+		const pathname = parsed.pathname.toLowerCase()
+
+		if (SKIPPED_PATHS.has(pathname) || pathname.startsWith('/api/')) {
+			return false
+		}
+
+		const lastSegment = pathname.split('/').filter(Boolean).pop() || ''
+		const extensionMatch = lastSegment.match(/\.([a-z0-9]+)$/)
+		const extension = extensionMatch?.[1] || ''
+
+		return HTML_LIKE_EXTENSIONS.has(extension)
+	} catch {
+		return false
+	}
+}
+
+/**
  * Normalizes URL for deduplication.
  *
  * @param input - Raw URL.
@@ -137,6 +170,9 @@ function isAllowedUrl(url: string, allowedDomains: string[]): boolean {
 function normalizeUrl(input: string): string {
 	const url = new URL(input)
 	url.hash = ''
+	if (url.pathname.length > 1 && url.pathname.endsWith('/')) {
+		url.pathname = url.pathname.replace(/\/+$/, '')
+	}
 
 	// Remove tracking parameters that do not represent unique content pages.
 	for (const key of [...url.searchParams.keys()]) {
@@ -226,7 +262,12 @@ async function fetchSitemapUrls(
 				continue
 			}
 
-			collected.add(normalizeUrl(url))
+			const normalizedUrl = normalizeUrl(url)
+			if (!isProbablyHtmlDocumentUrl(normalizedUrl)) {
+				continue
+			}
+
+			collected.add(normalizedUrl)
 			if (collected.size >= MAX_SITEMAP_URLS) {
 				break
 			}
@@ -322,7 +363,7 @@ function extractLinks(html: string, baseUrl: string, allowedDomains: string[]): 
 
 		try {
 			const absolute = normalizeUrl(new URL(rawHref, baseUrl).toString())
-			if (isAllowedUrl(absolute, allowedDomains)) {
+			if (isAllowedUrl(absolute, allowedDomains) && isProbablyHtmlDocumentUrl(absolute)) {
 				urls.add(absolute)
 			}
 		} catch {
