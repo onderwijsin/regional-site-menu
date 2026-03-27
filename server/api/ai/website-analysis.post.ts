@@ -1,3 +1,4 @@
+import { AI_OPENAI_CONFIG } from '@constants'
 import {
 	AI_WEBSITE_ANALYSIS_DEFAULT_PAGES,
 	AiWebsiteAnalysisRequestSchema,
@@ -5,11 +6,11 @@ import {
 } from '@schema/reportAi'
 
 import { createAllowedDomains, formatWebsiteAnalysisInput } from '../../utils/ai/analysis'
-import { crawlWebsiteForAnalysis } from '../../utils/ai/crawl'
 import { getOpenAiClient } from '../../utils/ai/openai'
 import { getAiSystemPrompt } from '../../utils/ai/prompts'
 import { fetchLlmsFullReferenceDocument } from '../../utils/ai/reference'
 import { countWords, sanitizeAiMarkdown } from '../../utils/ai/text'
+import { crawlWebsiteForAnalysis } from '../../utils/crawler/website'
 
 /**
  * Controller for `POST /api/ai/website-analysis`.
@@ -67,8 +68,8 @@ export default defineEventHandler(async (event) => {
 	const response = await client.responses.create(
 		{
 			model,
-			temperature: 0.1,
-			max_output_tokens: 1800,
+			temperature: AI_OPENAI_CONFIG.analysisRequest.temperature,
+			max_output_tokens: AI_OPENAI_CONFIG.analysisRequest.maxOutputTokens,
 			input: [
 				{
 					role: 'system',
@@ -81,7 +82,7 @@ export default defineEventHandler(async (event) => {
 			]
 		},
 		{
-			maxRetries: 2
+			maxRetries: AI_OPENAI_CONFIG.analysisRequest.maxRetries
 		}
 	)
 

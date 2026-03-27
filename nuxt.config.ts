@@ -5,6 +5,7 @@ import { fileURLToPath } from 'node:url'
 
 import { joinURL, parseURL } from 'ufo'
 
+import { AI_OPENAI_CONFIG, NUXT_BEHAVIOR_CONFIG } from './config/constants'
 import { app } from './config/head'
 import { siteDescription, siteTitle } from './config/indentity'
 import { robots } from './config/robots'
@@ -46,7 +47,8 @@ export default defineNuxtConfig({
 	},
 
 	alias: {
-		'@schema': fileURLToPath(new URL('./schema', import.meta.url))
+		'@schema': fileURLToPath(new URL('./schema', import.meta.url)),
+		'@constants': fileURLToPath(new URL('./config/constants', import.meta.url))
 	},
 
 	css: ['~/assets/css/main.css'],
@@ -90,7 +92,7 @@ export default defineNuxtConfig({
 		}
 	},
 
-	compatibilityDate: '2026-01-05',
+	compatibilityDate: NUXT_BEHAVIOR_CONFIG.compatibilityDate,
 
 	components: [
 		{
@@ -122,7 +124,7 @@ export default defineNuxtConfig({
 		prerender: {
 			crawlLinks: true,
 			failOnError: true,
-			routes: ['/overview']
+			routes: [...NUXT_BEHAVIOR_CONFIG.nitroPrerenderRoutes]
 		},
 		preset: 'cloudflare_module',
 		cloudflare: {
@@ -146,7 +148,7 @@ export default defineNuxtConfig({
 					STUDIO_GITHUB_CLIENT_ID: process.env.STUDIO_GITHUB_CLIENT_ID
 				},
 				limits: {
-					cpu_ms: 300000 // Increase max cpu time to 5 min due to expensive AI requests
+					cpu_ms: NUXT_BEHAVIOR_CONFIG.nitroCpuMs // Increase max cpu time to 5 min due to expensive AI requests
 				},
 				d1_databases: [
 					{
@@ -186,7 +188,7 @@ export default defineNuxtConfig({
 		build: {
 			markdown: {
 				toc: {
-					searchDepth: 1
+					searchDepth: NUXT_BEHAVIOR_CONFIG.contentTocSearchDepth
 				}
 			}
 		}
@@ -241,12 +243,12 @@ export default defineNuxtConfig({
 		},
 		openai: {
 			token: process.env.OPENAI_API_KEY,
-			model: process.env.OPENAI_MODEL || 'gpt-4.1-mini'
+			model: process.env.OPENAI_MODEL || AI_OPENAI_CONFIG.defaultModel
 		},
 		public: {
 			siteUrl: process.env.APP_URL,
-			titleSeparator: '|',
-			language: 'nl_NL', // prefer more explicit language codes like `en-AU` over `en`
+			titleSeparator: NUXT_BEHAVIOR_CONFIG.titleSeparator,
+			language: NUXT_BEHAVIOR_CONFIG.language, // prefer more explicit language codes like `en-AU` over `en`
 			mode: {
 				isDev,
 				isProd,
@@ -260,7 +262,7 @@ export default defineNuxtConfig({
 				disabled: process.env.DISABLE_TRACKING === 'true'
 			},
 			contact: {
-				page: 'https://www.onderwijsregio.nl/service/contact'
+				page: NUXT_BEHAVIOR_CONFIG.publicContactPage
 			}
 		}
 	},
@@ -284,8 +286,8 @@ export default defineNuxtConfig({
 		// https://github.com/nuxt-modules/plausible?tab=readme-ov-file#proxy-configuration
 		// Proxy is broken, probably due to edge runtime
 		proxy: true,
-		proxyBaseEndpoint: '/api/_plausible',
-		ignoredHostnames: ['localhost'],
+		proxyBaseEndpoint: NUXT_BEHAVIOR_CONFIG.plausibleProxyBaseEndpoint,
+		ignoredHostnames: [...NUXT_BEHAVIOR_CONFIG.plausibleIgnoredHostnames],
 		autoPageviews: true,
 		autoOutboundTracking: true
 	},
@@ -304,9 +306,9 @@ export default defineNuxtConfig({
 		name: siteTitle,
 		description: siteDescription,
 		url: process.env.APP_URL,
-		titleSeparator: '|',
-		defaultLocale: 'nl', // not needed if you have @nuxtjs/i18n installed
-		language: 'nl_NL',
+		titleSeparator: NUXT_BEHAVIOR_CONFIG.titleSeparator,
+		defaultLocale: NUXT_BEHAVIOR_CONFIG.defaultLocale, // not needed if you have @nuxtjs/i18n installed
+		language: NUXT_BEHAVIOR_CONFIG.language,
 		indexable: isProd,
 		trailingSlash: false
 	},

@@ -20,7 +20,7 @@ const heroLinks = ref<ButtonProps[]>([
 		color: 'neutral',
 		variant: 'subtle',
 		onClick: () => {
-			state.mode = 'explore'
+			state.setMode('explore', 'header_tabs')
 		}
 	},
 	{
@@ -31,7 +31,7 @@ const heroLinks = ref<ButtonProps[]>([
 		variant: 'subtle',
 		trailingIcon: 'i-lucide-arrow-right',
 		onClick: () => {
-			state.mode = 'edit'
+			state.setMode('edit', 'header_tabs')
 		}
 	}
 ])

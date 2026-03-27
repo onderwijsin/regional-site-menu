@@ -12,6 +12,7 @@ import type { BadgeProps } from '@nuxt/ui'
 import type { AuditAverage, AuditEntry, AuditProps, PillarAverage } from '~~/shared/types/audit'
 import type { Pillar } from '~~/shared/types/primitives'
 
+import { AUDIT_SCORE_LABELS } from '@constants'
 import { getPillarIconName, PILLARS } from '~/composables/content-taxonomy'
 
 // ----------------------
@@ -23,19 +24,6 @@ import { getPillarIconName, PILLARS } from '~/composables/content-taxonomy'
  *
  * Using a fixed map instead of ranges allows precise wording control.
  */
-const SCORE_LABELS: Record<number, string> = {
-	1: 'Zeer slecht (1/10)',
-	2: 'Zeer slecht (2/10)',
-	3: 'Slecht (3/10)',
-	4: 'Slecht (4/10)',
-	5: 'Matig (5/10)',
-	6: 'Voldoende (6/10)',
-	7: 'Goed (7/10)',
-	8: 'Zeer goed (8/10)',
-	9: 'Uitstekend (9/10)',
-	10: 'Perfect (10/10)'
-} as const
-
 // ----------------------
 // Utils
 // ----------------------
@@ -64,7 +52,7 @@ export const useAuditUtils = () => {
 	 */
 	const getScoreLabel = (score: number | undefined): string => {
 		if (score === undefined) return 'Nog geen score'
-		return SCORE_LABELS[score] ?? 'Nog geen score'
+		return AUDIT_SCORE_LABELS[score as keyof typeof AUDIT_SCORE_LABELS] ?? 'Nog geen score'
 	}
 
 	/**

@@ -1,13 +1,15 @@
 import type { jsPDF } from 'jspdf'
 import type { MarkdownBlock, RichTextMark, RichTextSegment } from './types'
 
+import { PDF_RENDER_CONFIG } from '@constants'
+
 import { PDF_COLORS } from '../constants'
 import { writeWrappedText } from '../pdf'
 import { MARKDOWN_LAYOUT } from './constants'
 import { measureMarkdownBlocksHeight, segmentsToPlainText } from './measure'
 
-const MARKDOWN_PAGE_MARGIN_TOP = 18
-const MARKDOWN_PAGE_MARGIN_BOTTOM = 18
+const MARKDOWN_PAGE_MARGIN_TOP = PDF_RENDER_CONFIG.markdownPageMarginTop
+const MARKDOWN_PAGE_MARGIN_BOTTOM = PDF_RENDER_CONFIG.markdownPageMarginBottom
 
 /**
  * Returns the current page height for the active jsPDF document.

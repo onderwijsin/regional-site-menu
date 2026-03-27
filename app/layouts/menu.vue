@@ -1,5 +1,7 @@
 <script lang="ts" setup>
-const { data: navigation } = await useAsyncData('navigation', () => {
+import { ASYNC_DATA_KEYS } from '@constants'
+
+const { data: navigation } = await useAsyncData(ASYNC_DATA_KEYS.navigation, () => {
 	return queryCollectionNavigation('items')
 })
 

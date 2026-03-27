@@ -2,6 +2,7 @@ import type { AiWebsiteAnalysisResponse, ReportAiInsights } from '~~/schema/repo
 import type { ReportConfig } from '~~/schema/reportConfig'
 import type { ReportData } from './report/types'
 
+import { REPORT_AI_PROGRESS_CONFIG } from '@constants'
 import {
 	AI_WEBSITE_ANALYSIS_DEFAULT_PAGES,
 	AiBriefingRequestSchema,
@@ -45,82 +46,36 @@ type AiProgressScenario = {
 	fastForwardMs: number
 }
 
-/**
- * Tuning value for estimated crawl progress duration.
- *
- * Effective duration for the crawl stage is:
- * `AI_ANALYSIS_CRAWL_STAGE_DURATION_PER_PAGE_MS * maxPages`.
- */
-const AI_ANALYSIS_CRAWL_STAGE_DURATION_PER_PAGE_MS = 2_000
-
-const AI_PROGRESS_CONFIG: Record<'analysis' | 'briefing', AiProgressScenario> = {
-	analysis: {
-		fastForwardMs: 240,
-		stages: [
-			{
-				id: 'analysis-start',
-				text: 'AI-analyse starten...',
-				reasoning: 'De aanvraag wordt voorbereid en de websitegegevens worden gevalideerd.',
-				durationMs: 4500
-			},
-			{
-				id: 'analysis-crawl',
-				text: "Websitepagina's verzamelen...",
-				reasoning:
-					'De server verzamelt relevante pagina’s van je website als context voor de analyse.',
-				durationMs: 20000
-			},
-			{
-				id: 'analysis-interpret',
-				text: 'Inhoud interpreteren...',
-				reasoning:
-					'De server interpreteert de verzamelde inhoud om inzichten te genereren.',
-				durationMs: 15000
-			},
-			{
-				id: 'analysis-criteria',
-				text: 'Criteria toepassen op content...',
-				reasoning: 'De verzamelde inhoud wordt getoetst aan de richtlijnen en criteria.',
-				durationMs: 8000
-			},
-			{
-				id: 'analysis-finalize',
-				text: 'Website-analyse afronden...',
-				reasoning:
-					'De uitkomst wordt gestructureerd en klaargezet voor opname in het rapport.',
-				durationMs: 6000
-			}
-		]
-	},
+const AI_PROGRESS_CONFIG: Record<'briefing', AiProgressScenario> = {
 	briefing: {
-		fastForwardMs: 220,
+		fastForwardMs: REPORT_AI_PROGRESS_CONFIG.briefingFastForwardMs,
 		stages: [
 			{
 				id: 'briefing-start',
 				text: 'AI-briefing starten...',
 				reasoning:
 					'De briefing-aanvraag wordt opgebouwd met auditresultaten en opgegeven context.',
-				durationMs: 1000
+				durationMs: REPORT_AI_PROGRESS_CONFIG.briefingStageDurationMs.start
 			},
 			{
 				id: 'briefing-synthesis',
 				text: 'Inzichten combineren...',
 				reasoning:
 					'Zelfevaluatie, opmerkingen en eventuele website-analyse worden samengebracht.',
-				durationMs: 3000
+				durationMs: REPORT_AI_PROGRESS_CONFIG.briefingStageDurationMs.synthesis
 			},
 			{
 				id: 'briefing-generate',
 				text: 'Briefing genereren...',
 				reasoning:
 					'De server genereert de briefing op basis van de verzamelde inzichten en context.',
-				durationMs: 2000
+				durationMs: REPORT_AI_PROGRESS_CONFIG.briefingStageDurationMs.generate
 			},
 			{
 				id: 'briefing-finalize',
 				text: 'Briefing afronden...',
 				reasoning: 'De briefing wordt concreet geformuleerd voor gebruik in de rapportage.',
-				durationMs: 2000
+				durationMs: REPORT_AI_PROGRESS_CONFIG.briefingStageDurationMs.finalize
 			}
 		]
 	}
@@ -134,7 +89,7 @@ const AI_PROGRESS_CONFIG: Record<'analysis' | 'briefing', AiProgressScenario> = 
  */
 function resolveAnalysisCrawlStageDurationMs(maxPages: number | undefined): number {
 	const safeMaxPages = Math.max(maxPages ?? AI_WEBSITE_ANALYSIS_DEFAULT_PAGES, 1)
-	return AI_ANALYSIS_CRAWL_STAGE_DURATION_PER_PAGE_MS * safeMaxPages
+	return REPORT_AI_PROGRESS_CONFIG.crawlStageDurationPerPageMs * safeMaxPages
 }
 
 /**
@@ -144,14 +99,45 @@ function resolveAnalysisCrawlStageDurationMs(maxPages: number | undefined): numb
  * @returns Scenario with crawl stage duration adjusted to max pages.
  */
 function createAnalysisProgressScenario(maxPages: number | undefined): AiProgressScenario {
-	const baseScenario = AI_PROGRESS_CONFIG.analysis
 	const crawlDurationMs = resolveAnalysisCrawlStageDurationMs(maxPages)
 
 	return {
-		...baseScenario,
-		stages: baseScenario.stages.map((stage) =>
-			stage.id === 'analysis-crawl' ? { ...stage, durationMs: crawlDurationMs } : stage
-		)
+		fastForwardMs: REPORT_AI_PROGRESS_CONFIG.analysisFastForwardMs,
+		stages: [
+			{
+				id: 'analysis-start',
+				text: 'AI-analyse starten...',
+				reasoning: 'De aanvraag wordt voorbereid en de websitegegevens worden gevalideerd.',
+				durationMs: REPORT_AI_PROGRESS_CONFIG.analysisStageDurationMs.start
+			},
+			{
+				id: 'analysis-crawl',
+				text: "Websitepagina's verzamelen...",
+				reasoning:
+					'De server verzamelt relevante pagina’s van je website als context voor de analyse.',
+				durationMs: crawlDurationMs
+			},
+			{
+				id: 'analysis-interpret',
+				text: 'Inhoud interpreteren...',
+				reasoning:
+					'De server interpreteert de verzamelde inhoud om inzichten te genereren.',
+				durationMs: REPORT_AI_PROGRESS_CONFIG.analysisStageDurationMs.interpret
+			},
+			{
+				id: 'analysis-criteria',
+				text: 'Criteria toepassen op content...',
+				reasoning: 'De verzamelde inhoud wordt getoetst aan de richtlijnen en criteria.',
+				durationMs: REPORT_AI_PROGRESS_CONFIG.analysisStageDurationMs.criteria
+			},
+			{
+				id: 'analysis-finalize',
+				text: 'Website-analyse afronden...',
+				reasoning:
+					'De uitkomst wordt gestructureerd en klaargezet voor opname in het rapport.',
+				durationMs: REPORT_AI_PROGRESS_CONFIG.analysisStageDurationMs.finalize
+			}
+		]
 	}
 }
 

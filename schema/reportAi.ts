@@ -1,3 +1,4 @@
+import { AI_WEBSITE_ANALYSIS_CONFIG } from '@constants'
 import { goal, pillar, priority } from '@schema/fields'
 import { z } from 'zod'
 
@@ -6,11 +7,11 @@ import { z } from 'zod'
  * - total crawl time budget: 3m45s (225s)
  * - per-page timeout: 5s
  */
-export const AI_WEBSITE_ANALYSIS_PAGE_TIMEOUT_MS = 5_000
-export const AI_WEBSITE_ANALYSIS_CRAWL_BUDGET_MS = 225_000
-export const AI_WEBSITE_ANALYSIS_MIN_PAGES = 1
-export const AI_WEBSITE_ANALYSIS_MAX_PAGES = 50
-export const AI_WEBSITE_ANALYSIS_DEFAULT_PAGES = 15
+export const AI_WEBSITE_ANALYSIS_PAGE_TIMEOUT_MS = AI_WEBSITE_ANALYSIS_CONFIG.pageTimeoutMs
+export const AI_WEBSITE_ANALYSIS_CRAWL_BUDGET_MS = AI_WEBSITE_ANALYSIS_CONFIG.crawlBudgetMs
+export const AI_WEBSITE_ANALYSIS_MIN_PAGES = AI_WEBSITE_ANALYSIS_CONFIG.minPages
+export const AI_WEBSITE_ANALYSIS_MAX_PAGES = AI_WEBSITE_ANALYSIS_CONFIG.maxPages
+export const AI_WEBSITE_ANALYSIS_DEFAULT_PAGES = AI_WEBSITE_ANALYSIS_CONFIG.defaultPages
 
 /**
  * Compact shape of an audited menu item used as AI input.

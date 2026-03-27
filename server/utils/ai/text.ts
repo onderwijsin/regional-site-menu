@@ -1,4 +1,4 @@
-const CODE_FENCE_REGEX = /^```(?:markdown|md)?\s*([\s\S]*?)\s*```$/i
+import { AI_TEXT_SANITIZATION_CONFIG } from '@constants'
 
 /**
  * Normalizes AI markdown output into a clean plain markdown string.
@@ -8,7 +8,7 @@ const CODE_FENCE_REGEX = /^```(?:markdown|md)?\s*([\s\S]*?)\s*```$/i
  */
 export function sanitizeAiMarkdown(value: string): string {
 	const normalized = value.replace(/\r\n/g, '\n').trim()
-	const match = normalized.match(CODE_FENCE_REGEX)
+	const match = normalized.match(AI_TEXT_SANITIZATION_CONFIG.codeFenceRegex)
 
 	if (match?.[1]) {
 		return match[1].trim()

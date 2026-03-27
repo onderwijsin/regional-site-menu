@@ -1,3 +1,4 @@
+import { DATAHUB_CONFIG } from '@constants'
 import { SubmissionSchema } from '@schema/submission'
 import { joinURL } from 'ufo'
 
@@ -23,7 +24,7 @@ export default defineEventHandler(async (event) => {
 		})
 	}
 
-	const url = joinURL(datahubUrl, 'items', 'submissions')
+	const url = joinURL(datahubUrl, ...DATAHUB_CONFIG.submissionPathSegments)
 
 	await $fetch(url, {
 		method: 'POST',
@@ -31,11 +32,11 @@ export default defineEventHandler(async (event) => {
 			Authorization: `Bearer ${datahubToken}`
 		},
 		body: {
-			form_type: 'sitemenu_submission',
+			form_type: DATAHUB_CONFIG.submissionFormType,
 			payload: parsedData
 		},
 		query: {
-			fields: ['id']
+			fields: [...DATAHUB_CONFIG.responseFields]
 		}
 	})
 

@@ -1,3 +1,4 @@
+import { AI_OPENAI_CONFIG } from '@constants'
 import { AiBriefingRequestSchema, AiBriefingResponseSchema } from '@schema/reportAi'
 import { zodTextFormat } from 'openai/helpers/zod'
 import { z } from 'zod'
@@ -47,8 +48,8 @@ export default defineEventHandler(async (event) => {
 	// 4) Request a structured response so parsing is deterministic.
 	const response = await client.responses.parse({
 		model,
-		temperature: 0.2,
-		max_output_tokens: 1800,
+		temperature: AI_OPENAI_CONFIG.briefingRequest.temperature,
+		max_output_tokens: AI_OPENAI_CONFIG.briefingRequest.maxOutputTokens,
 		input: [
 			{
 				role: 'system',

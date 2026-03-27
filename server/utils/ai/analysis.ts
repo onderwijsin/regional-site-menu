@@ -1,4 +1,4 @@
-import type { CrawledWebsitePage } from './crawl'
+import type { CrawledWebsitePage } from '../crawler/types'
 
 /**
  * Builds an allowlist for domain-constrained web search.
