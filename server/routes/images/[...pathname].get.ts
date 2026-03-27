@@ -1,4 +1,5 @@
 import { createError, eventHandler, getRouterParam } from 'h3'
+// @ts-expect-error alias is not added in dev, but it wil exist in prod
 import { blob } from 'hub:blob'
 
 export default eventHandler(async (event) => {
