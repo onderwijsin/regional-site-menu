@@ -66,10 +66,10 @@ export function markdownToTiptapDoc(markdown: string): z.infer<typeof TiptapDocS
  * Normalizes raw text extracted from TipTap nodes.
  *
  * @param value - Raw node text.
- * @returns Trimmed text with collapsed whitespace.
+ * @returns Text with collapsed whitespace while preserving meaningful separators.
  */
 function normalizeText(value: string | undefined): string {
-	return value?.replace(/\s+/g, ' ').trim() ?? ''
+	return value?.replace(/\s+/g, ' ') ?? ''
 }
 
 /**

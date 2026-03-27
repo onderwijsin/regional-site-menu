@@ -63,6 +63,11 @@ TipTap/editor markdown is normalized before rendering:
 
 This keeps report sections independent from TipTap-specific node details.
 
+Invariant to preserve:
+
+- markdown text normalization must keep meaningful whitespace between inline segments
+- markdown measurement spacing tokens must stay aligned with renderer spacing tokens
+
 ## Risk Areas
 
 - pagination and spacing logic

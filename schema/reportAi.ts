@@ -61,7 +61,11 @@ export const AiBriefingResponseSchema = z.object({
  * Request payload for website analysis against llms-full criteria.
  */
 export const AiWebsiteAnalysisRequestSchema = z.object({
-	url: z.url({ error: 'Voeg een geldige URL toe' }),
+	url: z
+		.url({ error: 'Voeg een geldige URL toe' })
+		.refine((value) => value.startsWith('http://') || value.startsWith('https://'), {
+			message: 'Alleen http(s)-URLs zijn toegestaan'
+		}),
 	region: z.string().min(1).optional(),
 	maxPages: z
 		.number()

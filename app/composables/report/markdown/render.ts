@@ -3,6 +3,7 @@ import type { MarkdownBlock, RichTextMark, RichTextSegment } from './types'
 
 import { PDF_COLORS } from '../constants'
 import { writeWrappedText } from '../pdf'
+import { MARKDOWN_LAYOUT } from './constants'
 import { measureMarkdownBlocksHeight, segmentsToPlainText } from './measure'
 
 const MARKDOWN_PAGE_MARGIN_TOP = 18
@@ -118,7 +119,7 @@ function renderMarkdownBlock(
 	switch (block.type) {
 		case 'paragraph':
 			cursorY = renderSegments(doc, block.segments, x, cursorY, maxWidth, 10)
-			cursorY += 1.5
+			cursorY += MARKDOWN_LAYOUT.paragraphBottom
 			break
 
 		case 'heading':
@@ -130,7 +131,7 @@ function renderMarkdownBlock(
 				maxWidth,
 				block.level === 1 ? 13 : block.level === 2 ? 12 : 11
 			)
-			cursorY += 1.5
+			cursorY += MARKDOWN_LAYOUT.headingBottom
 			break
 
 		case 'bulletList':
@@ -148,7 +149,7 @@ function renderMarkdownBlock(
 						fontStyle: 'normal',
 						color: PDF_COLORS.text
 					})
-					cursorY += 1
+					cursorY += MARKDOWN_LAYOUT.listItemBottom
 				}
 
 				if (item.children?.length) {
@@ -171,7 +172,7 @@ function renderMarkdownBlock(
 						fontStyle: 'normal',
 						color: PDF_COLORS.text
 					})
-					cursorY += 1
+					cursorY += MARKDOWN_LAYOUT.listItemBottom
 				}
 
 				if (item.children?.length) {
@@ -185,18 +186,24 @@ function renderMarkdownBlock(
 
 			// Render quoted content first so the vertical rule can stretch exactly
 			// from the first rendered line to the final one.
-			cursorY = renderMarkdownBlocks(doc, block.blocks, x + 4, cursorY + 1, maxWidth - 4)
+			cursorY = renderMarkdownBlocks(
+				doc,
+				block.blocks,
+				x + 4,
+				cursorY + MARKDOWN_LAYOUT.blockquoteTop,
+				maxWidth - 4
+			)
 
 			doc.setDrawColor(180, 180, 180)
 			doc.setLineWidth(0.8)
 			doc.line(x, blockquoteStartY, x, cursorY)
 
-			cursorY += 1
+			cursorY += MARKDOWN_LAYOUT.blockquoteBottom
 			break
 		}
 
 		case 'horizontalRule': {
-			const spacingBottom = 10
+			const spacingBottom = MARKDOWN_LAYOUT.horizontalRuleBottom
 
 			cursorY = ensureMarkdownPageSpace(doc, cursorY, spacingBottom)
 

@@ -56,8 +56,9 @@ What the route does:
 2. Crawls the requested domain server-side (capped, same-domain).
 3. Loads system prompt from content collection (`content/_prompts`).
 4. Fetches reference criteria from `/llms-full.txt` (fallback `/llms.txt`).
-5. Sends crawled context + reference to OpenAI.
-6. Returns typed response payload with `analysis`, `analysedPages`, and `usedSources`.
+5. Requires at least one crawled page with non-empty text excerpt.
+6. Sends validated crawl context + reference to OpenAI.
+7. Returns typed response payload with `analysis`, `analysedPages`, and `usedSources`.
 
 Controller + helpers:
 
@@ -131,6 +132,7 @@ Key behavior:
   - `status` (`running`/`completed`)
 - progress timing is configurable via `AI_PROGRESS_CONFIG`
 - if the backend finishes early, remaining visual stages are fast-forwarded sequentially
+- fast-forwarding happens only on success (failed runs do not show fully completed stage output)
 - logs full analysis payload in browser console for debugging
 
 ## Data Contracts
@@ -143,6 +145,7 @@ Key response fields:
 
 - `analysis`, `briefing`
 - `analysedPages` and `usedSources` for analysis traceability
+- `usedSources` includes the requested URL plus evidence-page URLs with non-empty crawl excerpts
 - `crawledPages` kept for backward compatibility
 
 ## PDF Integration

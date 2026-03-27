@@ -40,11 +40,14 @@ export default defineEventHandler(async (event) => {
 		maxPages
 	})
 
-	// If crawling yields nothing, the model has no trustworthy evidence.
-	if (crawledPages.length === 0) {
+	const evidencePages = crawledPages.filter((page) => page.excerpt.trim().length > 0)
+
+	// If crawling yields no textual evidence, the model has no trustworthy input.
+	if (evidencePages.length === 0) {
 		throw createError({
 			statusCode: 502,
-			statusMessage: "AI website-analyse kon geen pagina's ophalen van de opgegeven website"
+			statusMessage:
+				'AI website-analyse kon geen bruikbare pagina-inhoud ophalen van de opgegeven website'
 		})
 	}
 
@@ -56,7 +59,7 @@ export default defineEventHandler(async (event) => {
 		region: input.region,
 		referenceDocument,
 		maxPages,
-		crawledPages
+		crawledPages: evidencePages
 	})
 
 	// 4) Create OpenAI client bound to runtime secrets/model configuration.
@@ -92,17 +95,17 @@ export default defineEventHandler(async (event) => {
 
 	// 5) Normalize analysis markdown and attach deterministic source URLs.
 	const analysis = sanitizeAiMarkdown(analysisText)
-	const usedSources = [...new Set([input.url, ...crawledPages.map((page) => page.url)])]
+	const usedSources = [...new Set([input.url, ...evidencePages.map((page) => page.url)])]
 
 	// Return API contract with both backwards-compatible and canonical URL fields.
 	return AiWebsiteAnalysisResponseSchema.parse({
 		analysis,
 		wordCount: countWords(analysis),
-		crawledPages: crawledPages.map((page) => ({
+		crawledPages: evidencePages.map((page) => ({
 			url: page.url,
 			title: page.title
 		})),
-		analysedPages: crawledPages.map((page) => ({
+		analysedPages: evidencePages.map((page) => ({
 			url: page.url,
 			title: page.title
 		})),

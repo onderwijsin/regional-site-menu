@@ -271,16 +271,17 @@ export const useReportAi = () => {
 
 		completeProgressStage(activeProgressIndex)
 
+		if (taskError) {
+			throw taskError
+		}
+
 		// Fast-forward any stages not yet shown when task finishes early.
+		// This is intentionally success-only so failed runs do not look complete.
 		for (let nextIndex = stageIndex + 1; nextIndex < config.stages.length; nextIndex += 1) {
 			const nextStage = config.stages[nextIndex]!
 			const insertedIndex = pushProgressStage(nextStage)
 			await wait(config.fastForwardMs)
 			completeProgressStage(insertedIndex)
-		}
-
-		if (taskError) {
-			throw taskError
 		}
 
 		return taskResult as T

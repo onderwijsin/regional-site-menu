@@ -99,8 +99,9 @@ export async function crawlWebsiteForAnalysis(
 		}
 	}
 
-	// Ensure the user-provided URL remains visible in evidence, even after redirects.
-	if (!pages.some((page) => page.url === entryUrl)) {
+	// Ensure the user-provided URL remains visible when at least one page was
+	// successfully crawled, even after redirects.
+	if (pages.length > 0 && !pages.some((page) => page.url === entryUrl)) {
 		pages.unshift({
 			url: entryUrl,
 			excerpt: ''
