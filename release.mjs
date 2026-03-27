@@ -10,22 +10,22 @@ export default {
 			'@semantic-release/changelog',
 			{
 				changelogFile: 'CHANGELOG.md',
-				changelogTitle: '# Changelog',
-			},
+				changelogTitle: '# Changelog'
+			}
 		],
 		[
 			'@semantic-release/npm',
 			{
-				npmPublish: false,
-			},
+				npmPublish: false
+			}
 		],
 		[
 			'@semantic-release/git',
 			{
 				assets: ['CHANGELOG.md', 'package.json'],
-				message: 'chore(release): ${nextRelease.version} [skip ci]\n\n${nextRelease.notes}',
-			},
+				message: 'chore(release): ${nextRelease.version} [skip ci]\n\n${nextRelease.notes}'
+			}
 		],
-		'@semantic-release/github',
-	],
+		'@semantic-release/github'
+	]
 }

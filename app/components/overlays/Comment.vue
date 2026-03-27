@@ -23,11 +23,7 @@ function handleClose() {
 		@close:prevent="handleClose"
 	>
 		<template #body>
-			<Editor
-				v-model="comment"
-				autofocus
-				placeholder="Voeg jouw opmerking toe. Je opmerking wordt verwerkt in de rapportage die je kunt genereren."
-			/>
+			<Editor v-model="comment" autofocus placeholder="Voeg jouw opmerkingen toe." />
 		</template>
 		<template #footer>
 			<UButton

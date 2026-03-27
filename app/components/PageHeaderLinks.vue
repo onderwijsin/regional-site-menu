@@ -66,14 +66,14 @@ const items = computed<DropdownMenuItem[]>(() => [
 
 			trackAiAction({
 				label: 'markdown',
-				value: 'copy',
+				value: 'copy'
 			})
 
 			toast.add({
 				title: 'Gekopieerd naar klembord',
-				icon: getIcon('success'),
+				icon: getIcon('success')
 			})
-		},
+		}
 	},
 	{
 		label: 'Bekijk als Markdown',
@@ -83,9 +83,9 @@ const items = computed<DropdownMenuItem[]>(() => [
 		onSelect() {
 			trackAiAction({
 				label: 'markdown',
-				value: 'view',
+				value: 'view'
 			})
-		},
+		}
 	},
 	{
 		label: 'Open in ChatGPT',
@@ -95,9 +95,9 @@ const items = computed<DropdownMenuItem[]>(() => [
 		onSelect() {
 			trackAiAction({
 				label: 'chatgpt',
-				value: 'open_item',
+				value: 'open_item'
 			})
-		},
+		}
 	},
 	{
 		label: 'Open in Claude',
@@ -107,10 +107,10 @@ const items = computed<DropdownMenuItem[]>(() => [
 		onSelect() {
 			trackAiAction({
 				label: 'claude',
-				value: 'open_item',
+				value: 'open_item'
 			})
-		},
-	},
+		}
+	}
 ])
 </script>
 
@@ -124,7 +124,7 @@ const items = computed<DropdownMenuItem[]>(() => [
 				color="neutral"
 				variant="outline"
 				:ui="{
-					leadingIcon: [copied ? 'text-primary' : 'text-neutral', 'size-3.5'],
+					leadingIcon: [copied ? 'text-primary' : 'text-neutral', 'size-3.5']
 				}"
 				@click="copyPage"
 			/>
@@ -133,10 +133,10 @@ const items = computed<DropdownMenuItem[]>(() => [
 				:content="{
 					align: 'end',
 					side: 'bottom',
-					sideOffset: 8,
+					sideOffset: 8
 				}"
 				:ui="{
-					content: 'w-48',
+					content: 'w-48'
 				}"
 			>
 				<UButton

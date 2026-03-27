@@ -29,7 +29,7 @@ import { renderNotesSection } from './notes'
 export async function renderReportDocument(
 	ctx: PdfRenderContext,
 	config: ReportConfig,
-	data: ReportData,
+	data: ReportData
 ): Promise<void> {
 	// Keep orchestration explicit and linear. Every section mutates the shared
 	// jsPDF instance, so execution order defines page order.

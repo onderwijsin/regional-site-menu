@@ -14,8 +14,8 @@ const props = withDefaults(
 		persist?: boolean
 	}>(),
 	{
-		persist: true,
-	},
+		persist: true
+	}
 )
 
 // ----------------------
@@ -52,7 +52,7 @@ const filter = computed({
 		if (props.persist) {
 			state.filter = value
 		}
-	},
+	}
 })
 
 // ----------------------
@@ -66,8 +66,8 @@ const tabs: TabsItem[] = [
 	{ label: 'Alle doelen', value: 'all' },
 	...GOALS.map((goal) => ({
 		label: goal,
-		value: goal,
-	})),
+		value: goal
+	}))
 ]
 
 // ----------------------
@@ -89,12 +89,12 @@ const { data } = await useAsyncData(
 		if (filter.value === 'all') return items
 
 		return items.filter((item) =>
-			item.goals.includes(filter.value as (typeof item.goals)[number]),
+			item.goals.includes(filter.value as (typeof item.goals)[number])
 		)
 	},
 	{
-		watch: [filter],
-	},
+		watch: [filter]
+	}
 )
 
 // ----------------------
@@ -122,11 +122,11 @@ const { results } = useFuse(query, searchableData, {
 			{ name: 'priority', weight: 0.4 },
 
 			// Lowest weight → full-text fallback
-			{ name: 'body.value', weight: 0.2 },
+			{ name: 'body.value', weight: 0.2 }
 		],
-		threshold: 0.2,
+		threshold: 0.2
 	},
-	matchAllWhenSearchEmpty: true,
+	matchAllWhenSearchEmpty: true
 })
 
 // ----------------------
@@ -171,8 +171,8 @@ const noResultActions = computed<ButtonProps[]>(() => {
 		{
 			icon: getIcon('suggestion'),
 			label: 'Doe een suggestie',
-			onClick: openSuggestion,
-		},
+			onClick: openSuggestion
+		}
 	]
 
 	if (hasFilterApplied.value) {
@@ -181,7 +181,7 @@ const noResultActions = computed<ButtonProps[]>(() => {
 			label: 'Wis filters',
 			color: 'neutral',
 			variant: 'subtle',
-			onClick: clear,
+			onClick: clear
 		})
 	}
 

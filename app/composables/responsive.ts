@@ -63,6 +63,6 @@ export const useResponsive = () => {
 		isMd,
 		isLg,
 		isXl,
-		is2Xl,
+		is2Xl
 	}
 }

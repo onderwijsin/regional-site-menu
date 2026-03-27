@@ -5,7 +5,7 @@ useSeoMeta({
 	title: siteTitle,
 	description: siteDescription,
 	ogTitle: siteTitle,
-	ogDescription: siteDescription,
+	ogDescription: siteDescription
 })
 </script>
 

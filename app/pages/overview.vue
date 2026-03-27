@@ -2,14 +2,14 @@
 import { siteDescription, siteTitle } from '~~/config/indentity'
 
 defineRouteRules({
-	robots: false,
+	robots: false
 })
 
 useSeoMeta({
 	title: siteTitle,
 	description: siteDescription,
 	ogTitle: siteTitle,
-	ogDescription: siteDescription,
+	ogDescription: siteDescription
 })
 
 /**
@@ -34,8 +34,8 @@ useSeoMeta({
 					to: 'https://www.onderwijsregio.nl/service/contact',
 					target: '_blank',
 					trailingIcon: 'i-lucide-arrow-right',
-					color: 'primary',
-				},
+					color: 'primary'
+				}
 			]"
 		/>
 	</NuxtLayout>

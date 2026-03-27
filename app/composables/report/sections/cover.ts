@@ -52,7 +52,7 @@ export async function renderCoverPage(ctx: PdfRenderContext, title: string): Pro
 	doc.text(
 		`Gegenereerd op ${new Date().toLocaleDateString('nl-NL')}`,
 		layout.marginLeft,
-		startY + 28,
+		startY + 28
 	)
 
 	const config = useRuntimeConfig()

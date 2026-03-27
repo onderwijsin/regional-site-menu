@@ -22,7 +22,7 @@ export function formatBriefingInput(input: AiBriefingRequest): string {
 
 	for (const component of input.chosenComponents) {
 		lines.push(
-			`- ${component.title} (${component.pillar} | ${component.priority} | score: ${component.score ?? 'geen'})`,
+			`- ${component.title} (${component.pillar} | ${component.priority} | score: ${component.score ?? 'geen'})`
 		)
 		lines.push(`  - Doelen: ${component.goals.join(', ')}`)
 		lines.push(`  - Beschrijving: ${component.description}`)

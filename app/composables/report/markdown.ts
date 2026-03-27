@@ -4,7 +4,7 @@ export type {
 	RichTextMark,
 	RichTextSegment,
 	TiptapDoc,
-	TiptapNode,
+	TiptapNode
 } from './markdown/types'
 
 export { markdownToBlocks, markdownToTiptapDoc } from './markdown/parse'

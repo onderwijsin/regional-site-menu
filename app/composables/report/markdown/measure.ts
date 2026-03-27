@@ -41,7 +41,7 @@ function measureSegmentsHeight(doc: jsPDF, segments: RichTextSegment[], maxWidth
 export function measureMarkdownBlocksHeight(
 	doc: jsPDF,
 	blocks: MarkdownBlock[],
-	maxWidth: number,
+	maxWidth: number
 ): number {
 	let height = 0
 

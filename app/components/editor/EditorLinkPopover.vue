@@ -76,7 +76,7 @@ watch(
 			editor.off('selectionUpdate', updateUrl)
 		})
 	},
-	{ immediate: true },
+	{ immediate: true }
 )
 
 /**
@@ -119,7 +119,7 @@ function setLink(): void {
 		if (isEmpty) {
 			chain = chain.insertContent({
 				type: 'text',
-				text: url.value,
+				text: url.value
 			})
 		}
 	}

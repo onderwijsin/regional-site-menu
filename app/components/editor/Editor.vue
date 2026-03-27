@@ -17,8 +17,8 @@ withDefaults(
 		placeholder?: string
 	}>(),
 	{
-		placeholder: 'Voeg jouw tekst toe...',
-	},
+		placeholder: 'Voeg jouw tekst toe...'
+	}
 )
 const model = defineModel<string>()
 
@@ -37,7 +37,7 @@ const { tools } = useEditorConfig()
 			outline
 				? {
 						root: 'bg-white dark:bg-neutral-950',
-						base: 'sm:px-12 py-6 border border-muted rounded-md min-h-60',
+						base: 'sm:px-12 py-6 border border-muted rounded-md min-h-60'
 					}
 				: {}
 		"

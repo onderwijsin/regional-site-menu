@@ -20,6 +20,18 @@ export type PdfRenderContext = {
 }
 
 /**
+ * Input shape for PDF document metadata.
+ */
+export type PdfDocumentMetadata = {
+	title: string
+	subject: string
+	author: string
+	creator: string
+	keywords: string[]
+	language?: 'nl'
+}
+
+/**
  * Creates a new PDF rendering context with document instance, layout metrics,
  * and shared color tokens.
  *
@@ -38,7 +50,7 @@ export async function createRenderContext(): Promise<PdfRenderContext> {
 		unit: 'mm',
 		format: 'a4',
 		compress: true,
-		putOnlyUsedFonts: true,
+		putOnlyUsedFonts: true
 	})
 
 	await registerFonts(doc)
@@ -48,11 +60,36 @@ export async function createRenderContext(): Promise<PdfRenderContext> {
 		page: {
 			width: PDF_LAYOUT.pageWidth,
 			height: PDF_LAYOUT.pageHeight,
-			contentWidth: PDF_LAYOUT.pageWidth - PDF_LAYOUT.marginLeft - PDF_LAYOUT.marginRight,
+			contentWidth: PDF_LAYOUT.pageWidth - PDF_LAYOUT.marginLeft - PDF_LAYOUT.marginRight
 		},
 		layout: PDF_LAYOUT,
-		colors: PDF_COLORS,
+		colors: PDF_COLORS
 	}
+}
+
+/**
+ * Applies document-level PDF metadata for better indexing and provenance.
+ *
+ * @param doc - PDF document instance.
+ * @param metadata - Normalized metadata values.
+ * @returns Nothing.
+ */
+export function setPdfDocumentMetadata(doc: jsPDF, metadata: PdfDocumentMetadata): void {
+	const keywords = metadata.keywords
+		.map((keyword) => keyword.trim())
+		.filter((keyword) => keyword.length > 0)
+		.join(', ')
+
+	doc.setDocumentProperties({
+		title: metadata.title.trim(),
+		subject: metadata.subject.trim(),
+		author: metadata.author.trim(),
+		creator: metadata.creator.trim(),
+		keywords
+	})
+
+	doc.setCreationDate(new Date())
+	doc.setLanguage(metadata.language ?? 'nl')
 }
 
 /**
@@ -149,7 +186,7 @@ export function createDefaultFilename(region: string): string {
 export function ensurePageSpace(
 	ctx: PdfRenderContext,
 	cursorY: number,
-	requiredHeight: number,
+	requiredHeight: number
 ): number {
 	const limit = ctx.page.height - ctx.layout.marginBottom
 
@@ -175,7 +212,7 @@ export function measureWrappedTextHeight(
 	doc: jsPDF,
 	text: string,
 	maxWidth: number,
-	lineHeight = PDF_LAYOUT.lineHeight,
+	lineHeight = PDF_LAYOUT.lineHeight
 ): number {
 	const lines = doc.splitTextToSize(text, maxWidth) as string[]
 	return Math.max(lines.length, 1) * lineHeight
@@ -212,7 +249,7 @@ export function writeWrappedText(
 		fontStyle: PdfFontStyle
 		color: PdfColor
 		lineHeight?: number
-	},
+	}
 ): number {
 	const {
 		text,
@@ -222,7 +259,7 @@ export function writeWrappedText(
 		fontSize,
 		fontStyle,
 		color,
-		lineHeight = PDF_LAYOUT.lineHeight,
+		lineHeight = PDF_LAYOUT.lineHeight
 	} = args
 
 	doc.setFont('Rijksoverheid', fontStyle)

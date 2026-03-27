@@ -3,11 +3,11 @@ export default {
 	plugins: [
 		'@ianvs/prettier-plugin-sort-imports',
 		'prettier-plugin-tailwindcss',
-		'prettier-plugin-mdc',
+		'prettier-plugin-mdc'
 	],
 	semi: false,
 	singleQuote: true,
-	trailingComma: 'all',
+	trailingComma: 'none',
 	proseWrap: 'always',
 	printWidth: 100,
 	tabWidth: 4,
@@ -20,17 +20,17 @@ export default {
 				// Setting useTabs just in case. Prettier _should_ ignore it and
 				// default to spaces for YAML. Also, somehow prettier does not
 				// respect the `indent_size` in .editorconfig for YAML files.
-				useTabs: false,
-			},
+				useTabs: false
+			}
 		},
 		{
 			files: ['*.md'],
 			options: {
 				tabWidth: 2,
 				useTabs: false,
-				parser: 'mdc',
-			},
-		},
+				parser: 'mdc'
+			}
+		}
 	],
 	importOrder: [
 		'<TYPES>^(node:)',
@@ -44,7 +44,7 @@ export default {
 		'',
 		'^@/(.*)$',
 		'',
-		'^[./]',
+		'^[./]'
 	],
-	importOrderCaseSensitive: false,
+	importOrderCaseSensitive: false
 }

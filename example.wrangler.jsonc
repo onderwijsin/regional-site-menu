@@ -1,0 +1,16 @@
+{
+	"$schema": "node_modules/wrangler/config-schema.json",
+	"r2_buckets": [
+		{
+			"binding": "BLOB",
+			"bucket_name": "<your-bucket-name>",
+			"jurisdiction": "eu"
+		}
+	],
+	"kv_namespaces": [
+		{
+			"binding": "CACHE",
+			"id": "<your-kv-namespace-id>"
+		}
+	]
+}

@@ -15,8 +15,8 @@ const { getIcon } = useIcons()
 				to: contact.page,
 				target: '_blank',
 				trailingIcon: getIcon('external'),
-				color: 'primary',
-			},
+				color: 'primary'
+			}
 		]"
 	/>
 </template>

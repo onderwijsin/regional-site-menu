@@ -22,7 +22,7 @@ const { getIcon } = useIcons()
 				variant="soft"
 				:ui="{
 					body: 'w-full',
-					footer: 'space-x-2',
+					footer: 'space-x-2'
 				}"
 			>
 				<template #title>

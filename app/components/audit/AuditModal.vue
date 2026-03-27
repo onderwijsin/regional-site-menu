@@ -20,7 +20,7 @@ function handleSave() {
 		:ui="{
 			content: 'max-w-3xl min-h-[50dvh] max-h-[80dvh]',
 			footer: 'justify-end flex gap-3',
-			body: 'prose dark:prose-invert min-w-full',
+			body: 'prose dark:prose-invert min-w-full'
 		}"
 	>
 		<slot :score="score" :comment="comment" />
@@ -49,7 +49,7 @@ function handleSave() {
 				v-model="comment"
 				class="my-6"
 				outline
-				placeholder="Voeg jouw opmerking toe. Je opmerking wordt verwerkt in de rapportage die je kunt genereren."
+				placeholder="Voeg jouw opmerkingen toe."
 			/>
 		</template>
 		<template #footer>

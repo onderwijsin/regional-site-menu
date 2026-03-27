@@ -7,8 +7,8 @@ withDefaults(
 		contentClass?: string
 	}>(),
 	{
-		contentClass: 'space-y-12',
-	},
+		contentClass: 'space-y-12'
+	}
 )
 </script>
 

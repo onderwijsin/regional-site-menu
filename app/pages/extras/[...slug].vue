@@ -9,7 +9,7 @@ if (!page.value) {
 	throw createError({
 		statusCode: 404,
 		statusMessage: 'Item niet gevonden',
-		fatal: true,
+		fatal: true
 	})
 }
 
@@ -17,12 +17,12 @@ useSeoMeta({
 	title: `${page.value.title} | Extra's voor jouw site`,
 	description: page.value.description,
 	ogTitle: `${page.value.title} | Extra's voor jouw site`,
-	ogDescription: page.value.description,
+	ogDescription: page.value.description
 })
 
 const { data: surround } = await useAsyncData(`${route.path}-surround`, () => {
 	return queryCollectionItemSurroundings('extras', route.path, {
-		fields: ['description'],
+		fields: ['description']
 	})
 })
 
@@ -36,7 +36,7 @@ const { getIcon } = useIcons()
 			headline="Extra's voor jouw site"
 			:ui="{
 				root: 'pt-2',
-				wrapper: 'items-start lg:items-start',
+				wrapper: 'items-start lg:items-start'
 			}"
 		>
 			<template #description>

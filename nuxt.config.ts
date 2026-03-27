@@ -1,9 +1,6 @@
 // https://nuxt.com/docs/api/configuration/nuxt-config
 import type { Mode } from './shared/types/primitives'
 
-import { constants } from 'node:fs'
-import { access, copyFile, mkdir, stat } from 'node:fs/promises'
-import { dirname, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 import { joinURL, parseURL } from 'ufo'
@@ -22,36 +19,6 @@ const isDev = process.env.MODE === 'dev'
 const isNext = process.env.MODE === 'next'
 const isLivePreview = process.env.MODE === 'live-preview'
 
-const AI_REFERENCE_SNAPSHOTS = [
-	{
-		source: 'llms-full.txt',
-		target: 'ai-reference/llms-full.static.txt',
-	},
-	{
-		source: 'llms.txt',
-		target: 'ai-reference/llms.static.txt',
-	},
-]
-
-async function assertReadableNonEmpty(filePath: string): Promise<void> {
-	await access(filePath, constants.R_OK)
-	const fileStat = await stat(filePath)
-	if (fileStat.size <= 0) {
-		throw new Error(`Bestand is leeg: ${filePath}`)
-	}
-}
-
-async function createAiReferenceSnapshots(publicDir: string): Promise<void> {
-	for (const snapshot of AI_REFERENCE_SNAPSHOTS) {
-		const sourcePath = resolve(publicDir, snapshot.source)
-		const targetPath = resolve(publicDir, snapshot.target)
-
-		await assertReadableNonEmpty(sourcePath)
-		await mkdir(dirname(targetPath), { recursive: true })
-		await copyFile(sourcePath, targetPath)
-	}
-}
-
 export default defineNuxtConfig({
 	modules: [
 		'@nuxt/eslint',
@@ -66,34 +33,34 @@ export default defineNuxtConfig({
 		'@nuxtjs/robots',
 		'@nuxt/content',
 		'nuxt-llms',
-		'nuxt-studio',
+		'nuxt-studio'
 	],
 
 	devtools: {
-		enabled: true,
+		enabled: true
 	},
 
 	imports: {
 		// Auto-import pinia stores defined in `~/stores`
-		dirs: ['stores'],
+		dirs: ['stores']
 	},
 
 	alias: {
-		'@schema': fileURLToPath(new URL('./schema', import.meta.url)),
+		'@schema': fileURLToPath(new URL('./schema', import.meta.url))
 	},
 
 	css: ['~/assets/css/main.css'],
 
 	experimental: {
-		inlineRouteRules: true,
+		inlineRouteRules: true
 	},
 
 	image: { provider: 'none' },
 
 	$development: {
 		routeRules: {
-			'/**': { cache: false },
-		},
+			'/**': { cache: false }
+		}
 	},
 
 	$production: {
@@ -102,42 +69,34 @@ export default defineNuxtConfig({
 			'/_prompts/**': { prerender: false },
 			'/assets/**': {
 				ssr: false,
-				cache: false,
-			},
+				cache: false
+			}
 		},
 
 		image: {
 			provider: 'cloudflare',
 			cloudflare: {
-				baseURL: joinURL(process.env.APP_URL!),
-			},
-		},
+				baseURL: joinURL(process.env.APP_URL!)
+			}
+		}
 	},
 
 	routeRules: {
 		'/stats': {
 			redirect: {
 				statusCode: 301,
-				to: `https://plausible.io/${process.env.PLAUSIBLE_DOMAIN}`,
-			},
-		},
+				to: `https://plausible.io/${process.env.PLAUSIBLE_DOMAIN}`
+			}
+		}
 	},
 
 	compatibilityDate: '2026-01-05',
 
-	hooks: {
-		'nitro:init': (nitro) => {
-			nitro.hooks.hook('prerender:done', async () => {
-				await createAiReferenceSnapshots(nitro.options.output.publicDir)
-			})
-		},
-	},
-
 	components: [
 		{
 			path: '~/components',
-			pathPrefix: false,
-		},
+			pathPrefix: false
+		}
 	],
 
 	vite: {
@@ -153,9 +112,9 @@ export default defineNuxtConfig({
 				'@tiptap/core',
 				'@tiptap/starter-kit',
 				'@tiptap/markdown',
-				'@tiptap/**',
-			],
-		},
+				'@tiptap/**'
+			]
+		}
 	},
 
 	nitro: {
@@ -163,7 +122,7 @@ export default defineNuxtConfig({
 		prerender: {
 			crawlLinks: true,
 			failOnError: true,
-			routes: ['/overview'],
+			routes: ['/overview']
 		},
 		preset: 'cloudflare_module',
 		cloudflare: {
@@ -173,43 +132,43 @@ export default defineNuxtConfig({
 				name: process.env.WORKER_NAME,
 				assets: {
 					directory: './.output/public/',
-					binding: 'ASSETS',
+					binding: 'ASSETS'
 				},
 				observability: {
 					logs: {
 						enabled: true,
 						head_sampling_rate: 1,
-						invocation_logs: true,
-					},
+						invocation_logs: true
+					}
 				},
 				vars: {
 					// We need runtime access to this var via process.env
-					STUDIO_GITHUB_CLIENT_ID: process.env.STUDIO_GITHUB_CLIENT_ID,
+					STUDIO_GITHUB_CLIENT_ID: process.env.STUDIO_GITHUB_CLIENT_ID
 				},
 				limits: {
-					cpu_ms: 300000, // Increase max cpu time to 5 min due to expensive AI requests
+					cpu_ms: 300000 // Increase max cpu time to 5 min due to expensive AI requests
 				},
 				d1_databases: [
 					{
 						database_id: process.env.CLOUDFLARE_D1_DATABASE_ID,
-						binding: 'DB',
-					},
+						binding: 'DB'
+					}
 				],
 				kv_namespaces: [
 					{
 						binding: 'CACHE',
-						id: process.env.CLOUDFLARE_CACHE_NAMESPACE_ID,
-					},
+						id: process.env.CLOUDFLARE_CACHE_NAMESPACE_ID
+					}
 				],
 				r2_buckets: [
 					{
 						binding: 'BLOB',
 						bucket_name: process.env.CLOUDFLARE_R2_BUCKET,
-						jurisdiction: 'eu',
-					},
-				],
-			},
-		},
+						jurisdiction: 'eu'
+					}
+				]
+			}
+		}
 	},
 
 	hub: {
@@ -217,43 +176,43 @@ export default defineNuxtConfig({
 		blob: {
 			driver: 'cloudflare-r2',
 			bucketName: process.env.CLOUDFLARE_R2_BUCKET,
-			binding: 'BLOB',
+			binding: 'BLOB'
 		},
 
-		cache: true,
+		cache: true
 	},
 
 	content: {
 		build: {
 			markdown: {
 				toc: {
-					searchDepth: 1,
-				},
-			},
-		},
+					searchDepth: 1
+				}
+			}
+		}
 	},
 
 	studio: {
 		route: '/studio',
 		i18n: {
-			defaultLocale: 'nl',
+			defaultLocale: 'nl'
 		},
 		repository: {
 			provider: 'github',
 			owner: 'onderwijsin',
 			repo: 'regional-site-menu',
-			branch: 'main',
+			branch: 'main'
 		},
 		media: {
 			external: true,
-			prefix: 'assets',
+			prefix: '/assets'
 		},
 		auth: {
 			github: {
 				clientId: process.env.STUDIO_GITHUB_CLIENT_ID,
-				clientSecret: process.env.STUDIO_GITHUB_CLIENT_SECRET,
-			},
-		},
+				clientSecret: process.env.STUDIO_GITHUB_CLIENT_SECRET
+			}
+		}
 	},
 
 	debug: {
@@ -265,8 +224,8 @@ export default defineNuxtConfig({
 		modules: isDebug,
 		hooks: {
 			server: isDebug,
-			client: isDebug,
-		},
+			client: isDebug
+		}
 	},
 
 	runtimeConfig: {
@@ -274,15 +233,15 @@ export default defineNuxtConfig({
 		cloudflare: {
 			accountId: process.env.CLOUDFLARE_ACCOUNT_ID,
 			apiToken: process.env.CLOUDFLARE_API_TOKEN,
-			cacheNamespaceId: process.env.CLOUDFLARE_CACHE_NAMESPACE_ID,
+			cacheNamespaceId: process.env.CLOUDFLARE_CACHE_NAMESPACE_ID
 		},
 		datahub: {
 			url: process.env.DATAHUB_URL,
-			token: process.env.DATAHUB_TOKEN,
+			token: process.env.DATAHUB_TOKEN
 		},
 		openai: {
 			token: process.env.OPENAI_API_KEY,
-			model: process.env.OPENAI_MODEL || 'gpt-4.1-mini',
+			model: process.env.OPENAI_MODEL || 'gpt-4.1-mini'
 		},
 		public: {
 			siteUrl: process.env.APP_URL,
@@ -295,29 +254,29 @@ export default defineNuxtConfig({
 				isNext,
 				isDebug,
 				isLivePreview,
-				value: process.env.MODE as Mode,
+				value: process.env.MODE as Mode
 			},
 			tracking: {
-				disabled: process.env.DISABLE_TRACKING === 'true',
+				disabled: process.env.DISABLE_TRACKING === 'true'
 			},
 			contact: {
-				page: 'https://www.onderwijsregio.nl/service/contact',
-			},
-		},
+				page: 'https://www.onderwijsregio.nl/service/contact'
+			}
+		}
 	},
 
 	app: {
 		keepalive: true,
-		head: app.head,
+		head: app.head
 	},
 
 	ui: {
 		theme: {
-			colors: ['primary', 'secondary', 'neutral', 'success', 'warning', 'error', 'info'],
+			colors: ['primary', 'secondary', 'neutral', 'success', 'warning', 'error', 'info']
 		},
 		experimental: {
-			componentDetection: true,
-		},
+			componentDetection: true
+		}
 	},
 
 	plausible: {
@@ -328,7 +287,7 @@ export default defineNuxtConfig({
 		proxyBaseEndpoint: '/api/_plausible',
 		ignoredHostnames: ['localhost'],
 		autoPageviews: true,
-		autoOutboundTracking: true,
+		autoOutboundTracking: true
 	},
 
 	/**
@@ -338,7 +297,7 @@ export default defineNuxtConfig({
 	piniaPluginPersistedstate: {
 		// Default storage, can be overridden per Pinia store
 		storage: 'localStorage',
-		debug: isDebug || isDev,
+		debug: isDebug || isDev
 	},
 
 	site: {
@@ -349,7 +308,7 @@ export default defineNuxtConfig({
 		defaultLocale: 'nl', // not needed if you have @nuxtjs/i18n installed
 		language: 'nl_NL',
 		indexable: isProd,
-		trailingSlash: false,
+		trailingSlash: false
 	},
 
 	robots,
@@ -362,7 +321,7 @@ export default defineNuxtConfig({
 		full: {
 			title: 'Volledige documentatie',
 			description:
-				'Alle inhoud van de tool voor het ontwerpen, evalueren en verbeteren van websites van regionale onderwijsloket, gebundeld in één document.',
+				'Alle inhoud van de tool voor het ontwerpen, evalueren en verbeteren van websites van regionale onderwijsloket, gebundeld in één document.'
 		},
 
 		sections: [
@@ -370,14 +329,14 @@ export default defineNuxtConfig({
 				title: 'Menukaart items',
 				description:
 					'De verschillende elementen die de website van een regionaal onderwijsloket zou kunnen bevatten.',
-				contentCollection: 'items',
+				contentCollection: 'items'
 			},
 			{
 				title: "Extra's voor de website",
 				description:
 					'Handige resources, tools en content die je gratis in kunt zetten voor de website van een regionaal onderwijsloket.',
-				contentCollection: 'extras',
-			},
-		],
-	},
+				contentCollection: 'extras'
+			}
+		]
+	}
 })

@@ -28,7 +28,7 @@ export const useReport = (props?: ReportProps) => {
 	const overlay = useOverlay()
 
 	const slideover = overlay.create(Report, {
-		props,
+		props
 	})
 
 	/**
@@ -51,7 +51,7 @@ export const useReport = (props?: ReportProps) => {
 
 	return {
 		openReport,
-		closeReport,
+		closeReport
 	}
 }
 
@@ -105,6 +105,6 @@ export const useReportConfig = () => {
 
 	return {
 		openReportConfig,
-		closeReportConfig,
+		closeReportConfig
 	}
 }

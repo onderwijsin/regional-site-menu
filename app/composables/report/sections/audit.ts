@@ -11,7 +11,7 @@ import {
 	renderSectionTitle,
 	setPdfDrawColor,
 	setPdfTextColor,
-	writeWrappedText,
+	writeWrappedText
 } from '../pdf'
 import { getScoreColorKey } from './averages'
 
@@ -23,7 +23,7 @@ import { getScoreColorKey } from './averages'
  * @throws {ZodError} When markdown normalization fails for one of the comments.
  */
 export function createCommentBlockMap(
-	audits: Audit<ItemsCollectionItem>[],
+	audits: Audit<ItemsCollectionItem>[]
 ): Map<Audit<ItemsCollectionItem>['id'], MarkdownBlock[]> {
 	const result = new Map<Audit<ItemsCollectionItem>['id'], MarkdownBlock[]>()
 
@@ -54,7 +54,7 @@ export function drawAuditSectionItem(
 	ctx: PdfRenderContext,
 	audit: Audit<ItemsCollectionItem>,
 	commentBlocks: MarkdownBlock[],
-	startY: number,
+	startY: number
 ): number {
 	const { doc, layout, page, colors } = ctx
 
@@ -79,7 +79,7 @@ export function drawAuditSectionItem(
 	// Y segment occupied on each page while content is rendered.
 	const startPage = doc.getCurrentPageInfo().pageNumber
 	const pageSegments: { page: number; startY: number; endY?: number }[] = [
-		{ page: startPage, startY: y - 2 },
+		{ page: startPage, startY: y - 2 }
 	]
 
 	const trackPageBreak = () => {
@@ -90,7 +90,7 @@ export function drawAuditSectionItem(
 			lastSegment.endY = doc.internal.pageSize.getHeight() - layout.marginBottom
 			pageSegments.push({
 				page: currentPage,
-				startY: layout.marginTop - 5,
+				startY: layout.marginTop - 5
 			})
 		}
 	}
@@ -107,7 +107,7 @@ export function drawAuditSectionItem(
 		maxWidth: innerWidth - 30,
 		fontSize: 13,
 		fontStyle: 'bold',
-		color: colors.heading,
+		color: colors.heading
 	})
 
 	trackPageBreak()
@@ -118,7 +118,7 @@ export function drawAuditSectionItem(
 	doc.setFontSize(14)
 	setPdfTextColor(
 		doc,
-		audit.score !== undefined ? mapScoreColor(getScoreColorKey(audit.score)) : colors.muted,
+		audit.score !== undefined ? mapScoreColor(getScoreColorKey(audit.score)) : colors.muted
 	)
 
 	const scoreWidth = doc.getTextWidth(scoreText)
@@ -137,7 +137,7 @@ export function drawAuditSectionItem(
 		maxWidth: innerWidth,
 		fontSize: 10,
 		fontStyle: 'normal',
-		color: colors.secondary,
+		color: colors.secondary
 	})
 
 	trackPageBreak()
@@ -150,7 +150,7 @@ export function drawAuditSectionItem(
 		maxWidth: innerWidth,
 		fontSize: 11,
 		fontStyle: 'normal',
-		color: colors.text,
+		color: colors.text
 	})
 
 	trackPageBreak()
@@ -164,7 +164,7 @@ export function drawAuditSectionItem(
 			maxWidth: innerWidth,
 			fontSize: 11,
 			fontStyle: 'bold',
-			color: colors.heading,
+			color: colors.heading
 		})
 
 		trackPageBreak()
@@ -202,7 +202,7 @@ export function drawAuditSectionItem(
 export function renderAuditSection(
 	ctx: PdfRenderContext,
 	audits: Audit<ItemsCollectionItem>[],
-	config: ReportConfig,
+	config: ReportConfig
 ): void {
 	ctx.doc.addPage()
 
@@ -211,13 +211,13 @@ export function renderAuditSection(
 	y += 6
 
 	y = writeWrappedText(ctx.doc, {
-		text: `Onderstaand worden de individuele elementen uitgelicht die zijn beoordeeld door ${config.region}. Hier tref je per onderdeel de gegeven score en de eventueel gegeven toelichting daarbij.`,
+		text: `Hieronder vind je een toelichting op de elementen die zijn geëvalueerd door ${config.region}. Per onderdeel tref je de gegeven score aan en de eventueel gegeven toelichting daarbij.`,
 		x: ctx.layout.marginLeft,
 		y,
 		maxWidth: ctx.page.contentWidth,
 		fontSize: 11,
 		fontStyle: 'normal',
-		color: ctx.colors.muted,
+		color: ctx.colors.muted
 	})
 
 	y += 8

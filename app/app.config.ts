@@ -3,95 +3,95 @@ export default defineAppConfig({
 		colors: {
 			primary: 'primary',
 			secondary: 'secondary',
-			neutral: 'slate',
+			neutral: 'slate'
 		},
 		button: {
 			slots: {
-				base: 'cursor-pointer',
+				base: 'cursor-pointer'
 			},
 			variants: {
 				size: {
 					md: {
-						leadingIcon: 'size-4',
-					},
-				},
-			},
+						leadingIcon: 'size-4'
+					}
+				}
+			}
 		},
 		badge: {
 			slots: {
-				base: 'select-none',
-			},
+				base: 'select-none'
+			}
 		},
 		pageColumns: {
-			base: 'space-y-6 gap-x-6 lg:columns-2',
+			base: 'space-y-6 gap-x-6 lg:columns-2'
 		},
 		contentNavigation: {
 			slots: {
-				linkLeadingIcon: 'size-4',
-			},
+				linkLeadingIcon: 'size-4'
+			}
 		},
 		navigationMenu: {
 			slots: {
-				linkLeadingIcon: 'size-4',
-			},
+				linkLeadingIcon: 'size-4'
+			}
 		},
 		dropdownMenu: {
 			slots: {
-				content: 'dark:bg-neutral-950',
+				content: 'dark:bg-neutral-950'
 			},
 			variants: {
 				size: {
 					md: {
 						item: 'items-center',
-						itemLeadingIcon: 'size-4',
-					},
-				},
-			},
+						itemLeadingIcon: 'size-4'
+					}
+				}
+			}
 		},
 		page: {
 			slots: {
 				root: 'md:grid md:grid-cols-10 lg:grid-cols-12 md:gap-8',
 				left: 'md:col-span-3 lg:col-span-3',
-				center: 'md:col-span-7 lg:col-span-9',
-			},
+				center: 'md:col-span-7 lg:col-span-9'
+			}
 		},
 
 		input: {
 			slots: {
 				root: 'w-full',
-				base: 'dark:bg-neutral-950',
-			},
+				base: 'dark:bg-neutral-950'
+			}
 		},
 		selectMenu: {
 			slots: {
-				base: 'w-full dark:bg-neutral-950',
-			},
+				base: 'w-full dark:bg-neutral-950'
+			}
 		},
 		select: {
 			slots: {
-				base: 'w-full dark:bg-neutral-950',
-			},
+				base: 'w-full dark:bg-neutral-950'
+			}
 		},
 		textarea: {
 			slots: {
 				root: 'w-full',
-				base: 'dark:bg-neutral-950',
-			},
+				base: 'dark:bg-neutral-950'
+			}
 		},
 		formField: {
 			slots: {
-				label: 'font-bold',
-			},
+				label: 'font-bold'
+			}
 		},
 		switch: {
 			slots: {
-				label: 'font-bold',
-			},
+				label: 'font-bold'
+			}
 		},
 		alert: {
 			slots: {
-				title: 'font-bold',
-			},
-		},
-	},
+				title: 'font-bold'
+			}
+		}
+	}
 })

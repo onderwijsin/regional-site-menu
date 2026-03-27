@@ -9,7 +9,7 @@ export const useSuggestion = (props?: SuggestionProps) => {
 	const overlay = useOverlay()
 
 	const slideover = overlay.create(Suggestion, {
-		props,
+		props
 	})
 
 	function openSuggestion() {
@@ -22,6 +22,6 @@ export const useSuggestion = (props?: SuggestionProps) => {
 
 	return {
 		openSuggestion,
-		closeSuggestion,
+		closeSuggestion
 	}
 }

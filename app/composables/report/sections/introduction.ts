@@ -16,18 +16,18 @@ import { renderBulletList, renderSubheading, writeRichText } from './shared'
  */
 function buildContentProvenanceBullets(config: ReportConfig, region: string): string[] {
 	const bullets = [
-		`Scores en toelichtingen op deze scores per auditonderdeel zijn ingevuld door ${region} (zelfevaluatie).`,
+		`Scores en toelichtingen op deze scores per auditonderdeel zijn ingevuld door ${region} (zelfevaluatie).`
 	]
 
 	if (config.aiWebsiteAnalysis) {
 		bullets.push(
-			'De website-analyse in dit rapport is met AI gegenereerd op basis van de richtlijnen en criteria zoals de tool ze definieert. Let op: de AI kan fouten maken in de analyse.',
+			'De website-analyse in dit rapport is met AI gegenereerd op basis van de richtlijnen en criteria zoals de tool ze definieert. Let op: de AI kan fouten maken in de analyse.'
 		)
 	}
 
 	if (config.aiBriefing) {
 		bullets.push(
-			'De briefing in dit rapport is met AI gegenereerd op basis van de zelfevaluatie en context die door de regio is aangeleverd.',
+			'De briefing in dit rapport is met AI gegenereerd op basis van de zelfevaluatie en context die door de regio is aangeleverd.'
 		)
 	}
 
@@ -63,12 +63,10 @@ export function renderIntroductionPage(ctx: PdfRenderContext, config: ReportConf
 		ctx,
 		[
 			{
-				text: 'Dit rapport geeft inzicht in de kwaliteit en volledigheid van de website van ',
-			},
-			{ text: region, style: 'bold' },
-			{ text: '.' },
+				text: 'Dit rapport geeft inzicht in de volledigheid en helderheid van je site voor bezoekers.'
+			}
 		],
-		y,
+		y
 	)
 
 	y = writeWrappedText(doc, {
@@ -78,7 +76,7 @@ export function renderIntroductionPage(ctx: PdfRenderContext, config: ReportConf
 		maxWidth: page.contentWidth,
 		fontSize: 11,
 		fontStyle: 'normal',
-		color: colors.text,
+		color: colors.text
 	})
 
 	y += 4
@@ -92,7 +90,7 @@ export function renderIntroductionPage(ctx: PdfRenderContext, config: ReportConf
 		maxWidth: page.contentWidth,
 		fontSize: 11,
 		fontStyle: 'normal',
-		color: colors.text,
+		color: colors.text
 	})
 
 	y = writeWrappedText(doc, {
@@ -102,7 +100,7 @@ export function renderIntroductionPage(ctx: PdfRenderContext, config: ReportConf
 		maxWidth: page.contentWidth,
 		fontSize: 11,
 		fontStyle: 'normal',
-		color: colors.text,
+		color: colors.text
 	})
 
 	y += 8
@@ -112,9 +110,9 @@ export function renderIntroductionPage(ctx: PdfRenderContext, config: ReportConf
 		[
 			{ text: 'Dit rapport is gebaseerd op een zelfevaluatie door ' },
 			{ text: region, style: 'bold' },
-			{ text: '. Per element is door de regio zelf aangegeven:' },
+			{ text: '. Per element is door de regio zelf aangegeven:' }
 		],
-		y,
+		y
 	)
 
 	y += 4
@@ -123,9 +121,9 @@ export function renderIntroductionPage(ctx: PdfRenderContext, config: ReportConf
 		[
 			'of het aanwezig is',
 			'hoe goed het is uitgewerkt',
-			'in welke mate het bijdraagt aan het doel van de website',
+			'in welke mate het bijdraagt aan het doel van de website'
 		],
-		y,
+		y
 	)
 
 	y += 2
@@ -134,9 +132,9 @@ export function renderIntroductionPage(ctx: PdfRenderContext, config: ReportConf
 		[
 			{ text: 'De scores en toelichtingen in de audits zijn dus een weergave van hoe ' },
 			{ text: region, style: 'bold' },
-			{ text: ' de eigen website op dit moment beoordeelt.' },
+			{ text: ' de eigen website op dit moment beoordeelt.' }
 		],
-		y,
+		y
 	)
 
 	// Make source ownership explicit when AI sections are enabled.
@@ -147,7 +145,7 @@ export function renderIntroductionPage(ctx: PdfRenderContext, config: ReportConf
 		maxWidth: page.contentWidth,
 		fontSize: 11,
 		fontStyle: 'normal',
-		color: colors.text,
+		color: colors.text
 	})
 
 	y += 4
@@ -162,7 +160,7 @@ export function renderIntroductionPage(ctx: PdfRenderContext, config: ReportConf
 		maxWidth: page.contentWidth,
 		fontSize: 11,
 		fontStyle: 'normal',
-		color: colors.text,
+		color: colors.text
 	})
 
 	y += 4
@@ -171,19 +169,19 @@ export function renderIntroductionPage(ctx: PdfRenderContext, config: ReportConf
 		[
 			'startpunt voor verbetering van de website',
 			'gespreksdocument binnen de regio',
-			'input voor doorontwikkeling of een briefing richting een webbureau',
+			'input voor doorontwikkeling of een briefing richting een webbureau'
 		],
-		y,
+		y
 	)
 
 	y += 2
 	void writeWrappedText(doc, {
-		text: 'De combinatie van scores en toelichtingen helpt om gericht keuzes te maken: wat moet eerst beter, en wat kan later?',
+		text: 'De combinatie van scores en toelichtingen helpt om gericht keuzes te maken: wat doen we eerst en wat kan later?',
 		x: layout.marginLeft,
 		y,
 		maxWidth: page.contentWidth,
 		fontSize: 11,
 		fontStyle: 'normal',
-		color: colors.text,
+		color: colors.text
 	})
 }

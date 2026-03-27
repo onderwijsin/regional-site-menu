@@ -178,8 +178,9 @@ Validation rules:
 - Production routes are prerendered.
 - App is intentionally client-heavy.
 - Cloudflare target is configured through Nitro preset and NuxtHub integration.
-- Local warnings from Nuxt Site Config / Nuxt Content D1 behavior can appear during typecheck;
-  verify whether they are warnings vs actual failures.
+- Nuxt Content server queries require the D1 binding `DB` in Cloudflare environments.
+- Treat missing `DB` binding errors as real runtime failures (not harmless warnings).
+- Nuxt Studio media uploads require the R2 binding `BLOB` in Cloudflare environments.
 
 ## Naming and Existing Quirks (Do Not “Fix” Casually)
 

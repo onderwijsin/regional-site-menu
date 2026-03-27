@@ -19,7 +19,7 @@ const score = computed(() => state.getAuditScore(props.item.id))
 		:to="item.path"
 		:ui="{
 			body: mode === 'edit' ? 'pr-4' : '',
-			footer: 'space-x-2 space-y-1.5',
+			footer: 'space-x-2 space-y-1.5'
 		}"
 	>
 		<template #footer>

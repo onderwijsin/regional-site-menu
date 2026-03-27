@@ -40,7 +40,7 @@ const state = reactive<Submission>({
 	category: PILLARS[0],
 	email: undefined,
 	goals: [],
-	exampleUrl: '',
+	exampleUrl: ''
 })
 
 const email = computed({
@@ -51,20 +51,20 @@ const email = computed({
 		} else {
 			state.email = value
 		}
-	},
+	}
 })
 
 const goalOptions: { label: string; value: Submission['goals'][number] }[] = GOALS.map((goal) => ({
 	label: goal,
-	value: goal,
+	value: goal
 }))
 
 const categoryOptions: { label: string; value: Submission['category'] }[] = [
 	...PILLARS.map((pillar) => ({
 		label: pillar,
-		value: pillar,
+		value: pillar
 	})),
-	{ label: 'Handige extra', value: 'extra' },
+	{ label: 'Handige extra', value: 'extra' }
 ]
 
 const isSubmitting = ref(false)
@@ -75,14 +75,14 @@ async function onSubmit(event: FormSubmitEvent<Submission>) {
 	try {
 		await $fetch('/api/datahub/submission', {
 			method: 'POST',
-			body: formData,
+			body: formData
 		})
 		toast.add({
 			title: 'Gelukt!',
 			description:
 				'Bedankt voor je suggestie. We gaan deze bekijken en zo snel mogelijk actie ondernemen.',
 			color: 'success',
-			icon: getIcon('success'),
+			icon: getIcon('success')
 		})
 		emit('close')
 	} catch (error) {
@@ -92,7 +92,7 @@ async function onSubmit(event: FormSubmitEvent<Submission>) {
 			description:
 				'Er is een fout opgetreden bij het indienen van het formulier. Probeer het later opnieuw.',
 			color: 'error',
-			icon: getIcon('warn'),
+			icon: getIcon('warn')
 		})
 	} finally {
 		isSubmitting.value = false
