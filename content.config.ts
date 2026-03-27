@@ -21,7 +21,6 @@ export default defineContentConfig({
 				goals: z.array(goal),
 				scope,
 				priority,
-				exampleUrl: z.url().optional(),
 				audit: z
 					.object({
 						description: z.string().optional(),
