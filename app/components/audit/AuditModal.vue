@@ -49,7 +49,7 @@ function handleSave() {
 				v-model="comment"
 				class="my-6"
 				outline
-				placeholder="Voeg jouw opmerking toe. Je opmerking wordt verwerkt in de rapportage die je kunt genereren."
+				placeholder="Voeg jouw opmerkingen toe."
 			/>
 		</template>
 		<template #footer>
