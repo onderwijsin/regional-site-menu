@@ -1,6 +1,6 @@
 import type { ParsedHtmlCrawlData, UnknownRecord } from './types'
 
-import { parseHTML } from 'linkedom'
+import { parseHTML } from 'linkedom/worker'
 
 import { asRecord, callRecordMethod, toIterableArray } from './records'
 import { isAllowedUrl, normalizeUrl } from './url'
