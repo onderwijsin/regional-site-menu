@@ -121,7 +121,6 @@ export default defineNuxtConfig({
 			nodeCompat: true,
 			wrangler: {
 				name: process.env.WORKER_NAME,
-
 				assets: {
 					directory: './.output/public/',
 					binding: 'ASSETS',
@@ -132,6 +131,10 @@ export default defineNuxtConfig({
 						head_sampling_rate: 1,
 						invocation_logs: true,
 					},
+				},
+				vars: {
+					// We need runtime access to this var via process.env
+					STUDIO_GITHUB_CLIENT_ID: process.env.STUDIO_GITHUB_CLIENT_ID,
 				},
 			},
 		},
