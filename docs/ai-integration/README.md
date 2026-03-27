@@ -54,7 +54,7 @@ What the route does:
 
 1. Validates input with Zod (`schema/reportAi.ts`).
 2. Crawls the requested domain server-side (capped, same-domain).
-3. Loads system prompt from content collection (`content/prompts`).
+3. Loads system prompt from content collection (`content/_prompts`).
 4. Fetches reference criteria from `/llms-full.txt` (fallback `/llms.txt`).
 5. Sends crawled context + reference to OpenAI.
 6. Returns typed response payload with `analysis`, `analysedPages`, and `usedSources`.

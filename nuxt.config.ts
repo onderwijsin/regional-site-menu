@@ -99,6 +99,7 @@ export default defineNuxtConfig({
 	$production: {
 		routeRules: {
 			'/**': { prerender: true },
+			'/_prompts/**': { prerender: false },
 			'/images/**': {
 				ssr: false,
 				cache: false,
@@ -216,6 +217,7 @@ export default defineNuxtConfig({
 		blob: {
 			driver: 'cloudflare-r2',
 			bucketName: process.env.CLOUDFLARE_R2_BUCKET,
+			binding: 'BLOB',
 		},
 
 		cache: true,

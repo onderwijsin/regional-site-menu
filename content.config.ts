@@ -44,10 +44,10 @@ export default defineContentConfig({
 				download: z.url().nullable(),
 			}),
 		}),
-		prompts: defineCollection({
-			type: 'data',
+		_prompts: defineCollection({
+			type: 'page',
 			source: {
-				include: 'prompts/**/*.md',
+				include: '_prompts/**/*.md',
 				exclude: [],
 			},
 			schema: z.object({

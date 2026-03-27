@@ -60,7 +60,7 @@ Purpose:
 
 Source:
 
-- `content/prompts/**/*.md`
+- `content/_prompts/**/*.md`
 
 Schema fields:
 
@@ -84,7 +84,7 @@ Common patterns:
 - Client:
   - `queryCollection('items').where('extension', '=', 'md').all()`
 - Server:
-  - `queryCollection(event, 'prompts').where('key', '=', ...).all()`
+  - `queryCollection(event, '_prompts').where('key', '=', ...).all()`
 
 Notes:
 
