@@ -2,7 +2,9 @@ import type { AiWebsiteAnalysisResponse, ReportAiInsights } from '~~/schema/repo
 import type { ReportConfig } from '~~/schema/reportConfig'
 import type { ReportData } from './report/types'
 
+import { REPORT_AI_PROGRESS_CONFIG } from '@ai'
 import {
+	AI_WEBSITE_ANALYSIS_DEFAULT_PAGES,
 	AiBriefingRequestSchema,
 	AiBriefingResponseSchema,
 	AiWebsiteAnalysisRequestSchema,
@@ -44,74 +46,96 @@ type AiProgressScenario = {
 	fastForwardMs: number
 }
 
-const AI_PROGRESS_CONFIG: Record<'analysis' | 'briefing', AiProgressScenario> = {
-	analysis: {
-		fastForwardMs: 240,
-		stages: [
-			{
-				id: 'analysis-start',
-				text: 'AI-analyse starten...',
-				reasoning: 'De aanvraag wordt voorbereid en de websitegegevens worden gevalideerd.',
-				durationMs: 4500
-			},
-			{
-				id: 'analysis-crawl',
-				text: "Websitepagina's verzamelen...",
-				reasoning:
-					'De server verzamelt relevante pagina’s van je website als context voor de analyse.',
-				durationMs: 20000
-			},
-			{
-				id: 'analysis-interpret',
-				text: 'Inhoud interpreteren...',
-				reasoning:
-					'De server interpreteert de verzamelde inhoud om inzichten te genereren.',
-				durationMs: 15000
-			},
-			{
-				id: 'analysis-criteria',
-				text: 'Criteria toepassen op content...',
-				reasoning: 'De verzamelde inhoud wordt getoetst aan de richtlijnen en criteria.',
-				durationMs: 8000
-			},
-			{
-				id: 'analysis-finalize',
-				text: 'Website-analyse afronden...',
-				reasoning:
-					'De uitkomst wordt gestructureerd en klaargezet voor opname in het rapport.',
-				durationMs: 6000
-			}
-		]
-	},
+const AI_PROGRESS_CONFIG: Record<'briefing', AiProgressScenario> = {
 	briefing: {
-		fastForwardMs: 220,
+		fastForwardMs: REPORT_AI_PROGRESS_CONFIG.briefingFastForwardMs,
 		stages: [
 			{
 				id: 'briefing-start',
 				text: 'AI-briefing starten...',
 				reasoning:
 					'De briefing-aanvraag wordt opgebouwd met auditresultaten en opgegeven context.',
-				durationMs: 1000
+				durationMs: REPORT_AI_PROGRESS_CONFIG.briefingStageDurationMs.start
 			},
 			{
 				id: 'briefing-synthesis',
 				text: 'Inzichten combineren...',
 				reasoning:
 					'Zelfevaluatie, opmerkingen en eventuele website-analyse worden samengebracht.',
-				durationMs: 3000
+				durationMs: REPORT_AI_PROGRESS_CONFIG.briefingStageDurationMs.synthesis
 			},
 			{
 				id: 'briefing-generate',
 				text: 'Briefing genereren...',
 				reasoning:
 					'De server genereert de briefing op basis van de verzamelde inzichten en context.',
-				durationMs: 2000
+				durationMs: REPORT_AI_PROGRESS_CONFIG.briefingStageDurationMs.generate
 			},
 			{
 				id: 'briefing-finalize',
 				text: 'Briefing afronden...',
 				reasoning: 'De briefing wordt concreet geformuleerd voor gebruik in de rapportage.',
-				durationMs: 2000
+				durationMs: REPORT_AI_PROGRESS_CONFIG.briefingStageDurationMs.finalize
+			}
+		]
+	}
+}
+
+/**
+ * Resolves the crawl stage duration based on requested crawl depth.
+ *
+ * @param maxPages - Requested max pages for website analysis.
+ * @returns Duration in milliseconds for the crawl stage.
+ */
+function resolveAnalysisCrawlStageDurationMs(maxPages: number | undefined): number {
+	const safeMaxPages = Math.max(maxPages ?? AI_WEBSITE_ANALYSIS_DEFAULT_PAGES, 1)
+	return REPORT_AI_PROGRESS_CONFIG.crawlStageDurationPerPageMs * safeMaxPages
+}
+
+/**
+ * Creates analysis progress configuration with dynamic crawl-stage timing.
+ *
+ * @param maxPages - Requested max pages for website analysis.
+ * @returns Scenario with crawl stage duration adjusted to max pages.
+ */
+function createAnalysisProgressScenario(maxPages: number | undefined): AiProgressScenario {
+	const crawlDurationMs = resolveAnalysisCrawlStageDurationMs(maxPages)
+
+	return {
+		fastForwardMs: REPORT_AI_PROGRESS_CONFIG.analysisFastForwardMs,
+		stages: [
+			{
+				id: 'analysis-start',
+				text: 'AI-analyse starten...',
+				reasoning: 'De aanvraag wordt voorbereid en de websitegegevens worden gevalideerd.',
+				durationMs: REPORT_AI_PROGRESS_CONFIG.analysisStageDurationMs.start
+			},
+			{
+				id: 'analysis-crawl',
+				text: "Websitepagina's verzamelen...",
+				reasoning:
+					'De server verzamelt relevante pagina’s van je website als context voor de analyse.',
+				durationMs: crawlDurationMs
+			},
+			{
+				id: 'analysis-interpret',
+				text: 'Inhoud interpreteren...',
+				reasoning:
+					'De server interpreteert de verzamelde inhoud om inzichten te genereren.',
+				durationMs: REPORT_AI_PROGRESS_CONFIG.analysisStageDurationMs.interpret
+			},
+			{
+				id: 'analysis-criteria',
+				text: 'Criteria toepassen op content...',
+				reasoning: 'De verzamelde inhoud wordt getoetst aan de richtlijnen en criteria.',
+				durationMs: REPORT_AI_PROGRESS_CONFIG.analysisStageDurationMs.criteria
+			},
+			{
+				id: 'analysis-finalize',
+				text: 'Website-analyse afronden...',
+				reasoning:
+					'De uitkomst wordt gestructureerd en klaargezet voor opname in het rapport.',
+				durationMs: REPORT_AI_PROGRESS_CONFIG.analysisStageDurationMs.finalize
 			}
 		]
 	}
@@ -208,10 +232,10 @@ export const useReportAi = () => {
 	 * @returns Task result.
 	 */
 	async function runWithProgressScenario<T>(
-		scenario: keyof typeof AI_PROGRESS_CONFIG,
+		scenario: keyof typeof AI_PROGRESS_CONFIG | AiProgressScenario,
 		task: () => Promise<T>
 	): Promise<T> {
-		const config = AI_PROGRESS_CONFIG[scenario]
+		const config = typeof scenario === 'string' ? AI_PROGRESS_CONFIG[scenario] : scenario
 		if (config.stages.length === 0) {
 			return await task()
 		}
@@ -271,16 +295,17 @@ export const useReportAi = () => {
 
 		completeProgressStage(activeProgressIndex)
 
+		if (taskError) {
+			throw taskError
+		}
+
 		// Fast-forward any stages not yet shown when task finishes early.
+		// This is intentionally success-only so failed runs do not look complete.
 		for (let nextIndex = stageIndex + 1; nextIndex < config.stages.length; nextIndex += 1) {
 			const nextStage = config.stages[nextIndex]!
 			const insertedIndex = pushProgressStage(nextStage)
 			await wait(config.fastForwardMs)
 			completeProgressStage(insertedIndex)
-		}
-
-		if (taskError) {
-			throw taskError
 		}
 
 		return taskResult as T
@@ -308,8 +333,9 @@ export const useReportAi = () => {
 		if (config.aiWebsiteAnalysis && config.url) {
 			let analysisResult: AiWebsiteAnalysisResponse
 			try {
-				analysisResult = await runWithProgressScenario('analysis', () =>
-					generateWebsiteAnalysis(config)
+				analysisResult = await runWithProgressScenario(
+					createAnalysisProgressScenario(config.maxPages),
+					() => generateWebsiteAnalysis(config)
 				)
 			} catch (error: unknown) {
 				throw new ReportGenerationError('AI_WEBSITE_ANALYSIS_FAILED', error)

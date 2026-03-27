@@ -2,6 +2,7 @@
 import type { ButtonProps, TabsItem } from '@nuxt/ui'
 import type { Goal } from '~~/shared/types/primitives'
 
+import { ASYNC_DATA_KEYS } from '@constants'
 import { useFuse } from '@vueuse/integrations/useFuse'
 import { GOALS } from '~/composables/content-taxonomy'
 
@@ -75,27 +76,22 @@ const tabs: TabsItem[] = [
 // ----------------------
 
 /**
- * Fetch menu items (filtered server-side)
+ * Fetch menu items once and apply filter/search client-side.
  *
- * NOTE:
- * - Refetches when filter changes
- * - Keeps dataset small before fuzzy search
+ * This avoids repeated content queries when users switch goal tabs.
  */
-const { data } = await useAsyncData(
-	`menu-overview-${filter.value}`,
-	async () => {
-		const items = await queryCollection('items').where('extension', '=', 'md').all()
-
-		if (filter.value === 'all') return items
-
-		return items.filter((item) =>
-			item.goals.includes(filter.value as (typeof item.goals)[number])
-		)
-	},
-	{
-		watch: [filter]
-	}
+const { data } = await useAsyncData(ASYNC_DATA_KEYS.menuOverview, () =>
+	queryCollection('items').where('extension', '=', 'md').all()
 )
+
+const filteredData = computed(() => {
+	const items = data.value ?? []
+	if (filter.value === 'all') {
+		return items
+	}
+
+	return items.filter((item) => item.goals.includes(filter.value as (typeof item.goals)[number]))
+})
 
 // ----------------------
 // Search (Fuse.js)
@@ -104,7 +100,7 @@ const { data } = await useAsyncData(
 /**
  * Fuse requires a defined array
  */
-const searchableData = computed(() => data.value ?? [])
+const searchableData = computed(() => filteredData.value)
 
 /**
  * Fuzzy search results

@@ -73,8 +73,8 @@ Top-level:
 - `app/` Nuxt app code (pages, components, composables, store, plugins)
 - `content/` Markdown content for `items` and `extras`
 - `schema/` Zod schemas for content-adjacent and API payloads
-- `server/` server routes (currently Datahub submission endpoint)
-- `config/` site/head/robots identity configuration
+- `server/` server routes (`api/ai/*`, `api/datahub/*`, assets route handlers)
+- `config/` static app behavior config (`constants.ts`, `ai.ts`, head/site/robots)
 - `shared/types/` shared TypeScript types
 
 Nuxt config:
@@ -162,7 +162,13 @@ Rules when editing PDF code:
 
 ## Server/API and Validation
 
-- API route: `server/api/datahub/submission.post.ts`
+- API routes:
+  - `server/api/ai/briefing.post.ts`
+  - `server/api/ai/website-analysis.post.ts`
+  - `server/api/datahub/submission.post.ts`
+- AI helper modules:
+  - `server/utils/ai/*`
+  - `server/utils/crawler/*`
 - Input schema: `schema/submission.ts`
 - Report schema: `schema/reportConfig.ts`
 - Content field enums: `schema/fields.ts`

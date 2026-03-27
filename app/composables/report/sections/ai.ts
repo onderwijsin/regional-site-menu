@@ -1,10 +1,12 @@
 import type { PdfRenderContext } from '../pdf'
 import type { ReportData } from '../types'
 
+import { PDF_RENDER_CONFIG } from '@constants'
+
 import { markdownToBlocks, renderMarkdownBlocks } from '../markdown'
 import { renderSectionTitle, writeWrappedText } from '../pdf'
 
-const AI_MARKDOWN_TOP_PADDING = 10
+const AI_MARKDOWN_TOP_PADDING = PDF_RENDER_CONFIG.aiMarkdownTopPadding
 
 /**
  * Appends a Dutch URL appendix after the generated website analysis.

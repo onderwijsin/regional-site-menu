@@ -1,7 +1,6 @@
 import type { H3Event } from 'h3'
 
-const LLMS_FULL_PATH = '/llms-full.txt'
-const LLMS_PATH = '/llms.txt'
+import { AI_REFERENCE_PATHS } from '@ai'
 
 /**
  * Reads a text document from an internal app route within the same Nitro request.
@@ -35,12 +34,12 @@ async function fetchInternalTextDocument(event: H3Event, path: string): Promise<
  * @returns Plain text reference document.
  */
 export async function fetchLlmsFullReferenceDocument(event: H3Event): Promise<string> {
-	const fullText = await fetchInternalTextDocument(event, LLMS_FULL_PATH)
+	const fullText = await fetchInternalTextDocument(event, AI_REFERENCE_PATHS.llmsFull)
 	if (fullText) {
 		return fullText
 	}
 
-	const fallbackText = await fetchInternalTextDocument(event, LLMS_PATH)
+	const fallbackText = await fetchInternalTextDocument(event, AI_REFERENCE_PATHS.llms)
 	if (fallbackText) {
 		return fallbackText
 	}

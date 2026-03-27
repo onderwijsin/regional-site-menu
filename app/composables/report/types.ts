@@ -14,15 +14,6 @@ export type PdfFontStyle = 'normal' | 'bold' | 'italic'
 export type PdfColor = readonly [number, number, number]
 
 /**
- * Normalized markdown block used for simplified PDF rendering.
- */
-export type MarkdownBlock =
-	| { type: 'paragraph'; text: string }
-	| { type: 'heading'; level: 1 | 2 | 3 | 4 | 5 | 6; text: string }
-	| { type: 'bullet'; text: string }
-	| { type: 'ordered'; index: number; text: string }
-
-/**
  * Semantic score color token.
  */
 export type ScoreColor =

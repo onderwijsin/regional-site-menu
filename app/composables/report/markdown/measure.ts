@@ -2,6 +2,7 @@ import type { jsPDF } from 'jspdf'
 import type { MarkdownBlock, RichTextSegment } from './types'
 
 import { measureWrappedTextHeight } from '../pdf'
+import { MARKDOWN_LAYOUT } from './constants'
 
 /**
  * Flattens rich text segments into plain text for coarse layout calculations.
@@ -51,7 +52,11 @@ export function measureMarkdownBlocksHeight(
 		switch (block.type) {
 			case 'paragraph':
 			case 'heading':
-				height += measureSegmentsHeight(doc, block.segments, maxWidth) + 2
+				height +=
+					measureSegmentsHeight(doc, block.segments, maxWidth) +
+					(block.type === 'paragraph'
+						? MARKDOWN_LAYOUT.paragraphBottom
+						: MARKDOWN_LAYOUT.headingBottom)
 				break
 
 			case 'bulletList':
@@ -59,7 +64,9 @@ export function measureMarkdownBlocksHeight(
 					const itemText = segmentsToPlainText(item.segments)
 
 					if (itemText) {
-						height += measureWrappedTextHeight(doc, `• ${itemText}`, maxWidth) + 1.5
+						height +=
+							measureWrappedTextHeight(doc, `• ${itemText}`, maxWidth) +
+							MARKDOWN_LAYOUT.listItemBottom
 					}
 
 					if (item.children?.length) {
@@ -75,7 +82,7 @@ export function measureMarkdownBlocksHeight(
 					if (itemText) {
 						height +=
 							measureWrappedTextHeight(doc, `${index + 1}. ${itemText}`, maxWidth) +
-							1.5
+							MARKDOWN_LAYOUT.listItemBottom
 					}
 
 					if (item.children?.length) {
@@ -85,11 +92,14 @@ export function measureMarkdownBlocksHeight(
 				break
 
 			case 'blockquote':
-				height += measureMarkdownBlocksHeight(doc, block.blocks, maxWidth - 4) + 4
+				height +=
+					measureMarkdownBlocksHeight(doc, block.blocks, maxWidth - 4) +
+					MARKDOWN_LAYOUT.blockquoteTop +
+					MARKDOWN_LAYOUT.blockquoteBottom
 				break
 
 			case 'horizontalRule':
-				height += 4
+				height += MARKDOWN_LAYOUT.horizontalRuleBottom
 				break
 		}
 	}

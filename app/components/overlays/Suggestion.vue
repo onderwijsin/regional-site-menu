@@ -2,6 +2,7 @@
 import type { FormSubmitEvent } from '@nuxt/ui'
 import type { Submission } from '@schema/submission'
 
+import { SUGGESTION_FORM_CONFIG } from '@constants'
 import { SubmissionSchema } from '@schema/submission'
 import { GOALS, PILLARS } from '~/composables/content-taxonomy'
 
@@ -13,30 +14,10 @@ const emit = defineEmits<{
 	(e: 'close'): void
 }>()
 
-const DEFAULT_BODY = `
-## Waarom is dit belangrijk
-
-Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore
-et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut
-aliquip ex ea commodo consequat.
-
-## Tips bij het implementeren
-
-- Lorem ipsum dolor sit amet
-- Lorem ipsum dolor sit amet
-- Lorem ipsum dolor sit amet
-
-## Goede voorbeelden
-
-Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore
-et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut
-aliquip ex ea commodo consequat.
-`
-
 const state = reactive<Submission>({
 	title: '',
 	description: '',
-	body: DEFAULT_BODY,
+	body: SUGGESTION_FORM_CONFIG.defaultBody,
 	category: PILLARS[0],
 	email: undefined,
 	goals: [],

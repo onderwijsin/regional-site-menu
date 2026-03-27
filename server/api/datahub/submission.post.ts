@@ -1,24 +1,53 @@
+import { DATAHUB_CONFIG } from '@constants'
 import { SubmissionSchema } from '@schema/submission'
 import { joinURL } from 'ufo'
 
+/**
+ * Controller for `POST /api/datahub/submission`.
+ *
+ * Flow:
+ * 1. Validate inbound submission payload with Zod.
+ * 2. Resolve and validate required runtime Datahub config.
+ * 3. Forward request to Datahub with expected contract shape.
+ * 4. Return stable success response.
+ *
+ * @returns `{ success: true }` when downstream submission succeeds.
+ */
 export default defineEventHandler(async (event) => {
 	const body = await readBody(event)
 	const parsedData = SubmissionSchema.parse(body)
 
 	const config = useRuntimeConfig(event)
-	const url = joinURL(config.datahub.url, 'items', 'submissions')
+	const datahubUrl = config.datahub.url?.trim()
+	const datahubToken = config.datahub.token?.trim()
+
+	if (!datahubUrl) {
+		throw createError({
+			statusCode: 500,
+			statusMessage: 'DATAHUB_URL ontbreekt in runtimeConfig'
+		})
+	}
+
+	if (!datahubToken) {
+		throw createError({
+			statusCode: 500,
+			statusMessage: 'DATAHUB_TOKEN ontbreekt in runtimeConfig'
+		})
+	}
+
+	const url = joinURL(datahubUrl, ...DATAHUB_CONFIG.submissionPathSegments)
 
 	await $fetch(url, {
 		method: 'POST',
 		headers: {
-			Authorization: `Bearer ${config.datahub.token}`
+			Authorization: `Bearer ${datahubToken}`
 		},
 		body: {
-			form_type: 'sitemenu_submission',
+			form_type: DATAHUB_CONFIG.submissionFormType,
 			payload: parsedData
 		},
 		query: {
-			fields: ['id']
+			fields: [...DATAHUB_CONFIG.responseFields]
 		}
 	})
 

@@ -56,14 +56,16 @@ What the route does:
 2. Crawls the requested domain server-side (capped, same-domain).
 3. Loads system prompt from content collection (`content/_prompts`).
 4. Fetches reference criteria from `/llms-full.txt` (fallback `/llms.txt`).
-5. Sends crawled context + reference to OpenAI.
-6. Returns typed response payload with `analysis`, `analysedPages`, and `usedSources`.
+5. Requires at least one crawled page with non-empty text excerpt.
+6. Sends validated crawl context + reference to OpenAI.
+7. Returns typed response payload with `analysis`, `analysedPages`, and `usedSources`.
 
 Controller + helpers:
 
 - [website-analysis.post.ts](../../server/api/ai/website-analysis.post.ts)
 - [analysis.ts](../../server/utils/ai/analysis.ts)
-- [crawl.ts](../../server/utils/ai/crawl.ts)
+- [analysis-output.ts](../../server/utils/ai/analysis-output.ts)
+- [website.ts](../../server/utils/crawler/website.ts)
 - [reference.ts](../../server/utils/ai/reference.ts)
 
 ### `POST /api/ai/briefing`
@@ -79,6 +81,7 @@ What the route does:
 3. Formats domain input context (region, goals, selected components, notes, optional analysis
    context).
 4. Calls OpenAI with structured output parsing.
+   - falls back to plain-text response mode if structured SDK parsing fails.
 5. Normalizes markdown and returns typed response.
 
 Controller + helpers:
@@ -129,8 +132,9 @@ Key behavior:
   - `text` (stage label)
   - `reasoning` (expanded context)
   - `status` (`running`/`completed`)
-- progress timing is configurable via `AI_PROGRESS_CONFIG`
+- progress timing is configurable via `REPORT_AI_PROGRESS_CONFIG` in `config/ai.ts`
 - if the backend finishes early, remaining visual stages are fast-forwarded sequentially
+- fast-forwarding happens only on success (failed runs do not show fully completed stage output)
 - logs full analysis payload in browser console for debugging
 
 ## Data Contracts
@@ -143,6 +147,7 @@ Key response fields:
 
 - `analysis`, `briefing`
 - `analysedPages` and `usedSources` for analysis traceability
+- `usedSources` includes the requested URL plus evidence-page URLs with non-empty crawl excerpts
 - `crawledPages` kept for backward compatibility
 
 ## PDF Integration
@@ -165,12 +170,18 @@ Implemented safeguards:
 - strict input/output Zod validation on both endpoints
 - server-side same-domain crawl with page caps
 - llms-full reference criteria included in analysis prompt
+- structured model output parsing before analysis markdown assembly
+- compatibility fallback for model-specific unsupported reasoning/verbosity params
+- retry with higher output token budget when response ends `incomplete` due `max_output_tokens`
+- fallback from structured parse mode to plain-text mode when SDK JSON parsing fails
+- output fallback path (`output_text` + JSON-in-text parsing + plain markdown fallback)
 - explicit source URL traceability in API response and PDF output
 - browser debug log of raw analysis payload for quality tuning
 
 Remaining risk:
 
 - model output may still over-generalize relative to crawled excerpts
+- larger crawls increase token pressure and can still require tuning of `max_output_tokens`
 - users should review AI output before finalizing PDF
 
 ## Runtime and Config
@@ -178,7 +189,13 @@ Remaining risk:
 Runtime config:
 
 - `runtimeConfig.openai.token`
-- `runtimeConfig.openai.model` (default `gpt-4.1-mini`)
+- `runtimeConfig.openai.model` (default `gpt-5`)
+
+Static AI defaults:
+
+- [config/ai.ts](../../config/ai.ts)
+- endpoint-specific behavior docs: [server/api/ai/README.md](../../server/api/ai/README.md)
+- crawler behavior docs: [server/utils/crawler/README.md](../../server/utils/crawler/README.md)
 
 Environment:
 
@@ -190,4 +207,4 @@ Environment:
 1. Add explicit per-stage retry actions in UI (retry analysis only / briefing only).
 2. Add integration tests for endpoint shape + failure cases.
 3. Add quality telemetry (e.g. user edits ratio on AI briefing).
-4. Consider extracting AI progress config to a dedicated app config file for non-dev tuning.
+4. Add fallback observability metrics (how often structured parse fallback/retry paths are used).

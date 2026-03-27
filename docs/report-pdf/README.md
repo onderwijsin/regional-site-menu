@@ -36,6 +36,9 @@ Main goals:
 - [fonts.ts](../../app/composables/report/fonts.ts) registers Rijksoverheid fonts.
 - [markdown/](../../app/composables/report/markdown) markdown parsing, measuring, and rendering.
 - [sections/](../../app/composables/report/sections) concrete page renderers.
+- local module docs:
+  - [report/README.md](../../app/composables/report/README.md)
+  - [report/markdown/README.md](../../app/composables/report/markdown/README.md)
 
 ## Section Order
 
@@ -62,6 +65,11 @@ TipTap/editor markdown is normalized before rendering:
 4. render blocks with pagination checks
 
 This keeps report sections independent from TipTap-specific node details.
+
+Invariant to preserve:
+
+- markdown text normalization must keep meaningful whitespace between inline segments
+- markdown measurement spacing tokens must stay aligned with renderer spacing tokens
 
 ## Risk Areas
 

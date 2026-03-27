@@ -1,9 +1,15 @@
+import { AI_OPENAI_CONFIG } from '@ai'
 import { AiBriefingRequestSchema, AiBriefingResponseSchema } from '@schema/reportAi'
 import { zodTextFormat } from 'openai/helpers/zod'
 import { z } from 'zod'
 
 import { formatBriefingInput } from '../../utils/ai/briefing'
-import { getOpenAiClient } from '../../utils/ai/openai'
+import {
+	getOpenAiClient,
+	getSupportedOpenAiValuesFromError,
+	isUnsupportedOpenAiParameterError,
+	pickFirstSupportedOpenAiValue
+} from '../../utils/ai/openai'
 import { getAiSystemPrompt } from '../../utils/ai/prompts'
 import { countWords, sanitizeAiMarkdown } from '../../utils/ai/text'
 
@@ -45,38 +51,348 @@ export default defineEventHandler(async (event) => {
 	const userPrompt = formatBriefingInput(input)
 
 	// 4) Request a structured response so parsing is deterministic.
-	const response = await client.responses.parse({
-		model,
-		temperature: 0.2,
-		max_output_tokens: 1800,
-		input: [
-			{
-				role: 'system',
-				content: systemPrompt
-			},
-			{
-				role: 'user',
-				content: userPrompt
+	/**
+	 * Requests briefing output with compatibility fallbacks.
+	 *
+	 * Behavior:
+	 * - starts with structured output (`responses.parse`)
+	 * - degrades unsupported reasoning/verbosity params/values
+	 * - falls back to plain-text mode (`responses.create`) when structured parse
+	 *   fails at SDK JSON parse level
+	 *
+	 * @param options - Request tuning values.
+	 * @returns OpenAI response object normalized to include `output_parsed` key.
+	 */
+	const requestBriefingResponse = async (options: {
+		maxOutputTokens: number
+		includeReasoning: boolean
+		reasoningEffort: 'none' | 'minimal' | 'low' | 'medium' | 'high' | 'xhigh'
+		verbosity: 'low' | 'medium' | 'high'
+	}): Promise<Awaited<ReturnType<typeof client.responses.parse>>> => {
+		let includeReasoning = options.includeReasoning
+		let includeVerbosity = true
+		let reasoningEffort = options.reasoningEffort
+		let verbosity = options.verbosity
+		let useStructuredOutput = true
+
+		while (true) {
+			try {
+				if (useStructuredOutput) {
+					return await client.responses.parse(
+						{
+							model,
+							max_output_tokens: options.maxOutputTokens,
+							...(includeReasoning
+								? {
+										reasoning: {
+											effort: reasoningEffort
+										}
+									}
+								: {}),
+							input: [
+								{
+									role: 'system',
+									content: systemPrompt
+								},
+								{
+									role: 'user',
+									content: userPrompt
+								}
+							],
+							text: {
+								...(includeVerbosity
+									? {
+											verbosity
+										}
+									: {}),
+								format: zodTextFormat(BriefingOutputSchema, 'briefing_output')
+							}
+						},
+						{
+							maxRetries: AI_OPENAI_CONFIG.briefingRequest.maxRetries
+						}
+					)
+				}
+
+				const plainResponse = await client.responses.create(
+					{
+						model,
+						max_output_tokens: options.maxOutputTokens,
+						...(includeReasoning
+							? {
+									reasoning: {
+										effort: reasoningEffort
+									}
+								}
+							: {}),
+						input: [
+							{
+								role: 'system',
+								content: systemPrompt
+							},
+							{
+								role: 'user',
+								content: userPrompt
+							}
+						],
+						text: includeVerbosity ? { verbosity } : undefined
+					},
+					{
+						maxRetries: AI_OPENAI_CONFIG.briefingRequest.maxRetries
+					}
+				)
+
+				return {
+					...plainResponse,
+					output_parsed: null
+				} as Awaited<ReturnType<typeof client.responses.parse>>
+			} catch (error: unknown) {
+				if (useStructuredOutput && isStructuredOutputJsonParseError(error)) {
+					useStructuredOutput = false
+					console.warn(
+						'[AI] briefing structured parse failed, retrying with plain-text response mode',
+						{ model }
+					)
+					continue
+				}
+
+				if (
+					includeReasoning &&
+					isUnsupportedOpenAiParameterError(error, 'reasoning.effort')
+				) {
+					const supportedValues = getSupportedOpenAiValuesFromError(error)
+					const reasoningFallback = pickFirstSupportedOpenAiValue(supportedValues, [
+						'high',
+						'medium',
+						'low',
+						'minimal',
+						'none'
+					])
+
+					if (reasoningFallback && reasoningFallback !== reasoningEffort) {
+						reasoningEffort = reasoningFallback as typeof reasoningEffort
+						console.warn(
+							'[AI] briefing retrying with fallback reasoning.effort value',
+							{
+								model,
+								reasoningEffort
+							}
+						)
+						continue
+					}
+
+					includeReasoning = false
+					console.warn(
+						'[AI] briefing retrying without reasoning.effort for model compatibility',
+						{
+							model
+						}
+					)
+					continue
+				}
+
+				if (
+					includeVerbosity &&
+					isUnsupportedOpenAiParameterError(error, 'text.verbosity')
+				) {
+					const supportedValues = getSupportedOpenAiValuesFromError(error)
+					const verbosityFallback = pickFirstSupportedOpenAiValue(supportedValues, [
+						'high',
+						'medium',
+						'low'
+					])
+
+					if (verbosityFallback && verbosityFallback !== verbosity) {
+						verbosity = verbosityFallback as typeof verbosity
+						console.warn('[AI] briefing retrying with fallback text.verbosity value', {
+							model,
+							verbosity
+						})
+						continue
+					}
+
+					includeVerbosity = false
+					console.warn(
+						'[AI] briefing retrying without text.verbosity for model compatibility',
+						{
+							model
+						}
+					)
+					continue
+				}
+
+				throw error
 			}
-		],
-		text: {
-			format: zodTextFormat(BriefingOutputSchema, 'briefing_output')
 		}
+	}
+
+	let response = await requestBriefingResponse({
+		maxOutputTokens: AI_OPENAI_CONFIG.briefingRequest.maxOutputTokens,
+		includeReasoning: true,
+		reasoningEffort: AI_OPENAI_CONFIG.briefingRequest.reasoningEffort,
+		verbosity: AI_OPENAI_CONFIG.briefingRequest.verbosity
 	})
 
-	// Missing parsed content means the model did not satisfy the schema contract.
-	if (!response.output_parsed) {
-		throw createError({
-			statusCode: 502,
-			statusMessage: 'AI briefing kon niet worden gegenereerd'
+	if (shouldRetryAfterTokenLimitIncomplete(response)) {
+		console.warn('[AI] briefing retrying after incomplete max_output_tokens response', {
+			model,
+			initialMaxOutputTokens: AI_OPENAI_CONFIG.briefingRequest.maxOutputTokens,
+			retryMaxOutputTokens: AI_OPENAI_CONFIG.briefingRequest.maxOutputTokensOnIncompleteRetry
+		})
+
+		response = await requestBriefingResponse({
+			maxOutputTokens: AI_OPENAI_CONFIG.briefingRequest.maxOutputTokensOnIncompleteRetry,
+			includeReasoning: AI_OPENAI_CONFIG.briefingRequest.retryWithReasoningOnIncomplete,
+			reasoningEffort: AI_OPENAI_CONFIG.briefingRequest.incompleteRetryReasoningEffort,
+			verbosity: AI_OPENAI_CONFIG.briefingRequest.incompleteRetryVerbosity
 		})
 	}
 
-	// 5) Normalize markdown and return typed response contract.
-	const briefing = sanitizeAiMarkdown(response.output_parsed.briefing)
+	let briefing: string
+	if (response.output_parsed) {
+		const parsedOutput = BriefingOutputSchema.parse(response.output_parsed)
+		briefing = sanitizeAiMarkdown(parsedOutput.briefing)
+	} else {
+		const fallbackText = response.output_text?.trim()
+		if (fallbackText) {
+			const parsedFromJsonText = tryParseBriefingOutputFromText(fallbackText)
+			if (parsedFromJsonText) {
+				briefing = sanitizeAiMarkdown(parsedFromJsonText.briefing)
+				console.warn(
+					'[AI] briefing used JSON-text fallback after empty structured parse result',
+					{
+						model
+					}
+				)
+			} else {
+				briefing = sanitizeAiMarkdown(fallbackText)
+				console.warn(
+					'[AI] briefing used plain-text fallback after empty structured parse result',
+					{
+						model
+					}
+				)
+			}
+		} else {
+			console.error('[AI] briefing returned no structured output and no output_text', {
+				model,
+				status: response.status,
+				incompleteDetails: readRecordField(response, 'incomplete_details'),
+				refusal: extractResponseRefusalText(response)
+			})
+			throw createError({
+				statusCode: 502,
+				statusMessage: 'AI briefing kon niet worden gegenereerd'
+			})
+		}
+	}
 
 	return AiBriefingResponseSchema.parse({
 		briefing,
 		wordCount: countWords(briefing)
 	})
 })
+
+/**
+ * Returns true when model output is incomplete due output-token exhaustion.
+ *
+ * @param response - Responses API payload.
+ * @returns Whether a higher-token retry is warranted.
+ */
+function shouldRetryAfterTokenLimitIncomplete(response: unknown): boolean {
+	const status = readRecordField(response, 'status')
+	if (status !== 'incomplete') {
+		return false
+	}
+
+	const hasParsedOutput = Boolean(readRecordField(response, 'output_parsed'))
+	const outputText = readRecordField(response, 'output_text')
+	const hasOutputText = typeof outputText === 'string' && outputText.trim().length > 0
+	if (hasParsedOutput || hasOutputText) {
+		return false
+	}
+
+	const incompleteDetails = readRecordField(response, 'incomplete_details')
+	const reason = readRecordField(incompleteDetails, 'reason')
+	return reason === 'max_output_tokens'
+}
+
+/**
+ * Returns true when the OpenAI SDK fails to parse structured JSON output text.
+ *
+ * @param error - Unknown thrown error.
+ * @returns Whether this is a structured-output JSON parse failure.
+ */
+function isStructuredOutputJsonParseError(error: unknown): boolean {
+	if (!(error instanceof SyntaxError)) {
+		return false
+	}
+
+	return error.message.toLowerCase().includes('json')
+}
+
+/**
+ * Tries to parse structured briefing payload from a text response.
+ *
+ * @param text - Raw output text.
+ * @returns Structured output when valid, otherwise null.
+ */
+function tryParseBriefingOutputFromText(
+	text: string
+): (typeof BriefingOutputSchema)['_output'] | null {
+	const normalized = sanitizeAiMarkdown(text)
+
+	try {
+		const parsedJson = JSON.parse(normalized)
+		const parsed = BriefingOutputSchema.safeParse(parsedJson)
+		return parsed.success ? parsed.data : null
+	} catch {
+		return null
+	}
+}
+
+/**
+ * Best-effort extraction of refusal text from response output items.
+ *
+ * @param response - Parsed responses API payload.
+ * @returns Refusal text when present.
+ */
+function extractResponseRefusalText(response: unknown): string | null {
+	const outputItems = readRecordField(response, 'output')
+	if (!Array.isArray(outputItems)) {
+		return null
+	}
+
+	for (const item of outputItems) {
+		const content = readRecordField(item, 'content')
+		if (!Array.isArray(content)) {
+			continue
+		}
+
+		for (const part of content) {
+			if (readRecordField(part, 'type') === 'refusal') {
+				const refusal = readRecordField(part, 'refusal')
+				if (typeof refusal === 'string' && refusal.trim()) {
+					return refusal.trim()
+				}
+			}
+		}
+	}
+
+	return null
+}
+
+/**
+ * Reads an object field safely from unknown values.
+ *
+ * @param value - Unknown value.
+ * @param key - Field key.
+ * @returns Field value or undefined.
+ */
+function readRecordField(value: unknown, key: string): unknown {
+	if (!value || typeof value !== 'object') {
+		return undefined
+	}
+
+	return (value as Record<string, unknown>)[key]
+}

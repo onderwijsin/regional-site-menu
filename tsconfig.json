@@ -9,7 +9,9 @@
 	"compilerOptions": {
 		"baseUrl": ".",
 		"paths": {
-			"@schema": ["./schema"]
+			"@ai": ["./config/ai"],
+			"@schema": ["./schema"],
+			"@constants": ["./config/constants"]
 		}
 	}
 }

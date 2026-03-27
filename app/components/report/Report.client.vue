@@ -1,4 +1,5 @@
 <script lang="ts" setup>
+import { ASYNC_DATA_KEYS } from '@constants'
 import { buildReportAudits } from '~/composables/report/audits'
 
 /**
@@ -19,7 +20,7 @@ const state = useStateStore()
 /**
  * All menu items (markdown only)
  */
-const { data } = await useAsyncData('menu-overview', () =>
+const { data } = await useAsyncData(ASYNC_DATA_KEYS.menuOverview, () =>
 	queryCollection('items').where('extension', '=', 'md').all()
 )
 

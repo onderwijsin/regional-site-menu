@@ -1,16 +1,17 @@
 <script lang="ts" setup>
 import type { ItemsCollectionItem } from '@nuxt/content'
+import type { ReportGenerationStage } from '~/composables/report-generation-execution'
 import type { ReportAiInsights } from '~~/schema/reportAi'
 import type { ReportConfig } from '~~/schema/reportConfig'
 import type { Audit, PillarAverage } from '~~/shared/types/audit'
 import type { Pillar } from '~~/shared/types/primitives'
 
+import { useReportGenerationExecution } from '~/composables/report-generation-execution'
 import {
 	buildReportPdfAiInsights,
 	createReportAiInputSignature,
 	hasGeneratedReportAiInsights
 } from '~/composables/report-generation-flow'
-import { ReportGenerationError } from '~/composables/report/errors'
 import {
 	AI_WEBSITE_ANALYSIS_DEFAULT_PAGES,
 	AI_WEBSITE_ANALYSIS_MAX_PAGES,
@@ -24,8 +25,6 @@ type ReportGenerationFlowProps = {
 		audits: Audit<ItemsCollectionItem>[]
 	}
 }
-
-type ReportGenerationStage = 'config' | 'ai-loading' | 'briefing-review'
 
 const props = defineProps<ReportGenerationFlowProps>()
 
@@ -101,7 +100,6 @@ const { generateReport } = useReportGenerator()
 const { generateAiInsights, progress } = useReportAi()
 const { trackReportGenerated } = useTracking()
 const confirm = useConfirmDialog()
-const toast = useToast()
 const { getIcon } = useIcons()
 
 const hasAiEnabled = computed(() => state.aiBriefing || state.aiWebsiteAnalysis)
@@ -146,45 +144,6 @@ const stageMeta = computed(() => {
 			}
 	}
 })
-
-/**
- * Maps generation failures to user-facing Dutch copy.
- *
- * @param error - Unknown thrown value from generation flow.
- * @returns Description for toast message.
- */
-function getReportFailureDescription(error: unknown): string {
-	if (error instanceof ReportGenerationError) {
-		switch (error.code) {
-			case 'AI_WEBSITE_ANALYSIS_FAILED':
-				return 'Het lukte niet op de opgegeven website te analyseren'
-			case 'AI_BRIEFING_FAILED':
-				return 'Het lukte niet om een briefing te genereren'
-			default:
-				return 'Het lukte niet om je audit te verwerken'
-		}
-	}
-
-	return 'Het lukte niet om je audit te verwerken'
-}
-
-/**
- * Shows one consistent toast for report-flow failures.
- *
- * @param error - Unknown thrown value.
- * @returns Nothing.
- */
-function showGenerationErrorToast(error: unknown): void {
-	console.error('Rapport generatie mislukt', error)
-
-	toast.add({
-		icon: getIcon('error'),
-		title: 'Rapport genereren mislukt',
-		description: getReportFailureDescription(error),
-		color: 'error',
-		duration: 10000
-	})
-}
 
 const aiSignatureAudits = computed(() =>
 	props.data.audits.map((audit) => ({
@@ -239,125 +198,24 @@ function getFinalAiInsights(): ReportAiInsights | undefined {
 	})
 }
 
-/**
- * Generates the final PDF with optional AI insights.
- *
- * @returns Nothing.
- * @throws {unknown} Propagates report generation failures to caller.
- */
-async function startPdfGeneration(): Promise<void> {
-	isGeneratingPdf.value = true
-
-	try {
-		const reportData = {
-			audits: props.data.audits,
-			averages: props.data.averages
-		}
-
-		await generateReport(state, {
-			...reportData,
-			aiInsights: getFinalAiInsights()
-		})
-
-		trackReportGenerated({
-			scoredElementsCount: props.data.audits.length
-		})
-
-		emit('close')
-	} finally {
-		isGeneratingPdf.value = false
-	}
-}
-
-/**
- * Runs stage 2 AI generation and routes to the next stage.
- *
- * - When briefing is enabled: open review editor
- * - Otherwise: continue directly to PDF generation
- *
- * @returns Nothing.
- */
-async function startAiGenerationFlow(): Promise<void> {
-	stage.value = 'ai-loading'
-	isAiLoading.value = true
-	aiInsights.value = undefined
-	aiInsightsInputSignature.value = undefined
-	briefingDraft.value = ''
-
-	try {
-		const reportData = {
-			audits: props.data.audits,
-			averages: props.data.averages
-		}
-
-		const generatedInsights = await generateAiInsights(state, reportData)
-		aiInsights.value = generatedInsights
-		aiInsightsInputSignature.value = currentAiInputSignature.value
-
-		// When briefing is enabled, force an explicit human review/edit step
-		// before allowing final PDF generation.
-		if (state.aiBriefing && generatedInsights.briefing?.trim()) {
-			briefingDraft.value = generatedInsights.briefing
-			stage.value = 'briefing-review'
-			return
-		}
-
-		await startPdfGeneration()
-	} catch (error: unknown) {
-		stage.value = 'config'
-		showGenerationErrorToast(error)
-	} finally {
-		isAiLoading.value = false
-	}
-}
-
-/**
- * Entry submit action for stage 1 config form.
- *
- * @returns Nothing.
- */
-async function handleConfigSubmit(): Promise<void> {
-	if (hasAiEnabled.value) {
-		// Reuse previously generated insights when all relevant inputs are unchanged.
-		// This avoids unnecessary and costly repeated AI endpoint calls.
-		if (hasReusableAiInsights.value) {
-			if (state.aiBriefing) {
-				stage.value = 'briefing-review'
-				return
-			}
-
-			try {
-				await startPdfGeneration()
-			} catch (error: unknown) {
-				showGenerationErrorToast(error)
-			}
-
-			return
-		}
-
-		await startAiGenerationFlow()
-		return
-	}
-
-	try {
-		await startPdfGeneration()
-	} catch (error: unknown) {
-		showGenerationErrorToast(error)
-	}
-}
-
-/**
- * Final submit action from briefing review stage.
- *
- * @returns Nothing.
- */
-async function handleBriefingSubmit(): Promise<void> {
-	try {
-		await startPdfGeneration()
-	} catch (error: unknown) {
-		showGenerationErrorToast(error)
-	}
-}
+const { handleConfigSubmit, handleBriefingSubmit } = useReportGenerationExecution({
+	state,
+	data: props.data,
+	stage,
+	aiInsights,
+	aiInsightsInputSignature,
+	briefingDraft,
+	isAiLoading,
+	isGeneratingPdf,
+	hasAiEnabled,
+	hasReusableAiInsights,
+	currentAiInputSignature,
+	getFinalAiInsights,
+	generateReport,
+	generateAiInsights,
+	trackReportGenerated,
+	onClose: () => emit('close')
+})
 
 /**
  * Navigates to help page from inside the slideover.
