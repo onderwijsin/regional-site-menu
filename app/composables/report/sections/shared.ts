@@ -52,7 +52,7 @@ export function renderBulletList(ctx: PdfRenderContext, items: string[], startY:
 			maxWidth: page.contentWidth - 4,
 			fontSize: 11,
 			fontStyle: 'normal',
-			color: colors.text,
+			color: colors.text
 		})
 	}
 

@@ -28,7 +28,7 @@ const { contact } = useRuntimeConfig().public
 		:ui="{
 			content: 'max-w-3xl min-h-[50dvh] max-h-[80dvh]',
 			footer: 'justify-between',
-			body: 'prose dark:prose-invert min-w-full',
+			body: 'prose dark:prose-invert min-w-full'
 		}"
 	>
 		<template #body>

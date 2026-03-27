@@ -12,7 +12,7 @@ export const useComment = () => {
 	return (options: CommentOptions): Promise<Payload | undefined> => {
 		const slideover = overlay.create(Comment, {
 			destroyOnClose: true,
-			props: options,
+			props: options
 		})
 
 		return slideover.open()

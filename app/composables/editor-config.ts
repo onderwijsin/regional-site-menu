@@ -18,14 +18,14 @@ export const useEditorConfig = () => {
 		kind: 'heading' as const,
 		level,
 		label: `Kop ${level}`,
-		icon: getIcon(`heading${level}` as const),
+		icon: getIcon(`heading${level}` as const)
 	}))
 
 	const marks = [
 		{ mark: 'bold', label: 'Dikgedrukt', icon: getIcon('bold') },
 		{ mark: 'italic', label: 'Cursief', icon: getIcon('italic') },
 		{ mark: 'underline', label: 'Onderstreept', icon: getIcon('underline') },
-		{ mark: 'strike', label: 'Doorhalen', icon: getIcon('strike') },
+		{ mark: 'strike', label: 'Doorhalen', icon: getIcon('strike') }
 	] as const
 
 	// ----------------------
@@ -38,36 +38,36 @@ export const useEditorConfig = () => {
 			{
 				kind: 'paragraph',
 				label: 'Paragraaf',
-				icon: getIcon('paragraph'),
+				icon: getIcon('paragraph')
 			},
-			...headingItems,
+			...headingItems
 		],
 		[
 			{ type: 'label', label: 'Lijsten' },
 			{
 				kind: 'bulletList',
 				label: 'Opsomming',
-				icon: getIcon('list'),
+				icon: getIcon('list')
 			},
 			{
 				kind: 'orderedList',
 				label: 'Genummerde lijst',
-				icon: getIcon('listOrdered'),
-			},
+				icon: getIcon('listOrdered')
+			}
 		],
 		[
 			{ type: 'label', label: 'Invoegen' },
 			{
 				kind: 'blockquote',
 				label: 'Citaat',
-				icon: getIcon('quote'),
+				icon: getIcon('quote')
 			},
 			{
 				kind: 'horizontalRule',
 				label: 'Scheidingslijn',
-				icon: getIcon('separator'),
-			},
-		],
+				icon: getIcon('separator')
+			}
+		]
 	]
 
 	// ----------------------
@@ -79,34 +79,34 @@ export const useEditorConfig = () => {
 			{
 				kind: 'undo',
 				icon: getIcon('undo'),
-				tooltip: { text: 'Ongedaan maken' },
+				tooltip: { text: 'Ongedaan maken' }
 			},
 			{
 				kind: 'redo',
 				icon: getIcon('redo'),
-				tooltip: { text: 'Opnieuw' },
-			},
+				tooltip: { text: 'Opnieuw' }
+			}
 		],
 		[
 			{
 				icon: getIcon('headings'),
 				tooltip: { text: 'Headings' },
 				content: { align: 'start' },
-				items: headingItems,
-			},
+				items: headingItems
+			}
 		],
 		[
 			...marks.map((m) => ({
 				kind: 'mark' as const,
 				mark: m.mark,
 				icon: m.icon,
-				tooltip: { text: m.label },
-			})),
-		],
+				tooltip: { text: m.label }
+			}))
+		]
 	]
 
 	return {
 		suggestions,
-		tools,
+		tools
 	}
 }

@@ -20,7 +20,7 @@ const state = useStateStore()
  * All menu items (markdown only)
  */
 const { data } = await useAsyncData('menu-overview', () =>
-	queryCollection('items').where('extension', '=', 'md').all(),
+	queryCollection('items').where('extension', '=', 'md').all()
 )
 
 // ----------------------
@@ -46,8 +46,8 @@ function openReportGeneration() {
 	openReportConfig({
 		data: {
 			averages: getAverages(data.value, state.audit),
-			audits: audits.value,
-		},
+			audits: audits.value
+		}
 	})
 }
 
@@ -59,7 +59,7 @@ const confirm = useConfirmDialog()
 async function handleClear(): Promise<void> {
 	const confirmed = await confirm({
 		title: 'Weet je zeker dat je alle beoordelingen wilt verwijderen?',
-		description: 'Deze actie kan niet ongedaan worden gemaakt.',
+		description: 'Deze actie kan niet ongedaan worden gemaakt.'
 	})
 
 	if (confirmed) {
@@ -75,7 +75,7 @@ async function handleClear(): Promise<void> {
 		:ui="{
 			content: 'max-w-3xl',
 			body: 'prose dark:prose-invert min-w-full',
-			footer: 'flex justify-end gap-2',
+			footer: 'flex justify-end gap-2'
 		}"
 	>
 		<UButton

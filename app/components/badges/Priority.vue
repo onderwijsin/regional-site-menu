@@ -10,8 +10,8 @@ const props = withDefaults(
 	defineProps<Omit<BadgeProps, 'label' | 'icon'> & { value: Priority }>(),
 	{
 		variant: 'subtle',
-		color: 'neutral',
-	},
+		color: 'neutral'
+	}
 )
 
 const { getIcon } = useIcons()

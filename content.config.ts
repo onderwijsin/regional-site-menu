@@ -11,7 +11,7 @@ export default defineContentConfig({
 				include: 'items/**',
 				exclude: [],
 				// Drops the leading /items prefix in path. We only use that for organisation; it should not have an effect on front end routing!
-				prefix: '/',
+				prefix: '/'
 			},
 			schema: z.object({
 				title: z.string(),
@@ -23,16 +23,16 @@ export default defineContentConfig({
 				priority,
 				audit: z
 					.object({
-						description: z.string().optional(),
+						description: z.string().optional()
 					})
-					.optional(),
-			}),
+					.optional()
+			})
 		}),
 		extras: defineCollection({
 			type: 'page',
 			source: {
 				include: 'extras/**/*.md',
-				exclude: [],
+				exclude: []
 			},
 			schema: z.object({
 				title: z.string(),
@@ -41,20 +41,20 @@ export default defineContentConfig({
 				fee: z.string(),
 				category: z.enum(['tool', 'data', 'media']),
 				link: z.url().nullable(),
-				download: z.url().nullable(),
-			}),
+				download: z.url().nullable()
+			})
 		}),
 		_prompts: defineCollection({
 			type: 'page',
 			source: {
 				include: '_prompts/**/*.md',
-				exclude: [],
+				exclude: []
 			},
 			schema: z.object({
 				title: z.string(),
 				key: aiPromptKey,
-				description: z.string().optional(),
-			}),
-		}),
-	},
+				description: z.string().optional()
+			})
+		})
+	}
 })

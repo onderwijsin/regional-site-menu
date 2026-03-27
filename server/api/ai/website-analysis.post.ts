@@ -33,14 +33,14 @@ export default defineEventHandler(async (event) => {
 	const crawledPages = await crawlWebsiteForAnalysis({
 		startUrl: input.url,
 		allowedDomains,
-		maxPages,
+		maxPages
 	})
 
 	// If crawling yields nothing, the model has no trustworthy evidence.
 	if (crawledPages.length === 0) {
 		throw createError({
 			statusCode: 502,
-			statusMessage: "AI website-analyse kon geen pagina's ophalen van de opgegeven website",
+			statusMessage: "AI website-analyse kon geen pagina's ophalen van de opgegeven website"
 		})
 	}
 
@@ -52,7 +52,7 @@ export default defineEventHandler(async (event) => {
 		region: input.region,
 		referenceDocument,
 		maxPages,
-		crawledPages,
+		crawledPages
 	})
 
 	// 4) Create OpenAI client bound to runtime secrets/model configuration.
@@ -65,24 +65,24 @@ export default defineEventHandler(async (event) => {
 			input: [
 				{
 					role: 'system',
-					content: systemPrompt,
+					content: systemPrompt
 				},
 				{
 					role: 'user',
-					content: userPrompt,
-				},
-			],
+					content: userPrompt
+				}
+			]
 		},
 		{
-			maxRetries: 2,
-		},
+			maxRetries: 2
+		}
 	)
 
 	const analysisText = response.output_text?.trim()
 	if (!analysisText) {
 		throw createError({
 			statusCode: 502,
-			statusMessage: 'AI website-analyse kon niet worden gegenereerd',
+			statusMessage: 'AI website-analyse kon niet worden gegenereerd'
 		})
 	}
 
@@ -96,12 +96,12 @@ export default defineEventHandler(async (event) => {
 		wordCount: countWords(analysis),
 		crawledPages: crawledPages.map((page) => ({
 			url: page.url,
-			title: page.title,
+			title: page.title
 		})),
 		analysedPages: crawledPages.map((page) => ({
 			url: page.url,
-			title: page.title,
+			title: page.title
 		})),
-		usedSources,
+		usedSources
 	})
 })

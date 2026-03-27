@@ -33,7 +33,7 @@ const SCORE_LABELS: Record<number, string> = {
 	7: 'Goed (7/10)',
 	8: 'Zeer goed (8/10)',
 	9: 'Uitstekend (9/10)',
-	10: 'Perfect (10/10)',
+	10: 'Perfect (10/10)'
 } as const
 
 // ----------------------
@@ -78,7 +78,7 @@ export const useAuditUtils = () => {
 	const calculateAverageForPillar = (
 		data: ItemsCollectionItem[],
 		audit: Record<string, AuditEntry>,
-		pillar: Pillar,
+		pillar: Pillar
 	): { score: number; count: number } | undefined => {
 		const scores = data
 			.filter((item) => item.pillar === pillar)
@@ -91,7 +91,7 @@ export const useAuditUtils = () => {
 
 		return {
 			score: Math.round(total / scores.length),
-			count: scores.length,
+			count: scores.length
 		}
 	}
 
@@ -106,7 +106,7 @@ export const useAuditUtils = () => {
 	const assembleAverage = (
 		data: ItemsCollectionItem[],
 		audit: Record<string, AuditEntry>,
-		pillar: Pillar,
+		pillar: Pillar
 	): AuditAverage => {
 		const result = calculateAverageForPillar(data, audit, pillar)
 
@@ -114,7 +114,7 @@ export const useAuditUtils = () => {
 			score: result?.score,
 			count: result?.count,
 			label: getScoreLabel(result?.score),
-			color: getScoreColor(result?.score),
+			color: getScoreColor(result?.score)
 		}
 	}
 
@@ -127,12 +127,12 @@ export const useAuditUtils = () => {
 	 */
 	const getAverages = (
 		data: ItemsCollectionItem[],
-		audit: Record<string, AuditEntry>,
+		audit: Record<string, AuditEntry>
 	): PillarAverage<Pillar>[] => {
 		return PILLARS.map((pillar) => ({
 			pillar,
 			icon: getIcon(getPillarIconName(pillar)),
-			...assembleAverage(data, audit, pillar),
+			...assembleAverage(data, audit, pillar)
 		}))
 	}
 
@@ -141,7 +141,7 @@ export const useAuditUtils = () => {
 		getScoreLabel,
 		calculateAverageForPillar,
 		assembleAverage,
-		getAverages,
+		getAverages
 	}
 }
 
@@ -180,9 +180,9 @@ export const useAudit = (props: AuditProps) => {
 
 			trackAuditScore({
 				itemId: props.itemId,
-				score: value,
+				score: value
 			})
-		},
+		}
 	})
 
 	/**
@@ -190,7 +190,7 @@ export const useAudit = (props: AuditProps) => {
 	 */
 	const comment = computed({
 		get: () => getAuditComment(props.itemId),
-		set: (value: string) => setAuditComment(props.itemId, value),
+		set: (value: string) => setAuditComment(props.itemId, value)
 	})
 
 	// ----------------------
@@ -221,6 +221,6 @@ export const useAudit = (props: AuditProps) => {
 		currentScoreColor,
 		currentScoreLabel,
 		score,
-		comment,
+		comment
 	}
 }

@@ -8,7 +8,7 @@ import HintPopover from './HintPopover.vue'
 
 const props = withDefaults(defineProps<Omit<BadgeProps, 'label'> & { value: Goal }>(), {
 	variant: 'subtle',
-	color: 'secondary',
+	color: 'secondary'
 })
 
 const { getIcon } = useIcons()

@@ -67,9 +67,14 @@ If you are working on this codebase with an AI coding agent, read [`AGENTS.md`](
 ```bash
 pnpm install
 cp .example.env .env
+cp example.wrangler.jsonc wrangler.jsonc
 ```
 
-Update `.env` as needed.
+Update `.env` and `wrangler.jsonc` as needed.
+
+> The wrangler config is only needed locally, because NuxtHub requires it in local development to
+> properly resolve bindings. Any config passed to `nitro.cloudflare.wrangler` will be used in
+> production.
 
 ### Run
 
@@ -130,6 +135,8 @@ Use `.example.env` as template.
 - `CLOUDFLARE_ACCOUNT_ID`
 - `CLOUDFLARE_API_TOKEN`
 - `CLOUDFLARE_CACHE_NAMESPACE_ID`
+- `CLOUDFLARE_D1_DATABASE_ID`
+- `CLOUDFLARE_R2_BUCKET`
 - `WORKER_NAME`
 
 ### Datahub
@@ -168,24 +175,32 @@ Defined in `content.config.ts`:
 - `extras` — additional tools/resources
 - `_prompts` - system prompts used in AI integrations
 
-### Databaseless architecture
+### Database architecture
 
-Nuxt Content typically uses SQLite at build/runtime. In this project:
+Nuxt Content runs with a database-backed setup in this project:
 
-- The app is fully prerendered
-- No server-side database is used at runtime
-- Content is queried client-side via a **WASM SQLite database in the browser**
+- Cloudflare Workers runtime uses a D1 binding named `DB`
+- Server-side content queries (for example in AI routes) depend on that binding
+- Client-side content queries can still use the browser-side WASM SQLite flow for app navigation
 
-Flow:
+Practical implications:
 
-1. Build generates a content dump
-2. Client downloads dump on first query
-3. Local SQLite instance is initialized in-browser
+1. Production/staging deployments must expose the `DB` D1 binding.
+2. Local development should provide equivalent bindings through `wrangler.jsonc` and `.env`.
+3. Missing `DB` binding is a real runtime issue for server content queries and should not be
+   ignored.
 
-Result:
+### R2 asset storage (Nuxt Studio)
 
-- No D1 binding required
-- Local warnings about missing bindings can be ignored (if no actual errors)
+Nuxt Studio media uploads are stored externally in a Cloudflare R2 bucket.
+
+Requirements:
+
+1. Cloudflare Worker must expose an R2 binding named `BLOB`.
+2. `CLOUDFLARE_R2_BUCKET` must be configured in environment variables.
+3. Local `wrangler.jsonc` should include matching `r2_buckets` binding config.
+
+Without the `BLOB` binding/bucket config, Studio asset uploads (and related media access) will fail.
 
 ## Nuxt Studio
 

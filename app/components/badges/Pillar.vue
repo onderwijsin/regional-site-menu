@@ -8,7 +8,7 @@ import HintPopover from './HintPopover.vue'
 
 const props = withDefaults(defineProps<Omit<BadgeProps, 'label' | 'icon'> & { value: Pillar }>(), {
 	variant: 'subtle',
-	color: 'primary',
+	color: 'primary'
 })
 
 const hint = computed(() => getPillarHint(props.value))

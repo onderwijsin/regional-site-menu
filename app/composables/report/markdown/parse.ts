@@ -4,7 +4,7 @@ import type {
 	RichTextMark,
 	RichTextSegment,
 	TiptapDoc,
-	TiptapNode,
+	TiptapNode
 } from './types'
 
 import { Editor } from '@tiptap/core'
@@ -13,7 +13,7 @@ import StarterKit from '@tiptap/starter-kit'
 import { z } from 'zod'
 
 const TiptapMarkSchema = z.object({
-	type: z.string(),
+	type: z.string()
 })
 
 const TiptapNodeSchema: z.ZodType<TiptapNode> = z.lazy(() =>
@@ -22,13 +22,13 @@ const TiptapNodeSchema: z.ZodType<TiptapNode> = z.lazy(() =>
 		attrs: z.record(z.string(), z.unknown()).optional(),
 		content: z.array(TiptapNodeSchema).optional(),
 		text: z.string().optional(),
-		marks: z.array(TiptapMarkSchema).optional(),
-	}),
+		marks: z.array(TiptapMarkSchema).optional()
+	})
 )
 
 const TiptapDocSchema: z.ZodType<TiptapDoc> = z.object({
 	type: z.literal('doc'),
-	content: z.array(TiptapNodeSchema).optional(),
+	content: z.array(TiptapNodeSchema).optional()
 })
 
 /**
@@ -46,12 +46,12 @@ const TiptapDocSchema: z.ZodType<TiptapDoc> = z.object({
 export function markdownToTiptapDoc(markdown: string): z.infer<typeof TiptapDocSchema> {
 	const editor = new Editor({
 		extensions: [StarterKit, Markdown],
-		content: '',
+		content: ''
 	})
 
 	try {
 		editor.commands.setContent(markdown, {
-			contentType: 'markdown',
+			contentType: 'markdown'
 		})
 
 		// TipTap is used only as a parser here. We immediately validate and
@@ -118,8 +118,8 @@ function extractTextSegments(node: z.infer<typeof TiptapNodeSchema>): RichTextSe
 		return [
 			{
 				text,
-				marks: mapMarks(node.marks),
-			},
+				marks: mapMarks(node.marks)
+			}
 		]
 	}
 
@@ -167,7 +167,7 @@ function extractListItem(node: z.infer<typeof TiptapNodeSchema>): MarkdownListIt
 
 	return {
 		segments,
-		children: children.length > 0 ? children : undefined,
+		children: children.length > 0 ? children : undefined
 	}
 }
 
@@ -202,8 +202,8 @@ function tiptapNodeToBlocks(node: z.infer<typeof TiptapNodeSchema>): MarkdownBlo
 				{
 					type: 'heading',
 					level: level === 1 || level === 2 || level === 3 ? level : 3,
-					segments,
-				},
+					segments
+				}
 			]
 		}
 

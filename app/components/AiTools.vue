@@ -3,7 +3,7 @@ import type { ButtonProps, DropdownMenuItem } from '@nuxt/ui'
 
 withDefaults(defineProps<Omit<ButtonProps, 'icon' | 'aria-label'>>(), {
 	variant: 'ghost',
-	color: 'neutral',
+	color: 'neutral'
 })
 const site = useSiteConfig()
 const { trackAiAction } = useTracking()
@@ -15,7 +15,7 @@ const prompt = computed(
 Het document bevat de volledige lijst items uit de tool "Menukaart voor regionale onderwijsloket 
 websites". Deze tool biedt een overzicht van features, inhoud en andere functionailiteiten die een 
 website van een regionaal onderwijsloket zou moeten /kunnen bevatten om hun doelgroep(en) te bedienen.
-`,
+`
 )
 
 const items: DropdownMenuItem[] = [
@@ -27,9 +27,9 @@ const items: DropdownMenuItem[] = [
 		onSelect: () => {
 			trackAiAction({
 				label: 'chatgpt',
-				value: 'sparren',
+				value: 'sparren'
 			})
-		},
+		}
 	},
 	{
 		label: 'Sparren met Claude',
@@ -39,10 +39,10 @@ const items: DropdownMenuItem[] = [
 		onSelect: () => {
 			trackAiAction({
 				label: 'claude',
-				value: 'sparren',
+				value: 'sparren'
 			})
-		},
-	},
+		}
+	}
 ]
 </script>
 
@@ -52,10 +52,10 @@ const items: DropdownMenuItem[] = [
 		:content="{
 			align: 'end',
 			side: 'bottom',
-			sideOffset: 8,
+			sideOffset: 8
 		}"
 		:ui="{
-			content: 'w-48',
+			content: 'w-48'
 		}"
 	>
 		<UTooltip text="Spar over deze tool met AI">

@@ -14,7 +14,7 @@ import { countWords, sanitizeAiMarkdown } from '../../utils/ai/text'
  * deterministically before it enters the UI / PDF pipeline.
  */
 const BriefingOutputSchema = z.object({
-	briefing: z.string().min(1),
+	briefing: z.string().min(1)
 })
 
 /**
@@ -52,23 +52,23 @@ export default defineEventHandler(async (event) => {
 		input: [
 			{
 				role: 'system',
-				content: systemPrompt,
+				content: systemPrompt
 			},
 			{
 				role: 'user',
-				content: userPrompt,
-			},
+				content: userPrompt
+			}
 		],
 		text: {
-			format: zodTextFormat(BriefingOutputSchema, 'briefing_output'),
-		},
+			format: zodTextFormat(BriefingOutputSchema, 'briefing_output')
+		}
 	})
 
 	// Missing parsed content means the model did not satisfy the schema contract.
 	if (!response.output_parsed) {
 		throw createError({
 			statusCode: 502,
-			statusMessage: 'AI briefing kon niet worden gegenereerd',
+			statusMessage: 'AI briefing kon niet worden gegenereerd'
 		})
 	}
 
@@ -77,6 +77,6 @@ export default defineEventHandler(async (event) => {
 
 	return AiBriefingResponseSchema.parse({
 		briefing,
-		wordCount: countWords(briefing),
+		wordCount: countWords(briefing)
 	})
 })

@@ -77,7 +77,7 @@ function renderSegments(
 	x: number,
 	y: number,
 	maxWidth: number,
-	fontSize: number,
+	fontSize: number
 ): number {
 	const text = segmentsToPlainText(segments)
 	const dominantMarks = segments.flatMap((segment) => segment.marks)
@@ -92,7 +92,7 @@ function renderSegments(
 		maxWidth,
 		fontSize,
 		fontStyle,
-		color: PDF_COLORS.text,
+		color: PDF_COLORS.text
 	})
 }
 
@@ -111,7 +111,7 @@ function renderMarkdownBlock(
 	block: MarkdownBlock,
 	x: number,
 	y: number,
-	maxWidth: number,
+	maxWidth: number
 ): number {
 	let cursorY = y
 
@@ -128,7 +128,7 @@ function renderMarkdownBlock(
 				x,
 				cursorY,
 				maxWidth,
-				block.level === 1 ? 13 : block.level === 2 ? 12 : 11,
+				block.level === 1 ? 13 : block.level === 2 ? 12 : 11
 			)
 			cursorY += 1.5
 			break
@@ -146,7 +146,7 @@ function renderMarkdownBlock(
 						maxWidth,
 						fontSize: 10,
 						fontStyle: 'normal',
-						color: PDF_COLORS.text,
+						color: PDF_COLORS.text
 					})
 					cursorY += 1
 				}
@@ -169,7 +169,7 @@ function renderMarkdownBlock(
 						maxWidth,
 						fontSize: 10,
 						fontStyle: 'normal',
-						color: PDF_COLORS.text,
+						color: PDF_COLORS.text
 					})
 					cursorY += 1
 				}
@@ -232,7 +232,7 @@ export function renderMarkdownBlocks(
 	blocks: MarkdownBlock[],
 	x: number,
 	y: number,
-	maxWidth: number,
+	maxWidth: number
 ): number {
 	let cursorY = y
 

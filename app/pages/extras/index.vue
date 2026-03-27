@@ -6,7 +6,7 @@ useSeoMeta({
 	title,
 	description,
 	ogTitle: title,
-	ogDescription: description,
+	ogDescription: description
 })
 
 // ----------------------
@@ -18,7 +18,7 @@ const { getIcon } = useIcons()
 // Data fetching
 // ----------------------
 const { data } = await useAsyncData(`extras-overview`, () =>
-	queryCollection('extras').where('extension', '=', 'md').all(),
+	queryCollection('extras').where('extension', '=', 'md').all()
 )
 </script>
 
@@ -29,7 +29,7 @@ const { data } = await useAsyncData(`extras-overview`, () =>
 			headline="Extra's voor jouw site"
 			:ui="{
 				root: 'pt-2',
-				wrapper: 'items-start lg:items-start',
+				wrapper: 'items-start lg:items-start'
 			}"
 		>
 			<template #description>

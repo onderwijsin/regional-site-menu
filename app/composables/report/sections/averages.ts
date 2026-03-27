@@ -12,7 +12,7 @@ import {
 	setPdfDrawColor,
 	setPdfFillColor,
 	setPdfTextColor,
-	writeWrappedText,
+	writeWrappedText
 } from '../pdf'
 import { writeRichText } from './shared'
 
@@ -31,7 +31,7 @@ export function drawAverageCard(
 		width: number
 		height: number
 		average: PillarAverage<Pillar>
-	},
+	}
 ): void {
 	const { x, y, width, height, average } = args
 
@@ -68,7 +68,7 @@ export function drawAverageCard(
 
 	const labelLines = ctx.doc.splitTextToSize(
 		average.label,
-		width - ctx.layout.cardPadding * 2,
+		width - ctx.layout.cardPadding * 2
 	) as string[]
 
 	ctx.doc.text(labelLines, x + ctx.layout.cardPadding, cursorY)
@@ -105,7 +105,7 @@ function renderAverageSummaryCard(
 	data: PillarAverage<Pillar>,
 	x: number,
 	y: number,
-	width: number,
+	width: number
 ): void {
 	const { doc, colors } = ctx
 	const height = 32
@@ -156,7 +156,7 @@ function renderPillarDescription(
 	ctx: PdfRenderContext,
 	title: string,
 	body: string,
-	y: number,
+	y: number
 ): number {
 	const { doc, layout, page, colors } = ctx
 
@@ -174,7 +174,7 @@ function renderPillarDescription(
 		maxWidth: page.contentWidth,
 		fontSize: 11,
 		fontStyle: 'normal',
-		color: colors.text,
+		color: colors.text
 	})
 
 	return y + 4
@@ -191,7 +191,7 @@ function renderPillarDescription(
 function renderAveragesGrid(
 	ctx: PdfRenderContext,
 	averages: ReportData['averages'],
-	startY: number,
+	startY: number
 ): void {
 	const { layout, page } = ctx
 
@@ -221,7 +221,7 @@ function renderAveragesGrid(
 export function renderAveragesSection(
 	ctx: PdfRenderContext,
 	data: ReportData,
-	config: ReportConfig,
+	config: ReportConfig
 ): void {
 	const { doc, layout } = ctx
 
@@ -238,12 +238,12 @@ export function renderAveragesSection(
 		ctx,
 		[
 			{
-				text: 'Dit overzicht laat per pijler de gemiddelde score zien. De score per pijler is gebaseerd op alle beoordeelde elementen binnen die pijler en geeft daarmee een samenvattend beeld van hoe ',
+				text: 'Dit overzicht laat per pijler de gemiddelde score zien. De score per pijler is gebaseerd op alle beoordeelde elementen binnen die pijler en geeft daarmee een samenvattend beeld van hoe '
 			},
 			{ text: config.region, style: 'bold' },
-			{ text: ' op dit moment presteert.' },
+			{ text: ' op dit moment presteert.' }
 		],
-		y,
+		y
 	)
 
 	y += 6

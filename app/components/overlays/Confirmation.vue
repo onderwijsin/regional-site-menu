@@ -7,15 +7,15 @@ withDefaults(defineProps<ConfirmDialogProps>(), {
 			label: 'Sluit',
 			color: 'neutral',
 			variant: 'soft',
-			mode: 'cancel',
+			mode: 'cancel'
 		},
 		{
 			label: 'Bevestigen',
 			color: 'primary',
 			variant: 'solid',
-			mode: 'confirm',
-		},
-	],
+			mode: 'confirm'
+		}
+	]
 })
 
 const emits = defineEmits<{

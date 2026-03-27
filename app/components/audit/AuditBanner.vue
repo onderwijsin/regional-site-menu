@@ -19,8 +19,8 @@ const actions = computed<ButtonProps[]>(() => {
 				const result = await editComment({ initialValue: comment.value ?? '' })
 				if (!result) return
 				comment.value = result.value
-			},
-		},
+			}
+		}
 	]
 
 	return items

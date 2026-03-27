@@ -15,7 +15,7 @@ export const PDF_LAYOUT = {
 	blockGap: 4,
 	cardPadding: 5,
 	cardGap: 4,
-	borderRadius: 2,
+	borderRadius: 2
 }
 
 /**
@@ -33,5 +33,5 @@ export const PDF_COLORS = {
 	border: [229, 231, 235],
 	soft: [249, 250, 251],
 	commentBg: [248, 250, 252],
-	coverBg: [240, 247, 253],
+	coverBg: [240, 247, 253]
 } as const satisfies Record<string, PdfColor>

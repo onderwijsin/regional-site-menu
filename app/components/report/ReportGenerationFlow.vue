@@ -8,7 +8,7 @@ import type { Pillar } from '~~/shared/types/primitives'
 import {
 	buildReportPdfAiInsights,
 	createReportAiInputSignature,
-	hasGeneratedReportAiInsights,
+	hasGeneratedReportAiInsights
 } from '~/composables/report-generation-flow'
 import { ReportGenerationError } from '~/composables/report/errors'
 import { ReportConfigSchema } from '~~/schema/reportConfig'
@@ -36,7 +36,7 @@ const state = reactive<ReportConfig>({
 	aiBriefing: false,
 	aiWebsiteAnalysis: false,
 	url: stateStore.url,
-	notes: stateStore.notes,
+	notes: stateStore.notes
 })
 
 /**
@@ -47,7 +47,7 @@ const region = computed({
 	set: (value: string) => {
 		state.region = value
 		stateStore.region = value
-	},
+	}
 })
 
 const notes = computed({
@@ -55,7 +55,7 @@ const notes = computed({
 	set: (value: string) => {
 		state.notes = value
 		stateStore.notes = value
-	},
+	}
 })
 
 const url = computed({
@@ -68,7 +68,7 @@ const url = computed({
 			state.url = value
 			stateStore.url = value
 		}
-	},
+	}
 })
 
 const stage = ref<ReportGenerationStage>('config')
@@ -89,7 +89,7 @@ const isBusy = computed(() => isAiLoading.value || isGeneratingPdf.value)
 const isClosing = ref(false)
 const aiInsightsInputSignature = ref<string>()
 const activeLoadingToolId = computed(
-	() => progress.value.findLast((entry) => entry.status === 'running')?.id,
+	() => progress.value.findLast((entry) => entry.status === 'running')?.id
 )
 
 /**
@@ -110,19 +110,19 @@ const stageMeta = computed(() => {
 			return {
 				title: 'AI-inzichten genereren',
 				description:
-					'We genereren nu de verschillende AI-inzichten. Dit kan enige tijd duren.',
+					'We genereren nu de verschillende AI-inzichten. Dit kan enige tijd duren.'
 			}
 		case 'briefing-review':
 			return {
 				title: 'Controleer AI-briefing',
 				description:
-					'Controleer en bewerk de gegenereerde briefing voordat het PDF-rapport wordt gemaakt.',
+					'Controleer en bewerk de gegenereerde briefing voordat het PDF-rapport wordt gemaakt.'
 			}
 		default:
 			return {
 				title: 'Genereer rapportage',
 				description:
-					'Met jouw input en beoordelingen maken we een rapportage die je als PDF kunt downloaden.',
+					'Met jouw input en beoordelingen maken we een rapportage die je als PDF kunt downloaden.'
 			}
 	}
 })
@@ -162,7 +162,7 @@ function showGenerationErrorToast(error: unknown): void {
 		title: 'Rapport genereren mislukt',
 		description: getReportFailureDescription(error),
 		color: 'error',
-		duration: 10000,
+		duration: 10000
 	})
 }
 
@@ -170,12 +170,12 @@ const aiSignatureAudits = computed(() =>
 	props.data.audits.map((audit) => ({
 		id: audit.id,
 		score: audit.score ?? null,
-		comment: audit.comment,
-	})),
+		comment: audit.comment
+	}))
 )
 
 const currentAiInputSignature = computed(() =>
-	createReportAiInputSignature(state, aiSignatureAudits.value),
+	createReportAiInputSignature(state, aiSignatureAudits.value)
 )
 
 /**
@@ -215,7 +215,7 @@ function getFinalAiInsights(): ReportAiInsights | undefined {
 	return buildReportPdfAiInsights({
 		config: state,
 		aiInsights: aiInsights.value,
-		briefingDraft: briefingDraft.value,
+		briefingDraft: briefingDraft.value
 	})
 }
 
@@ -231,16 +231,16 @@ async function startPdfGeneration(): Promise<void> {
 	try {
 		const reportData = {
 			audits: props.data.audits,
-			averages: props.data.averages,
+			averages: props.data.averages
 		}
 
 		await generateReport(state, {
 			...reportData,
-			aiInsights: getFinalAiInsights(),
+			aiInsights: getFinalAiInsights()
 		})
 
 		trackReportGenerated({
-			scoredElementsCount: props.data.audits.length,
+			scoredElementsCount: props.data.audits.length
 		})
 
 		emit('close')
@@ -267,7 +267,7 @@ async function startAiGenerationFlow(): Promise<void> {
 	try {
 		const reportData = {
 			audits: props.data.audits,
-			averages: props.data.averages,
+			averages: props.data.averages
 		}
 
 		const generatedInsights = await generateAiInsights(state, reportData)
@@ -377,15 +377,15 @@ async function handleClose(): Promise<void> {
 						label: 'Blijf op deze pagina',
 						color: 'neutral',
 						variant: 'soft',
-						mode: 'cancel',
+						mode: 'cancel'
 					},
 					{
 						label: 'Sluit en verlies voortgang',
 						color: 'error',
 						variant: 'solid',
-						mode: 'confirm',
-					},
-				],
+						mode: 'confirm'
+					}
+				]
 			})
 
 			if (!confirmed) {
@@ -406,7 +406,7 @@ async function handleClose(): Promise<void> {
 		:description="stageMeta.description"
 		:ui="{
 			content: 'max-w-3xl',
-			footer: 'justify-end flex gap-3',
+			footer: 'justify-end flex gap-3'
 		}"
 		:close="false"
 		:dismissible="false"

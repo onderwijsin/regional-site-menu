@@ -15,9 +15,9 @@ export const robots = {
 				'Baiduspider',
 				'YandexBot',
 				'Slurp', // Yahoo
-				'Applebot', // Spotlight/Siri indexing
+				'Applebot' // Spotlight/Siri indexing
 			],
-			disallow: '/',
+			disallow: '/'
 		},
 
 		/**
@@ -27,7 +27,7 @@ export const robots = {
 		 */
 		{
 			userAgent: ['AhrefsBot', 'MJ12bot'],
-			disallow: '/',
+			disallow: '/'
 		},
 
 		/**
@@ -38,7 +38,7 @@ export const robots = {
 		 */
 		{
 			userAgent: ['CCBot', 'Bytespider', 'Diffbot'],
-			disallow: '/',
+			disallow: '/'
 		},
 
 		/**
@@ -52,11 +52,11 @@ export const robots = {
 			contentSignal: {
 				search: 'no', // ❌ no indexing
 				'ai-input': 'yes', // ✅ allow RAG / LLM usage
-				'ai-train': 'no', // ❌ no training
+				'ai-train': 'no' // ❌ no training
 			},
 			contentUsage: {
-				'train-ai': 'n',
-			},
+				'train-ai': 'n'
+			}
 		},
 
 		/**
@@ -68,13 +68,13 @@ export const robots = {
 		// Google AI (Gemini, Vertex)
 		{
 			userAgent: 'Google-Extended',
-			disallow: '/',
+			disallow: '/'
 		},
 
 		// Apple AI
 		{
 			userAgent: 'Applebot-Extended',
-			disallow: '/',
-		},
-	],
+			disallow: '/'
+		}
+	]
 } satisfies NuxtConfig['robots']

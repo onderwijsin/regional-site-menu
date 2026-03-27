@@ -6,7 +6,7 @@ import {
 	AiBriefingRequestSchema,
 	AiBriefingResponseSchema,
 	AiWebsiteAnalysisRequestSchema,
-	AiWebsiteAnalysisResponseSchema,
+	AiWebsiteAnalysisResponseSchema
 } from '~~/schema/reportAi'
 
 import { ReportGenerationError } from './report/errors'
@@ -52,36 +52,36 @@ const AI_PROGRESS_CONFIG: Record<'analysis' | 'briefing', AiProgressScenario> = 
 				id: 'analysis-start',
 				text: 'AI-analyse starten...',
 				reasoning: 'De aanvraag wordt voorbereid en de websitegegevens worden gevalideerd.',
-				durationMs: 4500,
+				durationMs: 4500
 			},
 			{
 				id: 'analysis-crawl',
 				text: "Websitepagina's verzamelen...",
 				reasoning:
 					'De server verzamelt relevante pagina’s van je website als context voor de analyse.',
-				durationMs: 20000,
+				durationMs: 20000
 			},
 			{
 				id: 'analysis-interpret',
 				text: 'Inhoud interpreteren...',
 				reasoning:
 					'De server interpreteert de verzamelde inhoud om inzichten te genereren.',
-				durationMs: 15000,
+				durationMs: 15000
 			},
 			{
 				id: 'analysis-criteria',
 				text: 'Criteria toepassen op content...',
 				reasoning: 'De verzamelde inhoud wordt getoetst aan de richtlijnen en criteria.',
-				durationMs: 8000,
+				durationMs: 8000
 			},
 			{
 				id: 'analysis-finalize',
 				text: 'Website-analyse afronden...',
 				reasoning:
 					'De uitkomst wordt gestructureerd en klaargezet voor opname in het rapport.',
-				durationMs: 6000,
-			},
-		],
+				durationMs: 6000
+			}
+		]
 	},
 	briefing: {
 		fastForwardMs: 220,
@@ -91,30 +91,30 @@ const AI_PROGRESS_CONFIG: Record<'analysis' | 'briefing', AiProgressScenario> = 
 				text: 'AI-briefing starten...',
 				reasoning:
 					'De briefing-aanvraag wordt opgebouwd met auditresultaten en opgegeven context.',
-				durationMs: 1000,
+				durationMs: 1000
 			},
 			{
 				id: 'briefing-synthesis',
 				text: 'Inzichten combineren...',
 				reasoning:
 					'Zelfevaluatie, opmerkingen en eventuele website-analyse worden samengebracht.',
-				durationMs: 3000,
+				durationMs: 3000
 			},
 			{
 				id: 'briefing-generate',
 				text: 'Briefing genereren...',
 				reasoning:
 					'De server genereert de briefing op basis van de verzamelde inzichten en context.',
-				durationMs: 2000,
+				durationMs: 2000
 			},
 			{
 				id: 'briefing-finalize',
 				text: 'Briefing afronden...',
 				reasoning: 'De briefing wordt concreet geformuleerd voor gebruik in de rapportage.',
-				durationMs: 2000,
-			},
-		],
-	},
+				durationMs: 2000
+			}
+		]
+	}
 }
 
 /**
@@ -140,7 +140,7 @@ function wait(ms: number): Promise<void> {
 function createBriefingPayload(
 	config: ReportConfig,
 	data: ReportData,
-	websiteAnalysisContext?: string,
+	websiteAnalysisContext?: string
 ) {
 	return AiBriefingRequestSchema.parse({
 		region: config.region,
@@ -153,10 +153,10 @@ function createBriefingPayload(
 			priority: audit.item.priority,
 			description: audit.item.description,
 			score: audit.score ?? null,
-			comment: audit.comment,
+			comment: audit.comment
 		})),
 		extraContext: config.notes.trim() ? config.notes : undefined,
-		websiteAnalysisContext,
+		websiteAnalysisContext
 	})
 }
 
@@ -175,7 +175,7 @@ export const useReportAi = () => {
 			id: `${stage.id}-${progress.value.length + 1}`,
 			text: stage.text,
 			reasoning: stage.reasoning,
-			status: 'running',
+			status: 'running'
 		})
 
 		return progress.value.length - 1
@@ -209,7 +209,7 @@ export const useReportAi = () => {
 	 */
 	async function runWithProgressScenario<T>(
 		scenario: keyof typeof AI_PROGRESS_CONFIG,
-		task: () => Promise<T>,
+		task: () => Promise<T>
 	): Promise<T> {
 		const config = AI_PROGRESS_CONFIG[scenario]
 		if (config.stages.length === 0) {
@@ -247,7 +247,7 @@ export const useReportAi = () => {
 			const waitMs = Math.max(activeStage.durationMs - elapsedMs, 0)
 			const raceResult = await Promise.race([
 				wait(waitMs).then(() => 'timer_elapsed' as const),
-				taskSettledPromise,
+				taskSettledPromise
 			])
 
 			if (raceResult === 'task_settled') {
@@ -297,7 +297,7 @@ export const useReportAi = () => {
 	 */
 	async function generateAiInsights(
 		config: ReportConfig,
-		data: ReportData,
+		data: ReportData
 	): Promise<ReportAiInsights> {
 		progress.value = []
 		let websiteAnalysis: string | undefined
@@ -309,7 +309,7 @@ export const useReportAi = () => {
 			let analysisResult: AiWebsiteAnalysisResponse
 			try {
 				analysisResult = await runWithProgressScenario('analysis', () =>
-					generateWebsiteAnalysis(config),
+					generateWebsiteAnalysis(config)
 				)
 			} catch (error: unknown) {
 				throw new ReportGenerationError('AI_WEBSITE_ANALYSIS_FAILED', error)
@@ -325,7 +325,7 @@ export const useReportAi = () => {
 		if (config.aiBriefing) {
 			try {
 				briefing = await runWithProgressScenario('briefing', () =>
-					generateBriefing(config, data, websiteAnalysis),
+					generateBriefing(config, data, websiteAnalysis)
 				)
 			} catch (error: unknown) {
 				throw new ReportGenerationError('AI_BRIEFING_FAILED', error)
@@ -336,7 +336,7 @@ export const useReportAi = () => {
 			briefing,
 			websiteAnalysis,
 			websiteAnalysisUrls,
-			websiteAnalysisSources,
+			websiteAnalysisSources
 		}
 	}
 
@@ -351,7 +351,7 @@ export const useReportAi = () => {
 	async function generateBriefing(
 		config: ReportConfig,
 		data: ReportData,
-		websiteAnalysisContext?: string,
+		websiteAnalysisContext?: string
 	): Promise<string> {
 		const payload = createBriefingPayload(config, data, websiteAnalysisContext)
 
@@ -360,7 +360,7 @@ export const useReportAi = () => {
 
 		const response = await $fetch('/api/ai/briefing', {
 			method: 'POST',
-			body: payload,
+			body: payload
 		})
 		const parsed = AiBriefingResponseSchema.parse(response)
 
@@ -374,11 +374,11 @@ export const useReportAi = () => {
 	 * @returns AI analysis markdown.
 	 */
 	async function generateWebsiteAnalysis(
-		config: ReportConfig,
+		config: ReportConfig
 	): Promise<AiWebsiteAnalysisResponse> {
 		const payload = AiWebsiteAnalysisRequestSchema.parse({
 			url: config.url,
-			region: config.region,
+			region: config.region
 		})
 
 		// Track only real endpoint usage, not UI toggle state.
@@ -386,7 +386,7 @@ export const useReportAi = () => {
 
 		const response = await $fetch('/api/ai/website-analysis', {
 			method: 'POST',
-			body: payload,
+			body: payload
 		})
 		const parsed = AiWebsiteAnalysisResponseSchema.parse(response)
 
@@ -400,6 +400,6 @@ export const useReportAi = () => {
 
 	return {
 		generateAiInsights,
-		progress,
+		progress
 	}
 }

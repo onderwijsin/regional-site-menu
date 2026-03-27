@@ -14,8 +14,8 @@ const { getIcon } = useIcons()
 				label: 'Doe een suggestie',
 				trailingIcon: getIcon('suggestion'),
 				color: 'primary',
-				onClick: openSuggestion,
-			},
+				onClick: openSuggestion
+			}
 		]"
 	/>
 </template>

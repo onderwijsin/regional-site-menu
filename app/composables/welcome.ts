@@ -12,6 +12,6 @@ export const useWelcome = () => {
 
 	return {
 		openWelcome: open,
-		showWelcome: computed(() => state.shouldShowWelcomeModal),
+		showWelcome: computed(() => state.shouldShowWelcomeModal)
 	}
 }

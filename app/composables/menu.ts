@@ -9,26 +9,26 @@ export const useMenu = () => {
 		to: 'https://www.onderwijsregio.nl/',
 		trailingIcon: getIcon('external'),
 		color: 'neutral',
-		variant: 'ghost',
+		variant: 'ghost'
 	}
 
 	// In the vertical navigation, we want a leading icon
 	const externalSiteMenuLink: NavigationMenuItem = {
 		...externalSite,
 		trailingIcon: null,
-		icon: getIcon('external'),
+		icon: getIcon('external')
 	}
 
 	const help = {
 		label: 'Help',
 		icon: getIcon('help'),
-		to: '/help',
+		to: '/help'
 	} satisfies NavigationMenuItem
 
 	const extras = {
 		label: "Extra's",
 		icon: getIcon('gift'),
-		to: '/extras',
+		to: '/extras'
 	}
 
 	const staticNavigation: NavigationMenuItem[] = [extras, help, externalSiteMenuLink]

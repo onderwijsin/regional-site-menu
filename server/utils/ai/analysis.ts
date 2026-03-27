@@ -43,7 +43,7 @@ export function formatWebsiteAnalysisInput(args: {
 		'# Analyse-opdracht',
 		`Gebruik uitsluitend de hierboven aangeleverde crawl-context (max ${args.maxPages} pagina's).`,
 		'Noem geen pagina of detail dat niet in deze context staat.',
-		'Als context ontbreekt voor een uitspraak, benoem dat expliciet als ontbrekende informatie.',
+		'Als context ontbreekt voor een uitspraak, benoem dat expliciet als ontbrekende informatie.'
 	].join('\n')
 }
 

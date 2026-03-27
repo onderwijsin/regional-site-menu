@@ -8,7 +8,7 @@ export const SubmissionSchema = z.object({
 	category: z.union([pillar, z.literal('extra')]),
 	email: z.string().email({ error: 'Voeg een geldig e-mailadres toe' }).optional(),
 	goals: z.array(goal).min(1, { error: 'Kies minstens één doel' }),
-	exampleUrl: z.url({ error: 'Voeg een geldige URL toe' }),
+	exampleUrl: z.url({ error: 'Voeg een geldige URL toe' })
 })
 
 export type Submission = z.infer<typeof SubmissionSchema>

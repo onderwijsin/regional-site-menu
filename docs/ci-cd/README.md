@@ -62,6 +62,7 @@ Highlights:
   - preview version uploads (`wrangler versions upload`)
 - posts preview URL comments back to PRs for version-upload preview runs
 - can optionally apply D1 migrations
+  - controlled via `apply_db_migrations` workflow input (defaults to `false`)
 
 ## Release Flow
 
@@ -114,6 +115,8 @@ Manual dispatch in `deploy.yml` can override environment selection.
 2. Preview uploads are restricted to preview environment.
 3. `APP_URL` is required for non-preview deployments.
 4. Worker deployment status is reflected via GitHub deployment status updates.
+5. Cloudflare environments must expose the D1 binding `DB` (including `CLOUDFLARE_D1_DATABASE_ID`).
+6. Cloudflare environments must expose the R2 binding `BLOB` (including `CLOUDFLARE_R2_BUCKET`).
 
 ## Known Build Workaround
 

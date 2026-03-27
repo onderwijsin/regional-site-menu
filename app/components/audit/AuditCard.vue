@@ -15,7 +15,7 @@ async function handleDelete() {
 	const confirmed = await confirm({
 		title: 'Weet je het zeker?',
 		description:
-			'Als je de beoordeling verwijdert, kan deze actie niet ongedaan worden gemaakt.',
+			'Als je de beoordeling verwijdert, kan deze actie niet ongedaan worden gemaakt.'
 	})
 
 	if (confirmed) {
@@ -31,7 +31,7 @@ async function handleDelete() {
 		size="sm"
 		:ui="{
 			footer: 'space-x-2 space-y-1.5',
-			description: 'space-y-3',
+			description: 'space-y-3'
 		}"
 	>
 		<template #description>

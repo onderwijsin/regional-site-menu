@@ -9,13 +9,13 @@ if (!page.value) {
 	throw createError({
 		statusCode: 404,
 		statusMessage: 'Item niet gevonden',
-		fatal: true,
+		fatal: true
 	})
 }
 
 const { data: surround } = await useAsyncData(`${route.path}-surround`, () => {
 	return queryCollectionItemSurroundings('_prompts', route.path, {
-		fields: ['description'],
+		fields: ['description']
 	})
 })
 </script>
@@ -27,7 +27,7 @@ const { data: surround } = await useAsyncData(`${route.path}-surround`, () => {
 			headline="Prompts"
 			:ui="{
 				root: 'pt-2',
-				wrapper: 'items-start lg:items-start',
+				wrapper: 'items-start lg:items-start'
 			}"
 		>
 			<template #description>

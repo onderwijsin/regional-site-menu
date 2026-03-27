@@ -88,10 +88,10 @@ Controller + helpers:
 
 ## Prompt Management
 
-Prompts are stored in Nuxt Content collection `prompts`:
+Prompts are stored in Nuxt Content collection `_prompts`:
 
-- [01.ai-briefing-system.md](../../content/prompts/01.ai-briefing-system.md)
-- [02.ai-website-analysis-system.md](../../content/prompts/02.ai-website-analysis-system.md)
+- [01.ai-briefing-system.md](../../content/_prompts/01.ai-briefing-system.md)
+- [02.ai-website-analysis-system.md](../../content/_prompts/02.ai-website-analysis-system.md)
 
 Why:
 
@@ -109,6 +109,11 @@ Prompt loader:
 
 Note: Nuxt Content returns markdown as an AST body. The loader normalizes it into plain text before
 sending it to OpenAI.
+
+Database note:
+
+- Prompt loading is runtime `queryCollection(event, '_prompts')`.
+- In Cloudflare environments this requires the D1 `DB` binding to be available.
 
 ## Client Orchestration and Progress
 

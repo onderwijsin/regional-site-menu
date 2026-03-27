@@ -38,7 +38,7 @@ export async function createRenderContext(): Promise<PdfRenderContext> {
 		unit: 'mm',
 		format: 'a4',
 		compress: true,
-		putOnlyUsedFonts: true,
+		putOnlyUsedFonts: true
 	})
 
 	await registerFonts(doc)
@@ -48,10 +48,10 @@ export async function createRenderContext(): Promise<PdfRenderContext> {
 		page: {
 			width: PDF_LAYOUT.pageWidth,
 			height: PDF_LAYOUT.pageHeight,
-			contentWidth: PDF_LAYOUT.pageWidth - PDF_LAYOUT.marginLeft - PDF_LAYOUT.marginRight,
+			contentWidth: PDF_LAYOUT.pageWidth - PDF_LAYOUT.marginLeft - PDF_LAYOUT.marginRight
 		},
 		layout: PDF_LAYOUT,
-		colors: PDF_COLORS,
+		colors: PDF_COLORS
 	}
 }
 
@@ -149,7 +149,7 @@ export function createDefaultFilename(region: string): string {
 export function ensurePageSpace(
 	ctx: PdfRenderContext,
 	cursorY: number,
-	requiredHeight: number,
+	requiredHeight: number
 ): number {
 	const limit = ctx.page.height - ctx.layout.marginBottom
 
@@ -175,7 +175,7 @@ export function measureWrappedTextHeight(
 	doc: jsPDF,
 	text: string,
 	maxWidth: number,
-	lineHeight = PDF_LAYOUT.lineHeight,
+	lineHeight = PDF_LAYOUT.lineHeight
 ): number {
 	const lines = doc.splitTextToSize(text, maxWidth) as string[]
 	return Math.max(lines.length, 1) * lineHeight
@@ -212,7 +212,7 @@ export function writeWrappedText(
 		fontStyle: PdfFontStyle
 		color: PdfColor
 		lineHeight?: number
-	},
+	}
 ): number {
 	const {
 		text,
@@ -222,7 +222,7 @@ export function writeWrappedText(
 		fontSize,
 		fontStyle,
 		color,
-		lineHeight = PDF_LAYOUT.lineHeight,
+		lineHeight = PDF_LAYOUT.lineHeight
 	} = args
 
 	doc.setFont('Rijksoverheid', fontStyle)

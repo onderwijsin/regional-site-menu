@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 defineRouteRules({
-	robots: false,
+	robots: false
 })
 </script>
 

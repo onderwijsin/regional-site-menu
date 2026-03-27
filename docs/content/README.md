@@ -2,6 +2,18 @@
 
 This project uses Nuxt Content as the source of truth for structured app content.
 
+## Runtime Database
+
+- Nuxt Content uses a D1 database binding named `DB` in Cloudflare Workers.
+- Server-side `queryCollection(event, ...)` calls require this binding at runtime.
+- Without `DB`, server routes that query content can fail with `binding "DB" not found`.
+
+## Runtime Asset Storage (R2)
+
+- Nuxt Studio media uploads are configured as external assets.
+- Uploaded media is stored in Cloudflare R2 via binding `BLOB`.
+- `CLOUDFLARE_R2_BUCKET` must match the bound bucket in Cloudflare/Wrangler config.
+
 ## Where It Is Defined
 
 - Collection config: [content.config.ts](../../content.config.ts)
@@ -52,7 +64,7 @@ Schema fields:
 - `link`: optional external link (`null` when absent)
 - `download`: optional download link (`null` when absent)
 
-### `prompts`
+### `_prompts`
 
 Purpose:
 

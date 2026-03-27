@@ -23,7 +23,7 @@ function appendAnalysedUrls(markdown: string, urls: string[]): string {
 		'',
 		'## Geanalyseerde URLs',
 		'De onderstaande URLs zijn gebruikt voor deze analyse:',
-		...uniqueUrls.map((url) => `- ${url}`),
+		...uniqueUrls.map((url) => `- ${url}`)
 	]
 
 	return `${markdown.trim()}\n${lines.join('\n')}`
@@ -42,7 +42,7 @@ function renderAiMarkdownPage(
 		title: string
 		description: string
 		markdown: string
-	},
+	}
 ): void {
 	const { doc, layout, page, colors } = ctx
 
@@ -59,7 +59,7 @@ function renderAiMarkdownPage(
 		maxWidth: page.contentWidth,
 		fontSize: 11,
 		fontStyle: 'normal',
-		color: colors.muted,
+		color: colors.muted
 	})
 	y += AI_MARKDOWN_TOP_PADDING
 
@@ -83,21 +83,21 @@ export function renderAiInsightsSection(ctx: PdfRenderContext, data: ReportData)
 			title: 'AI-briefing',
 			description:
 				'Deze briefing is automatisch gegenereerd met AI, waarbij gebruik is gemaakt van alle ingevoerde context, audit resultaten en de criteria zoals gedefinieerd door de tool.',
-			markdown: briefing,
+			markdown: briefing
 		})
 	}
 
 	if (websiteAnalysis) {
 		const websiteAnalysisWithUrls = appendAnalysedUrls(
 			websiteAnalysis,
-			data.aiInsights?.websiteAnalysisUrls ?? [],
+			data.aiInsights?.websiteAnalysisUrls ?? []
 		)
 
 		renderAiMarkdownPage(ctx, {
 			title: 'AI-analyse van huidige website',
 			description:
 				'Deze analyse is automatisch gegenereerd met AI op basis van de opgegeven website url van de regio. De analyse vergelijkt de geanalyseerde website-inhoud met de componenten zoals gedefinieerd door de tool.',
-			markdown: websiteAnalysisWithUrls,
+			markdown: websiteAnalysisWithUrls
 		})
 	}
 }

@@ -11,15 +11,15 @@ export default defineEventHandler(async (event) => {
 	await $fetch(url, {
 		method: 'POST',
 		headers: {
-			Authorization: `Bearer ${config.datahub.token}`,
+			Authorization: `Bearer ${config.datahub.token}`
 		},
 		body: {
 			form_type: 'sitemenu_submission',
-			payload: parsedData,
+			payload: parsedData
 		},
 		query: {
-			fields: ['id'],
-		},
+			fields: ['id']
+		}
 	})
 
 	return { success: true }

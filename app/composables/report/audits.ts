@@ -12,7 +12,7 @@ type AuditMap = Record<string, AuditEntry>
  */
 export function buildReportAudits(
 	items: ItemsCollectionItem[] | undefined,
-	auditMap: AuditMap,
+	auditMap: AuditMap
 ): Audit<ItemsCollectionItem>[] {
 	if (!items) {
 		return []
@@ -36,7 +36,7 @@ export function buildReportAudits(
 			id,
 			score: value.score,
 			comment: value.comment,
-			item,
+			item
 		})
 	}
 

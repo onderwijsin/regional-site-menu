@@ -88,7 +88,7 @@ export const useTracking = () => {
 		trackEvent('ai_action', {
 			event_category: 'engagement',
 			event_label: params.label,
-			event_value: params.value,
+			event_value: params.value
 		})
 	}
 
@@ -105,7 +105,7 @@ export const useTracking = () => {
 		trackEvent('ai_insight', {
 			event_category: 'engagement',
 			event_label: params.tool,
-			event_value: 'endpoint_call',
+			event_value: 'endpoint_call'
 		})
 	}
 
@@ -125,7 +125,7 @@ export const useTracking = () => {
 			event_label: 'set',
 			event_value: `${params.score}`,
 			item_id: params.itemId,
-			score: `${params.score}`,
+			score: `${params.score}`
 		})
 	}
 
@@ -140,7 +140,7 @@ export const useTracking = () => {
 			event_category: 'engagement',
 			event_label: 'generated',
 			event_value: 'pdf',
-			scored_elements_count: `${params.scoredElementsCount}`,
+			scored_elements_count: `${params.scoredElementsCount}`
 		})
 	}
 
@@ -165,7 +165,7 @@ export const useTracking = () => {
 			event_value: `${params.from}_to_${params.to}`,
 			from_mode: params.from,
 			to_mode: params.to,
-			source: params.source,
+			source: params.source
 		})
 	}
 
@@ -175,6 +175,6 @@ export const useTracking = () => {
 		trackAiInsight,
 		trackAuditScore,
 		trackReportGenerated,
-		trackModeSwitch,
+		trackModeSwitch
 	}
 }

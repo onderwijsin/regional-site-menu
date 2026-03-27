@@ -10,6 +10,6 @@ export default defineNuxtPlugin(() => {
 			if (isMd.value) return
 			return navigateTo('/disclaimer')
 		},
-		{ global: true },
+		{ global: true }
 	)
 })

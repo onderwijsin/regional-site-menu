@@ -54,7 +54,7 @@ export async function registerFonts(doc: jsPDF): Promise<void> {
 			loadFont('/fonts/Rijksoverheid-italic.ttf'),
 			loadFont('/fonts/Rijksoverheid-Heading-regular.ttf'),
 			loadFont('/fonts/Rijksoverheid-Heading-bold.ttf'),
-			loadFont('/fonts/Rijksoverheid-Heading-italic.ttf'),
+			loadFont('/fonts/Rijksoverheid-Heading-italic.ttf')
 		])
 
 	// Register body fonts first because most helpers assume this family exists.

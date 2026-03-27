@@ -22,13 +22,13 @@ export type ReportAiSignatureAudit = {
  */
 export function createReportAiInputSignature(
 	config: ReportConfig,
-	audits: ReportAiSignatureAudit[],
+	audits: ReportAiSignatureAudit[]
 ): string {
 	const normalizedAudits = [...audits]
 		.map((audit) => ({
 			id: audit.id,
 			score: audit.score ?? null,
-			comment: audit.comment?.trim() || '',
+			comment: audit.comment?.trim() || ''
 		}))
 		.sort((left, right) => left.id.localeCompare(right.id))
 
@@ -38,7 +38,7 @@ export function createReportAiInputSignature(
 		aiWebsiteAnalysis: config.aiWebsiteAnalysis,
 		url: config.url?.trim() || undefined,
 		notes: config.notes.trim(),
-		audits: normalizedAudits,
+		audits: normalizedAudits
 	})
 }
 
@@ -53,7 +53,7 @@ export function hasGeneratedReportAiInsights(insights?: ReportAiInsights): boole
 		insights?.briefing?.trim() ||
 		insights?.websiteAnalysis?.trim() ||
 		(insights?.websiteAnalysisUrls?.length ?? 0) > 0 ||
-		(insights?.websiteAnalysisSources?.length ?? 0) > 0,
+		(insights?.websiteAnalysisSources?.length ?? 0) > 0
 	)
 }
 

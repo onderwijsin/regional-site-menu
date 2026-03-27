@@ -10,7 +10,7 @@ if (!page.value) {
 	throw createError({
 		statusCode: 404,
 		statusMessage: 'Item niet gevonden',
-		fatal: true,
+		fatal: true
 	})
 }
 
@@ -18,12 +18,12 @@ useSeoMeta({
 	title: `${page.value.title} | ${page.value.pillar}`,
 	description: page.value.description,
 	ogTitle: `${page.value.title} | ${page.value.pillar}`,
-	ogDescription: page.value.description,
+	ogDescription: page.value.description
 })
 
 const { data: surround } = await useAsyncData(`${route.path}-surround`, () => {
 	return queryCollectionItemSurroundings('items', route.path, {
-		fields: ['description'],
+		fields: ['description']
 	})
 })
 
@@ -37,7 +37,7 @@ const score = computed(() => state.getAuditScore(page.value!.id))
 			:headline="page.pillar"
 			:ui="{
 				root: 'pt-2',
-				wrapper: 'items-start lg:items-start',
+				wrapper: 'items-start lg:items-start'
 			}"
 		>
 			<template #description>

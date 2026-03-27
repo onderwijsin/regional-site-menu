@@ -131,7 +131,7 @@ export const useStateStore = defineStore(
 		 */
 		function setMode(
 			nextMode: ViewMode,
-			source: 'header_tabs' | 'welcome_modal' = 'header_tabs',
+			source: 'header_tabs' | 'welcome_modal' = 'header_tabs'
 		): void {
 			const previousMode = mode.value
 
@@ -143,7 +143,7 @@ export const useStateStore = defineStore(
 			trackModeSwitch({
 				from: previousMode,
 				to: nextMode,
-				source,
+				source
 			})
 		}
 
@@ -194,7 +194,7 @@ export const useStateStore = defineStore(
 			getAuditComment,
 			setAuditComment,
 			removeAudit,
-			clearAllAudits,
+			clearAllAudits
 		}
 	},
 	{
@@ -202,7 +202,7 @@ export const useStateStore = defineStore(
 		 * Persist selected state across sessions
 		 */
 		persist: {
-			pick: ['mode', 'filter', 'hideWelcome', 'audit', 'region', 'notes', 'url'],
-		},
-	},
+			pick: ['mode', 'filter', 'hideWelcome', 'audit', 'region', 'notes', 'url']
+		}
+	}
 )

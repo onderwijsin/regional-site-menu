@@ -13,7 +13,7 @@ export const ReportConfigSchema = z
 		aiBriefing: z.boolean(),
 		aiWebsiteAnalysis: z.boolean(),
 		url: z.url({ error: 'Voeg een geldige URL toe' }).optional(),
-		notes: z.string(),
+		notes: z.string()
 	})
 	.superRefine((data, ctx) => {
 		const { aiWebsiteAnalysis, url } = data
@@ -23,7 +23,7 @@ export const ReportConfigSchema = z
 			ctx.addIssue({
 				code: 'custom',
 				path: ['url'],
-				message: 'URL is verplicht wanneer analyse is ingeschakeld',
+				message: 'URL is verplicht wanneer analyse is ingeschakeld'
 			})
 		}
 	})

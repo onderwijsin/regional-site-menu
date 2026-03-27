@@ -68,7 +68,7 @@ const icons = {
 	// Misc
 	document: 'lucide:file',
 	screensize: 'lucide:fullscreen',
-	markdown: 'simple-icons:markdown',
+	markdown: 'simple-icons:markdown'
 }
 
 export const useIcons = () => {
@@ -77,6 +77,6 @@ export const useIcons = () => {
 	}
 
 	return {
-		getIcon,
+		getIcon
 	}
 }

@@ -12,7 +12,7 @@ export const ReportAiSelectedComponentSchema = z.object({
 	priority,
 	description: z.string().min(1),
 	score: z.number().int().min(1).max(10).nullable(),
-	comment: z.string(),
+	comment: z.string()
 })
 
 /**
@@ -35,7 +35,7 @@ export const AiBriefingRequestSchema = z.object({
 	/**
 	 * Optional website analysis generated in stage 1, reused in stage 2 briefing generation.
 	 */
-	websiteAnalysisContext: z.string().optional(),
+	websiteAnalysisContext: z.string().optional()
 })
 
 /**
@@ -43,7 +43,7 @@ export const AiBriefingRequestSchema = z.object({
  */
 export const AiBriefingResponseSchema = z.object({
 	briefing: z.string().min(1),
-	wordCount: z.number().int().min(1),
+	wordCount: z.number().int().min(1)
 })
 
 /**
@@ -52,12 +52,12 @@ export const AiBriefingResponseSchema = z.object({
 export const AiWebsiteAnalysisRequestSchema = z.object({
 	url: z.url({ error: 'Voeg een geldige URL toe' }),
 	region: z.string().min(1).optional(),
-	maxPages: z.number().int().min(3).max(20).optional(),
+	maxPages: z.number().int().min(3).max(20).optional()
 })
 
 export const AiWebsiteAnalysisPageSchema = z.object({
 	url: z.url(),
-	title: z.string().optional(),
+	title: z.string().optional()
 })
 
 /**
@@ -77,7 +77,7 @@ export const AiWebsiteAnalysisResponseSchema = z.object({
 	/**
 	 * Explicit evidence URLs extracted from tool-call sources.
 	 */
-	usedSources: z.array(z.url()),
+	usedSources: z.array(z.url())
 })
 
 /**
@@ -87,7 +87,7 @@ export const ReportAiInsightsSchema = z.object({
 	briefing: z.string().min(1).optional(),
 	websiteAnalysis: z.string().min(1).optional(),
 	websiteAnalysisUrls: z.array(z.url()).optional(),
-	websiteAnalysisSources: z.array(z.url()).optional(),
+	websiteAnalysisSources: z.array(z.url()).optional()
 })
 
 export type ReportAiSelectedComponent = z.infer<typeof ReportAiSelectedComponentSchema>

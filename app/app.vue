@@ -4,7 +4,7 @@ import { nl } from '@nuxt/ui/locale'
 useSeoMeta({
 	ogImage: '/assets/ogimage.png',
 	twitterImage: '/assets/ogimage.png',
-	twitterCard: 'summary_large_image',
+	twitterCard: 'summary_large_image'
 })
 
 const { mode } = storeToRefs(useStateStore())
@@ -64,7 +64,7 @@ const { getIcon } = useIcons()
 		<USeparator
 			:avatar="{
 				src: '/assets/logo.png',
-				loading: 'lazy',
+				loading: 'lazy'
 			}"
 		/>
 

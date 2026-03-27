@@ -17,12 +17,12 @@ export function getOpenAiClient(event: H3Event): { client: OpenAI; model: string
 	if (!token) {
 		throw createError({
 			statusCode: 500,
-			statusMessage: 'OPENAI_API_KEY ontbreekt in runtimeConfig',
+			statusMessage: 'OPENAI_API_KEY ontbreekt in runtimeConfig'
 		})
 	}
 
 	return {
 		client: new OpenAI({ apiKey: token }),
-		model: config.openai.model || DEFAULT_OPENAI_MODEL,
+		model: config.openai.model || DEFAULT_OPENAI_MODEL
 	}
 }

@@ -19,8 +19,6 @@ const DEFAULT_MAX_QUEUED_URLS = 500
 const MAX_SITEMAP_URLS = 200
 
 const SITEMAP_PATHS = ['/sitemap.xml', '/sitemap_index.xml']
-const HTML_LIKE_EXTENSIONS = new Set(['', 'html', 'htm', 'php', 'asp', 'aspx', 'jsp'])
-const SKIPPED_PATHS = new Set(['/llms.txt', '/llms-full.txt'])
 
 /**
  * Runs a lightweight same-domain crawl for AI analysis context.
@@ -35,7 +33,7 @@ const SKIPPED_PATHS = new Set(['/llms.txt', '/llms-full.txt'])
  * @returns Deterministic list of crawled pages and excerpts.
  */
 export async function crawlWebsiteForAnalysis(
-	args: CrawlWebsiteArgs,
+	args: CrawlWebsiteArgs
 ): Promise<CrawledWebsitePage[]> {
 	const maxCharsPerPage = args.maxCharsPerPage ?? DEFAULT_MAX_CHARS_PER_PAGE
 	const maxQueuedUrls = args.maxQueuedUrls ?? DEFAULT_MAX_QUEUED_URLS
@@ -71,9 +69,6 @@ export async function crawlWebsiteForAnalysis(
 		}
 
 		visited.add(currentUrl)
-		if (!isProbablyHtmlDocumentUrl(currentUrl)) {
-			continue
-		}
 
 		const fetched = await fetchHtmlPage(currentUrl, timeoutMs)
 		if (!fetched) {
@@ -90,7 +85,7 @@ export async function crawlWebsiteForAnalysis(
 		pages.push({
 			url: resolvedUrl,
 			title,
-			excerpt,
+			excerpt
 		})
 
 		// Add discovered same-domain links for BFS traversal.
@@ -108,7 +103,7 @@ export async function crawlWebsiteForAnalysis(
 	if (!pages.some((page) => page.url === entryUrl)) {
 		pages.unshift({
 			url: entryUrl,
-			excerpt: '',
+			excerpt: ''
 		})
 	}
 
@@ -126,36 +121,8 @@ function isAllowedUrl(url: string, allowedDomains: string[]): boolean {
 	try {
 		const { hostname } = new URL(url)
 		return allowedDomains.some(
-			(domain) => hostname === domain || hostname.endsWith(`.${domain}`),
+			(domain) => hostname === domain || hostname.endsWith(`.${domain}`)
 		)
-	} catch {
-		return false
-	}
-}
-
-/**
- * Returns true when a URL likely points to an HTML page we should crawl.
- *
- * This avoids crawling known non-page endpoints (like llms txt routes or APIs)
- * that can trigger server handlers not intended as crawl context.
- *
- * @param url - URL to test.
- * @returns Whether the URL should be fetched by the crawler.
- */
-function isProbablyHtmlDocumentUrl(url: string): boolean {
-	try {
-		const parsed = new URL(url)
-		const pathname = parsed.pathname.toLowerCase()
-
-		if (SKIPPED_PATHS.has(pathname) || pathname.startsWith('/api/')) {
-			return false
-		}
-
-		const lastSegment = pathname.split('/').filter(Boolean).pop() || ''
-		const extensionMatch = lastSegment.match(/\.([a-z0-9]+)$/)
-		const extension = extensionMatch?.[1] || ''
-
-		return HTML_LIKE_EXTENSIONS.has(extension)
 	} catch {
 		return false
 	}
@@ -170,9 +137,6 @@ function isProbablyHtmlDocumentUrl(url: string): boolean {
 function normalizeUrl(input: string): string {
 	const url = new URL(input)
 	url.hash = ''
-	if (url.pathname.length > 1 && url.pathname.endsWith('/')) {
-		url.pathname = url.pathname.replace(/\/+$/, '')
-	}
 
 	// Remove tracking parameters that do not represent unique content pages.
 	for (const key of [...url.searchParams.keys()]) {
@@ -199,7 +163,7 @@ function normalizeUrl(input: string): string {
  */
 async function fetchHtmlPage(
 	url: string,
-	timeoutMs: number,
+	timeoutMs: number
 ): Promise<{ html: string; finalUrl: string } | null> {
 	const controller = new AbortController()
 	const timeoutId = setTimeout(() => controller.abort(), timeoutMs)
@@ -210,8 +174,8 @@ async function fetchHtmlPage(
 			redirect: 'follow',
 			signal: controller.signal,
 			headers: {
-				Accept: 'text/html,application/xhtml+xml',
-			},
+				Accept: 'text/html,application/xhtml+xml'
+			}
 		})
 
 		if (!response.ok) {
@@ -225,7 +189,7 @@ async function fetchHtmlPage(
 
 		return {
 			html: await response.text(),
-			finalUrl: response.url || url,
+			finalUrl: response.url || url
 		}
 	} catch {
 		return null
@@ -245,7 +209,7 @@ async function fetchHtmlPage(
 async function fetchSitemapUrls(
 	startUrl: string,
 	allowedDomains: string[],
-	timeoutMs: number,
+	timeoutMs: number
 ): Promise<string[]> {
 	const entry = new URL(startUrl)
 	const collected = new Set<string>()
@@ -262,12 +226,7 @@ async function fetchSitemapUrls(
 				continue
 			}
 
-			const normalizedUrl = normalizeUrl(url)
-			if (!isProbablyHtmlDocumentUrl(normalizedUrl)) {
-				continue
-			}
-
-			collected.add(normalizedUrl)
+			collected.add(normalizeUrl(url))
 			if (collected.size >= MAX_SITEMAP_URLS) {
 				break
 			}
@@ -298,8 +257,8 @@ async function fetchTextDocument(url: string, timeoutMs: number): Promise<string
 			redirect: 'follow',
 			signal: controller.signal,
 			headers: {
-				Accept: 'application/xml,text/xml,text/plain,text/html',
-			},
+				Accept: 'application/xml,text/xml,text/plain,text/html'
+			}
 		})
 
 		if (!response.ok) {
@@ -363,7 +322,7 @@ function extractLinks(html: string, baseUrl: string, allowedDomains: string[]): 
 
 		try {
 			const absolute = normalizeUrl(new URL(rawHref, baseUrl).toString())
-			if (isAllowedUrl(absolute, allowedDomains) && isProbablyHtmlDocumentUrl(absolute)) {
+			if (isAllowedUrl(absolute, allowedDomains)) {
 				urls.add(absolute)
 			}
 		} catch {
