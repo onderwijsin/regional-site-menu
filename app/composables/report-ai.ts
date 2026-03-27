@@ -378,7 +378,8 @@ export const useReportAi = () => {
 	): Promise<AiWebsiteAnalysisResponse> {
 		const payload = AiWebsiteAnalysisRequestSchema.parse({
 			url: config.url,
-			region: config.region
+			region: config.region,
+			maxPages: config.maxPages
 		})
 
 		// Track only real endpoint usage, not UI toggle state.

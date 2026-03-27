@@ -37,6 +37,7 @@ export function createReportAiInputSignature(
 		aiBriefing: config.aiBriefing,
 		aiWebsiteAnalysis: config.aiWebsiteAnalysis,
 		url: config.url?.trim() || undefined,
+		maxPages: config.maxPages ?? undefined,
 		notes: config.notes.trim(),
 		audits: normalizedAudits
 	})

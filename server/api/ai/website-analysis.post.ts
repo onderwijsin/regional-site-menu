@@ -1,4 +1,8 @@
-import { AiWebsiteAnalysisRequestSchema, AiWebsiteAnalysisResponseSchema } from '@schema/reportAi'
+import {
+	AI_WEBSITE_ANALYSIS_DEFAULT_PAGES,
+	AiWebsiteAnalysisRequestSchema,
+	AiWebsiteAnalysisResponseSchema
+} from '@schema/reportAi'
 
 import { createAllowedDomains, formatWebsiteAnalysisInput } from '../../utils/ai/analysis'
 import { crawlWebsiteForAnalysis } from '../../utils/ai/crawl'
@@ -28,7 +32,7 @@ export default defineEventHandler(async (event) => {
 	const body = await readBody(event)
 	const input = AiWebsiteAnalysisRequestSchema.parse(body)
 
-	const maxPages = input.maxPages ?? 15
+	const maxPages = input.maxPages ?? AI_WEBSITE_ANALYSIS_DEFAULT_PAGES
 	const allowedDomains = createAllowedDomains(input.url)
 	const crawledPages = await crawlWebsiteForAnalysis({
 		startUrl: input.url,

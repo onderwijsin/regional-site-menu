@@ -1,5 +1,7 @@
 import { z } from 'zod'
 
+import { AI_WEBSITE_ANALYSIS_MAX_PAGES, AI_WEBSITE_ANALYSIS_MIN_PAGES } from './reportAi'
+
 /**
  * Report configuration schema
  *
@@ -13,6 +15,12 @@ export const ReportConfigSchema = z
 		aiBriefing: z.boolean(),
 		aiWebsiteAnalysis: z.boolean(),
 		url: z.url({ error: 'Voeg een geldige URL toe' }).optional(),
+		maxPages: z
+			.number()
+			.int()
+			.min(AI_WEBSITE_ANALYSIS_MIN_PAGES)
+			.max(AI_WEBSITE_ANALYSIS_MAX_PAGES)
+			.optional(),
 		notes: z.string()
 	})
 	.superRefine((data, ctx) => {

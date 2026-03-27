@@ -2,6 +2,17 @@ import { goal, pillar, priority } from '@schema/fields'
 import { z } from 'zod'
 
 /**
+ * Crawl budget for website analysis:
+ * - total crawl time budget: 3m45s (225s)
+ * - per-page timeout: 5s
+ */
+export const AI_WEBSITE_ANALYSIS_PAGE_TIMEOUT_MS = 5_000
+export const AI_WEBSITE_ANALYSIS_CRAWL_BUDGET_MS = 225_000
+export const AI_WEBSITE_ANALYSIS_MIN_PAGES = 1
+export const AI_WEBSITE_ANALYSIS_MAX_PAGES = 50
+export const AI_WEBSITE_ANALYSIS_DEFAULT_PAGES = 15
+
+/**
  * Compact shape of an audited menu item used as AI input.
  */
 export const ReportAiSelectedComponentSchema = z.object({
@@ -52,7 +63,12 @@ export const AiBriefingResponseSchema = z.object({
 export const AiWebsiteAnalysisRequestSchema = z.object({
 	url: z.url({ error: 'Voeg een geldige URL toe' }),
 	region: z.string().min(1).optional(),
-	maxPages: z.number().int().min(3).max(20).optional()
+	maxPages: z
+		.number()
+		.int()
+		.min(AI_WEBSITE_ANALYSIS_MIN_PAGES)
+		.max(AI_WEBSITE_ANALYSIS_MAX_PAGES)
+		.optional()
 })
 
 export const AiWebsiteAnalysisPageSchema = z.object({
