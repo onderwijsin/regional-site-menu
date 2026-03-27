@@ -180,20 +180,32 @@ export default defineNuxtConfig({
 				limits: {
 					cpu_ms: 300000, // Increase max cpu time to 5 min due to expensive AI requests
 				},
+				d1_databases: [
+					{
+						database_id: process.env.CLOUDFLARE_D1_DATABASE_ID,
+						binding: 'DB',
+					},
+				],
+				kv_namespaces: [
+					{
+						binding: 'CACHE',
+						id: process.env.CLOUDFLARE_CACHE_NAMESPACE_ID,
+					},
+				],
+				r2_buckets: [
+					{
+						binding: 'BLOB',
+						bucket_name: process.env.CLOUDFLARE_R2_BUCKET,
+						jurisdiction: 'eu',
+					},
+				],
 			},
 		},
 	},
 
 	hub: {
-		blob: !isDev
-			? {
-					driver: 'cloudflare-r2',
-					bucketName: process.env.CLOUDFLARE_R2_BUCKET,
-					binding: 'BLOB',
-				}
-			: false,
 		/**
-		 * There is a weird error in local development if we define the cache driver, where the binding is undefined
+		 * There is a weird error in local development if we define CF resources in local dev, the binding is undefined
 		 * We can only resolve the issue by adding the binding in a wrangler.json file, which we don't want to add
 		 * specifically for this issue.
 		 *
@@ -201,7 +213,15 @@ export default defineNuxtConfig({
 		 *
 		 * `Cache write error. [unstorage] [cloudflare] Invalid binding CACHE: undefined`
 		 */
-		cache: !isDev
+		blob: isDev
+			? {
+					driver: 'cloudflare-r2',
+					bucketName: process.env.CLOUDFLARE_R2_BUCKET,
+					binding: 'BLOB',
+				}
+			: false,
+
+		cache: isDev
 			? {
 					driver: 'cloudflare-kv-binding',
 					namespaceId: process.env.CLOUDFLARE_CACHE_NAMESPACE_ID,
