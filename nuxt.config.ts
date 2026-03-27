@@ -213,20 +213,22 @@ export default defineNuxtConfig({
 		 *
 		 * `Cache write error. [unstorage] [cloudflare] Invalid binding CACHE: undefined`
 		 */
-		blob: isDev
-			? {
-					driver: 'cloudflare-r2',
-					bucketName: process.env.CLOUDFLARE_R2_BUCKET,
-					binding: 'BLOB',
-				}
-			: false,
+		// blob: isDev
+		// 	? {
+		// 			driver: 'cloudflare-r2',
+		// 			bucketName: process.env.CLOUDFLARE_R2_BUCKET,
+		// 			binding: 'BLOB',
+		// 		}
+		// 	: false,
+		blob: true,
 
-		cache: isDev
-			? {
-					driver: 'cloudflare-kv-binding',
-					namespaceId: process.env.CLOUDFLARE_CACHE_NAMESPACE_ID,
-				}
-			: false,
+		// cache: isDev
+		// 	? {
+		// 			driver: 'cloudflare-kv-binding',
+		// 			namespaceId: process.env.CLOUDFLARE_CACHE_NAMESPACE_ID,
+		// 		}
+		// 	: false,
+		cache: true,
 	},
 
 	content: {
