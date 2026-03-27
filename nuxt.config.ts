@@ -55,7 +55,14 @@ export default defineNuxtConfig({
 		inlineRouteRules: true
 	},
 
-	image: { provider: 'none' },
+	// image: { provider: 'none' },
+	image: {
+		provider: 'cloudflare',
+		cloudflare: {
+			// During local development, we so to fetch images from the prod server!
+			baseURL: joinURL(process.env.PROD_URL ?? process.env.APP_URL!)
+		}
+	},
 
 	$development: {
 		routeRules: {
@@ -70,13 +77,6 @@ export default defineNuxtConfig({
 			'/assets/**': {
 				ssr: false,
 				cache: false
-			}
-		},
-
-		image: {
-			provider: 'cloudflare',
-			cloudflare: {
-				baseURL: joinURL(process.env.APP_URL!)
 			}
 		}
 	},

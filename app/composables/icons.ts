@@ -11,6 +11,9 @@ const icons = {
 	help: 'lucide:circle-help',
 	gift: 'lucide:gift',
 	search: 'lucide:search',
+	inspiration: 'lucide:lightbulb',
+	explore: 'lucide:compass',
+	faq: 'lucide:badge-question-mark',
 
 	// Content
 	inzicht: 'lucide:component',

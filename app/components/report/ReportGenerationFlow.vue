@@ -11,6 +11,11 @@ import {
 	hasGeneratedReportAiInsights
 } from '~/composables/report-generation-flow'
 import { ReportGenerationError } from '~/composables/report/errors'
+import {
+	AI_WEBSITE_ANALYSIS_DEFAULT_PAGES,
+	AI_WEBSITE_ANALYSIS_MAX_PAGES,
+	AI_WEBSITE_ANALYSIS_MIN_PAGES
+} from '~~/schema/reportAi'
 import { ReportConfigSchema } from '~~/schema/reportConfig'
 
 type ReportGenerationFlowProps = {
@@ -36,6 +41,7 @@ const state = reactive<ReportConfig>({
 	aiBriefing: false,
 	aiWebsiteAnalysis: false,
 	url: stateStore.url,
+	maxPages: AI_WEBSITE_ANALYSIS_DEFAULT_PAGES,
 	notes: stateStore.notes
 })
 
@@ -68,6 +74,20 @@ const url = computed({
 			state.url = value
 			stateStore.url = value
 		}
+	}
+})
+
+const analysisMaxPages = computed({
+	get: () => state.maxPages ?? AI_WEBSITE_ANALYSIS_DEFAULT_PAGES,
+	set: (value: number) => {
+		if (Number.isNaN(value)) {
+			return
+		}
+
+		state.maxPages = Math.min(
+			AI_WEBSITE_ANALYSIS_MAX_PAGES,
+			Math.max(AI_WEBSITE_ANALYSIS_MIN_PAGES, Math.round(value))
+		)
 	}
 })
 
@@ -475,6 +495,20 @@ async function handleClose(): Promise<void> {
 						size="lg"
 						placeholder="https://voorbeeld.nl"
 						:icon="getIcon('url')"
+					/>
+				</UFormField>
+				<UFormField
+					v-if="state.aiWebsiteAnalysis"
+					name="maxPages"
+					label="Tot hoeveel pagina's wil je analyseren?"
+					:description="`Kies tussen ${AI_WEBSITE_ANALYSIS_MIN_PAGES} en ${AI_WEBSITE_ANALYSIS_MAX_PAGES} pagina's. Des te meer pagina's je kiest, des te langer de analyse duurt.`"
+				>
+					<UInputNumber
+						v-model="analysisMaxPages"
+						size="lg"
+						:min="AI_WEBSITE_ANALYSIS_MIN_PAGES"
+						:max="AI_WEBSITE_ANALYSIS_MAX_PAGES"
+						:step="1"
 					/>
 				</UFormField>
 				<UFormField
