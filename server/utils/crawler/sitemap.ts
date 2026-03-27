@@ -1,6 +1,6 @@
 import type { SitemapDocumentEntries } from './types'
 
-import { CRAWLER_CONFIG } from '@constants'
+import { CRAWLER_CONFIG } from '@ai'
 import { XMLParser } from 'fast-xml-parser'
 import pLimit from 'p-limit'
 

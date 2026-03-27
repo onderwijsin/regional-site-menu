@@ -1,4 +1,4 @@
-import { CRAWLER_CONFIG } from '@constants'
+import { CRAWLER_CONFIG } from '@ai'
 
 /**
  * Returns true when URL host is inside the allowed domain list.

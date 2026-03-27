@@ -5,7 +5,8 @@ import { fileURLToPath } from 'node:url'
 
 import { joinURL, parseURL } from 'ufo'
 
-import { AI_OPENAI_CONFIG, NUXT_BEHAVIOR_CONFIG } from './config/constants'
+import { AI_OPENAI_CONFIG } from './config/ai'
+import { NUXT_BEHAVIOR_CONFIG } from './config/constants'
 import { app } from './config/head'
 import { siteDescription, siteTitle } from './config/indentity'
 import { robots } from './config/robots'
@@ -47,6 +48,7 @@ export default defineNuxtConfig({
 	},
 
 	alias: {
+		'@ai': fileURLToPath(new URL('./config/ai', import.meta.url)),
 		'@schema': fileURLToPath(new URL('./schema', import.meta.url)),
 		'@constants': fileURLToPath(new URL('./config/constants', import.meta.url))
 	},

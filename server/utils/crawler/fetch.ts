@@ -1,4 +1,4 @@
-import { CRAWLER_CONFIG } from '@constants'
+import { CRAWLER_CONFIG } from '@ai'
 
 /**
  * Reads a response body up to a max byte limit.

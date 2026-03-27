@@ -1,4 +1,4 @@
-import { AI_WEBSITE_ANALYSIS_CONFIG } from '@constants'
+import { AI_WEBSITE_ANALYSIS_CONFIG } from '@ai'
 import { goal, pillar, priority } from '@schema/fields'
 import { z } from 'zod'
 

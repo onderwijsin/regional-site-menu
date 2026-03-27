@@ -1,6 +1,6 @@
 import type { CrawledWebsitePage, CrawlWebsiteArgs } from './types'
 
-import { CRAWLER_CONFIG } from '@constants'
+import { CRAWLER_CONFIG } from '@ai'
 import pLimit from 'p-limit'
 
 import { createCrawlCacheKey, getCachedCrawlPages, setCachedCrawlPages } from './cache'

@@ -1,6 +1,6 @@
 import type { H3Event } from 'h3'
 
-import { AI_REFERENCE_PATHS } from '@constants'
+import { AI_REFERENCE_PATHS } from '@ai'
 
 /**
  * Reads a text document from an internal app route within the same Nitro request.

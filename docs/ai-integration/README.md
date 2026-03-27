@@ -64,7 +64,8 @@ Controller + helpers:
 
 - [website-analysis.post.ts](../../server/api/ai/website-analysis.post.ts)
 - [analysis.ts](../../server/utils/ai/analysis.ts)
-- [crawl.ts](../../server/utils/ai/crawl.ts)
+- [analysis-output.ts](../../server/utils/ai/analysis-output.ts)
+- [website.ts](../../server/utils/crawler/website.ts)
 - [reference.ts](../../server/utils/ai/reference.ts)
 
 ### `POST /api/ai/briefing`
@@ -131,6 +132,7 @@ Key behavior:
   - `reasoning` (expanded context)
   - `status` (`running`/`completed`)
 - progress timing is configurable via `AI_PROGRESS_CONFIG`
+- progress timing is configurable via `REPORT_AI_PROGRESS_CONFIG` in `config/ai.ts`
 - if the backend finishes early, remaining visual stages are fast-forwarded sequentially
 - fast-forwarding happens only on success (failed runs do not show fully completed stage output)
 - logs full analysis payload in browser console for debugging
@@ -168,6 +170,7 @@ Implemented safeguards:
 - strict input/output Zod validation on both endpoints
 - server-side same-domain crawl with page caps
 - llms-full reference criteria included in analysis prompt
+- structured model output parsing before analysis markdown assembly
 - explicit source URL traceability in API response and PDF output
 - browser debug log of raw analysis payload for quality tuning
 
@@ -181,7 +184,11 @@ Remaining risk:
 Runtime config:
 
 - `runtimeConfig.openai.token`
-- `runtimeConfig.openai.model` (default `gpt-4.1-mini`)
+- `runtimeConfig.openai.model` (default `gpt-5`)
+
+Static AI defaults:
+
+- [config/ai.ts](../../config/ai.ts)
 
 Environment:
 

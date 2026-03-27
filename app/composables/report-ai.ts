@@ -2,7 +2,7 @@ import type { AiWebsiteAnalysisResponse, ReportAiInsights } from '~~/schema/repo
 import type { ReportConfig } from '~~/schema/reportConfig'
 import type { ReportData } from './report/types'
 
-import { REPORT_AI_PROGRESS_CONFIG } from '@constants'
+import { REPORT_AI_PROGRESS_CONFIG } from '@ai'
 import {
 	AI_WEBSITE_ANALYSIS_DEFAULT_PAGES,
 	AiBriefingRequestSchema,

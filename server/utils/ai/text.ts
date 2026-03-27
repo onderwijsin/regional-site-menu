@@ -1,4 +1,4 @@
-import { AI_TEXT_SANITIZATION_CONFIG } from '@constants'
+import { AI_TEXT_SANITIZATION_CONFIG } from '@ai'
 
 /**
  * Normalizes AI markdown output into a clean plain markdown string.
