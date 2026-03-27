@@ -51,7 +51,7 @@ type AiProgressScenario = {
  * Effective duration for the crawl stage is:
  * `AI_ANALYSIS_CRAWL_STAGE_DURATION_PER_PAGE_MS * maxPages`.
  */
-const AI_ANALYSIS_CRAWL_STAGE_DURATION_PER_PAGE_MS = 3_000
+const AI_ANALYSIS_CRAWL_STAGE_DURATION_PER_PAGE_MS = 2_000
 
 const AI_PROGRESS_CONFIG: Record<'analysis' | 'briefing', AiProgressScenario> = {
 	analysis: {

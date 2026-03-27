@@ -302,6 +302,9 @@ async function startAiGenerationFlow(): Promise<void> {
 			return
 		}
 
+		// When briefing is disabled, AI generation is complete at this point.
+		// Explicitly end the loading phase before starting PDF generation.
+		isAiLoading.value = false
 		await startPdfGeneration()
 	} catch (error: unknown) {
 		stage.value = 'config'
