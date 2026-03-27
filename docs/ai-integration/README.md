@@ -81,6 +81,7 @@ What the route does:
 3. Formats domain input context (region, goals, selected components, notes, optional analysis
    context).
 4. Calls OpenAI with structured output parsing.
+   - falls back to plain-text response mode if structured SDK parsing fails.
 5. Normalizes markdown and returns typed response.
 
 Controller + helpers:
@@ -131,7 +132,6 @@ Key behavior:
   - `text` (stage label)
   - `reasoning` (expanded context)
   - `status` (`running`/`completed`)
-- progress timing is configurable via `AI_PROGRESS_CONFIG`
 - progress timing is configurable via `REPORT_AI_PROGRESS_CONFIG` in `config/ai.ts`
 - if the backend finishes early, remaining visual stages are fast-forwarded sequentially
 - fast-forwarding happens only on success (failed runs do not show fully completed stage output)
@@ -171,12 +171,17 @@ Implemented safeguards:
 - server-side same-domain crawl with page caps
 - llms-full reference criteria included in analysis prompt
 - structured model output parsing before analysis markdown assembly
+- compatibility fallback for model-specific unsupported reasoning/verbosity params
+- retry with higher output token budget when response ends `incomplete` due `max_output_tokens`
+- fallback from structured parse mode to plain-text mode when SDK JSON parsing fails
+- output fallback path (`output_text` + JSON-in-text parsing + plain markdown fallback)
 - explicit source URL traceability in API response and PDF output
 - browser debug log of raw analysis payload for quality tuning
 
 Remaining risk:
 
 - model output may still over-generalize relative to crawled excerpts
+- larger crawls increase token pressure and can still require tuning of `max_output_tokens`
 - users should review AI output before finalizing PDF
 
 ## Runtime and Config
@@ -189,6 +194,8 @@ Runtime config:
 Static AI defaults:
 
 - [config/ai.ts](../../config/ai.ts)
+- endpoint-specific behavior docs: [server/api/ai/README.md](../../server/api/ai/README.md)
+- crawler behavior docs: [server/utils/crawler/README.md](../../server/utils/crawler/README.md)
 
 Environment:
 
@@ -200,4 +207,4 @@ Environment:
 1. Add explicit per-stage retry actions in UI (retry analysis only / briefing only).
 2. Add integration tests for endpoint shape + failure cases.
 3. Add quality telemetry (e.g. user edits ratio on AI briefing).
-4. Consider extracting AI progress config to a dedicated app config file for non-dev tuning.
+4. Add fallback observability metrics (how often structured parse fallback/retry paths are used).

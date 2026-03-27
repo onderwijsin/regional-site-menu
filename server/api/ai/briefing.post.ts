@@ -51,6 +51,18 @@ export default defineEventHandler(async (event) => {
 	const userPrompt = formatBriefingInput(input)
 
 	// 4) Request a structured response so parsing is deterministic.
+	/**
+	 * Requests briefing output with compatibility fallbacks.
+	 *
+	 * Behavior:
+	 * - starts with structured output (`responses.parse`)
+	 * - degrades unsupported reasoning/verbosity params/values
+	 * - falls back to plain-text mode (`responses.create`) when structured parse
+	 *   fails at SDK JSON parse level
+	 *
+	 * @param options - Request tuning values.
+	 * @returns OpenAI response object normalized to include `output_parsed` key.
+	 */
 	const requestBriefingResponse = async (options: {
 		maxOutputTokens: number
 		includeReasoning: boolean

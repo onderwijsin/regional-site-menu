@@ -75,6 +75,18 @@ export default defineEventHandler(async (event) => {
 
 	// 4) Create OpenAI client bound to runtime secrets/model configuration.
 	const { client, model } = getOpenAiClient(event)
+	/**
+	 * Requests website-analysis output with compatibility fallbacks.
+	 *
+	 * Behavior:
+	 * - starts with structured output (`responses.parse`)
+	 * - degrades unsupported reasoning/verbosity params/values
+	 * - falls back to plain-text mode (`responses.create`) when structured parse
+	 *   fails at SDK JSON parse level
+	 *
+	 * @param options - Request tuning values.
+	 * @returns OpenAI response object normalized to include `output_parsed` key.
+	 */
 	const requestWebsiteAnalysisResponse = async (options: {
 		maxOutputTokens: number
 		includeReasoning: boolean

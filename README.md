@@ -48,7 +48,7 @@ If you are working on this codebase with an AI coding agent, read [`AGENTS.md`](
 - `content/` — markdown collections (`items`, `extras`, `_prompts`)
 - `schema/` — Zod schemas (forms, report config, enums)
 - `server/` — API routes (e.g. Datahub submission proxy)
-- `config/` — head, site, robots config
+- `config/` — app constants and static config (`constants.ts`, `ai.ts`, head/site/robots)
 - `shared/types/` — shared TypeScript types
 - `docs/` — technical documentation (AI, content, auditing, conventions, CI/CD, PDF pipeline)
 
@@ -279,6 +279,13 @@ Additional technical docs:
 - [Project Conventions](./docs/conventions/README.md)
 - [CI/CD](./docs/ci-cd/README.md)
 - [Report PDF Pipeline](./docs/report-pdf/README.md)
+- [Report Composables Notes](./app/composables/report/README.md)
+- [Report Markdown Notes](./app/composables/report/markdown/README.md)
+- [AI API Route Notes](./server/api/ai/README.md)
+- [AI Utility Module Notes](./server/utils/ai/README.md)
+- [Crawler Module Notes](./server/utils/crawler/README.md)
+- [Datahub API Notes](./server/api/datahub/README.md)
+- [Config Module Notes](./config/README.md)
 
 ---
 

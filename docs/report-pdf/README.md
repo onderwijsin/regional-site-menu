@@ -36,6 +36,9 @@ Main goals:
 - [fonts.ts](../../app/composables/report/fonts.ts) registers Rijksoverheid fonts.
 - [markdown/](../../app/composables/report/markdown) markdown parsing, measuring, and rendering.
 - [sections/](../../app/composables/report/sections) concrete page renderers.
+- local module docs:
+  - [report/README.md](../../app/composables/report/README.md)
+  - [report/markdown/README.md](../../app/composables/report/markdown/README.md)
 
 ## Section Order
 

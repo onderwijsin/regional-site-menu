@@ -2,6 +2,17 @@ import { DATAHUB_CONFIG } from '@constants'
 import { SubmissionSchema } from '@schema/submission'
 import { joinURL } from 'ufo'
 
+/**
+ * Controller for `POST /api/datahub/submission`.
+ *
+ * Flow:
+ * 1. Validate inbound submission payload with Zod.
+ * 2. Resolve and validate required runtime Datahub config.
+ * 3. Forward request to Datahub with expected contract shape.
+ * 4. Return stable success response.
+ *
+ * @returns `{ success: true }` when downstream submission succeeds.
+ */
 export default defineEventHandler(async (event) => {
 	const body = await readBody(event)
 	const parsedData = SubmissionSchema.parse(body)
