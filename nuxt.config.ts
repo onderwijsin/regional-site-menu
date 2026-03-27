@@ -136,6 +136,9 @@ export default defineNuxtConfig({
 					// We need runtime access to this var via process.env
 					STUDIO_GITHUB_CLIENT_ID: process.env.STUDIO_GITHUB_CLIENT_ID,
 				},
+				limits: {
+					cpu_ms: 300000, // Increase max cpu time to 5 min due to expensive AI requests
+				},
 			},
 		},
 	},
@@ -186,9 +189,9 @@ export default defineNuxtConfig({
 			repo: 'regional-site-menu',
 			branch: 'main',
 		},
-		media: {
-			external: true,
-		},
+		// media: {
+		// 	external: true,
+		// },
 		auth: {
 			github: {
 				clientId: process.env.STUDIO_GITHUB_CLIENT_ID,
