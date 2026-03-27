@@ -67,9 +67,9 @@ export default defineNuxtConfig({
 		routeRules: {
 			'/**': { prerender: true },
 		},
-		image: {
-			provider: 'cloudflare',
-		},
+		// image: {
+		// 	provider: 'cloudflare',
+		// },
 	},
 
 	routeRules: {
@@ -138,11 +138,13 @@ export default defineNuxtConfig({
 	},
 
 	hub: {
-		blob: {
-			driver: 'cloudflare-r2',
-			bucketName: process.env.CLOUDFLARE_R2_BUCKET,
-			binding: 'BLOB',
-		},
+		blob: !isDev
+			? {
+					driver: 'cloudflare-r2',
+					bucketName: process.env.CLOUDFLARE_R2_BUCKET,
+					binding: 'BLOB',
+				}
+			: false,
 		/**
 		 * There is a weird error in local development if we define the cache driver, where the binding is undefined
 		 * We can only resolve the issue by adding the binding in a wrangler.json file, which we don't want to add
