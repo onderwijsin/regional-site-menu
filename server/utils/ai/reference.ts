@@ -1,42 +1,52 @@
 import type { H3Event } from 'h3'
 
 /**
- * Fetches the llms-full reference document from the app route.
+ * Reads a text document from an internal app route within the same Nitro request.
+ *
+ * This avoids worker-to-self network calls on Cloudflare, which can cause 522
+ * timeouts when routing back through the public domain.
  *
  * @param event - Current request context.
- * @returns Plain text reference document.
+ * @param path - Route path to fetch.
+ * @returns Plain text when available, otherwise an empty string.
  */
-export async function fetchLlmsFullReferenceDocument(event: H3Event): Promise<string> {
-	const requestUrl = getRequestURL(event)
-	const fullUrl = new URL('/llms-full.txt', requestUrl).toString()
-
+async function fetchInternalTextDocument(event: H3Event, path: string): Promise<string> {
 	try {
-		const text = await $fetch<string>(fullUrl, {
+		const text = await event.$fetch<string>(path, {
 			headers: {
 				Accept: 'text/plain',
 			},
 		})
 
-		if (text.trim()) {
+		if (typeof text === 'string' && text.trim()) {
 			return text
 		}
 	} catch {
-		// Fallback below.
+		// Try fallback path in caller.
 	}
 
-	const fallbackUrl = new URL('/llms.txt', requestUrl).toString()
-	const fallbackText = await $fetch<string>(fallbackUrl, {
-		headers: {
-			Accept: 'text/plain',
-		},
+	return ''
+}
+
+/**
+ * Fetches the llms-full reference document from internal routes.
+ *
+ * @param event - Current request context.
+ * @returns Plain text reference document.
+ */
+export async function fetchLlmsFullReferenceDocument(event: H3Event): Promise<string> {
+	const fullText = await fetchInternalTextDocument(event, '/llms-full.txt')
+	if (fullText) {
+		return fullText
+	}
+
+	const fallbackText = await fetchInternalTextDocument(event, '/llms.txt')
+	if (fallbackText) {
+		return fallbackText
+	}
+
+	throw createError({
+		statusCode: 500,
+		statusMessage: 'Kon llms referentiedocument niet ophalen',
 	})
-
-	if (!fallbackText.trim()) {
-		throw createError({
-			statusCode: 500,
-			statusMessage: 'Kon llms referentiedocument niet ophalen',
-		})
-	}
-
-	return fallbackText
 }
