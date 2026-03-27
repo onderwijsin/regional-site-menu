@@ -1,6 +1,9 @@
 // https://nuxt.com/docs/api/configuration/nuxt-config
 import type { Mode } from './shared/types/primitives'
 
+import { constants } from 'node:fs'
+import { access, copyFile, mkdir, stat } from 'node:fs/promises'
+import { dirname, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 import { parseURL } from 'ufo'
@@ -18,6 +21,36 @@ const isPreview =
 const isDev = process.env.MODE === 'dev'
 const isNext = process.env.MODE === 'next'
 const isLivePreview = process.env.MODE === 'live-preview'
+
+const AI_REFERENCE_SNAPSHOTS = [
+	{
+		source: 'llms-full.txt',
+		target: 'ai-reference/llms-full.static.txt',
+	},
+	{
+		source: 'llms.txt',
+		target: 'ai-reference/llms.static.txt',
+	},
+]
+
+async function assertReadableNonEmpty(filePath: string): Promise<void> {
+	await access(filePath, constants.R_OK)
+	const fileStat = await stat(filePath)
+	if (fileStat.size <= 0) {
+		throw new Error(`Bestand is leeg: ${filePath}`)
+	}
+}
+
+async function createAiReferenceSnapshots(publicDir: string): Promise<void> {
+	for (const snapshot of AI_REFERENCE_SNAPSHOTS) {
+		const sourcePath = resolve(publicDir, snapshot.source)
+		const targetPath = resolve(publicDir, snapshot.target)
+
+		await assertReadableNonEmpty(sourcePath)
+		await mkdir(dirname(targetPath), { recursive: true })
+		await copyFile(sourcePath, targetPath)
+	}
+}
 
 export default defineNuxtConfig({
 	modules: [
@@ -83,6 +116,14 @@ export default defineNuxtConfig({
 
 	compatibilityDate: '2026-01-05',
 
+	hooks: {
+		'nitro:init': (nitro) => {
+			nitro.hooks.hook('prerender:done', async () => {
+				await createAiReferenceSnapshots(nitro.options.output.publicDir)
+			})
+		},
+	},
+
 	components: [
 		{
 			path: '~/components',
@@ -136,6 +177,9 @@ export default defineNuxtConfig({
 					// We need runtime access to this var via process.env
 					STUDIO_GITHUB_CLIENT_ID: process.env.STUDIO_GITHUB_CLIENT_ID,
 				},
+				limits: {
+					cpu_ms: 300000, // Increase max cpu time to 5 min due to expensive AI requests
+				},
 			},
 		},
 	},
@@ -186,9 +230,9 @@ export default defineNuxtConfig({
 			repo: 'regional-site-menu',
 			branch: 'main',
 		},
-		media: {
-			external: true,
-		},
+		// media: {
+		// 	external: true,
+		// },
 		auth: {
 			github: {
 				clientId: process.env.STUDIO_GITHUB_CLIENT_ID,
