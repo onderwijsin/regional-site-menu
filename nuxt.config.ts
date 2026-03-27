@@ -205,7 +205,7 @@ export default defineNuxtConfig({
 		},
 		media: {
 			external: true,
-			prefix: 'assets'
+			prefix: '/assets'
 		},
 		auth: {
 			github: {

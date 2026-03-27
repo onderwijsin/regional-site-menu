@@ -20,6 +20,18 @@ export type PdfRenderContext = {
 }
 
 /**
+ * Input shape for PDF document metadata.
+ */
+export type PdfDocumentMetadata = {
+	title: string
+	subject: string
+	author: string
+	creator: string
+	keywords: string[]
+	language?: 'nl'
+}
+
+/**
  * Creates a new PDF rendering context with document instance, layout metrics,
  * and shared color tokens.
  *
@@ -53,6 +65,31 @@ export async function createRenderContext(): Promise<PdfRenderContext> {
 		layout: PDF_LAYOUT,
 		colors: PDF_COLORS
 	}
+}
+
+/**
+ * Applies document-level PDF metadata for better indexing and provenance.
+ *
+ * @param doc - PDF document instance.
+ * @param metadata - Normalized metadata values.
+ * @returns Nothing.
+ */
+export function setPdfDocumentMetadata(doc: jsPDF, metadata: PdfDocumentMetadata): void {
+	const keywords = metadata.keywords
+		.map((keyword) => keyword.trim())
+		.filter((keyword) => keyword.length > 0)
+		.join(', ')
+
+	doc.setDocumentProperties({
+		title: metadata.title.trim(),
+		subject: metadata.subject.trim(),
+		author: metadata.author.trim(),
+		creator: metadata.creator.trim(),
+		keywords
+	})
+
+	doc.setCreationDate(new Date())
+	doc.setLanguage(metadata.language ?? 'nl')
 }
 
 /**

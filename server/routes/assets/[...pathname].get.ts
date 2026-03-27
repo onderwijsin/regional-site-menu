@@ -9,11 +9,9 @@ export default eventHandler(async (event) => {
 	}
 
 	/**
-	 * Nuxt Studio prefixes images with /assets, so that the actual request path by the app
-	 * needs to be /assets/assets/:filename, which is ugly.
-	 * So if the pathname starts with /assets here, slice it!
+	 * Nuxt Studio prefixes images with /assets when they are uploaded. So assets are stored in R2
+	 * is an assets dir. Since pathname no longer contains '/assets' here, we need to prepend it!
 	 */
-	const sanitizedPathname = pathname.startsWith('/assets') ? pathname.slice(7) : pathname
 	setHeader(event, 'Content-Security-Policy', "default-src 'none';")
-	return blob.serve(event, sanitizedPathname)
+	return blob.serve(event, `/assets/${pathname}`)
 })
