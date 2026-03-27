@@ -139,6 +139,14 @@ Use `.example.env` as template.
 - `CLOUDFLARE_R2_BUCKET`
 - `WORKER_NAME`
 
+### Storage Credentials
+
+- `S3_ACCESS_KEY_ID`
+- `S3_SECRET_ACCESS_KEY`
+- `S3_ENDPOINT`
+- `S3_BUCKET` (should be the same as `CLOUDFLARE_R2_BUCKET`)
+- `S3_PUBLIC_URL`
+
 ### Datahub
 
 - `DATAHUB_URL`
@@ -165,7 +173,7 @@ Use `.example.env` as template.
 
 ## Content Management
 
-This project uses [Nuxt Content](https://content.nuxt.com/).
+This project uses [Nuxt Content](https://content.nuxt.com/) for managing and querying content.
 
 ### Collections
 
@@ -187,20 +195,6 @@ Practical implications:
 
 1. Production/staging deployments must expose the `DB` D1 binding.
 2. Local development should provide equivalent bindings through `wrangler.jsonc` and `.env`.
-3. Missing `DB` binding is a real runtime issue for server content queries and should not be
-   ignored.
-
-### R2 asset storage (Nuxt Studio)
-
-Nuxt Studio media uploads are stored externally in a Cloudflare R2 bucket.
-
-Requirements:
-
-1. Cloudflare Worker must expose an R2 binding named `BLOB`.
-2. `CLOUDFLARE_R2_BUCKET` must be configured in environment variables.
-3. Local `wrangler.jsonc` should include matching `r2_buckets` binding config.
-
-Without the `BLOB` binding/bucket config, Studio asset uploads (and related media access) will fail.
 
 ## Nuxt Studio
 
@@ -225,6 +219,20 @@ For the current temporary Cloudflare Workers build workaround (Nuxt Studio + `sh
   repo
 - A valid Github OAuth app must be configured, and the `STUDIO_GITHUB_CLIENT_ID` and
   `STUDIO_GITHUB_CLIENT_SECRET` environment variables must be set.
+
+### R2 asset storage (Nuxt Studio)
+
+Nuxt Studio media uploads are stored externally in a Cloudflare R2 bucket.
+
+Requirements:
+
+1. Cloudflare Worker must expose an R2 binding named `BLOB`.
+2. `CLOUDFLARE_R2_BUCKET` must be configured in environment variables.
+3. Local `wrangler.jsonc` should include matching `r2_buckets` binding config.
+4. Add the various `s3` environment variables (`S3_ACCESS_KEY_ID`, `S3_SECRET_ACCESS_KEY`,
+   `S3_ENDPOINT`, `S3_BUCKET`, `S3_PUBLIC_URL`)
+
+Without the `BLOB` binding/bucket config, Studio asset uploads (and related media access) will fail.
 
 ---
 
