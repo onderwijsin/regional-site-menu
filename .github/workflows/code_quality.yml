@@ -27,6 +27,21 @@ on:
         required: false
         default: pnpm typecheck
         type: string
+      build-before-test:
+        description: 'Whether to build before testing'
+        required: false
+        default: false
+        type: boolean
+      test-command:
+        description: 'Test command to run instead of default'
+        required: false
+        default: pnpm test:unit
+        type: string
+      coverage-command:
+        description: 'Coverage command to run instead of default'
+        required: false
+        default: pnpm test:coverage
+        type: string
       runner:
         description: 'Runner to execute the job on'
         required: false
@@ -72,3 +87,32 @@ jobs:
 
       - name: Typecheck
         run: ${{ inputs.typecheck-command }}
+
+  test:
+    runs-on: ${{ inputs.runner }}
+    if: ${{ github.actor != 'dependabot[bot]' }}
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Setup node, pnpm, GitHub packages authentication and install dependencies
+        uses: ./.github/actions/setup
+        with:
+          gh-packages-token: ${{ secrets.GH_PACKAGES_TOKEN }}
+
+      - name: Build packages before testing
+        if: ${{ inputs.build-command && inputs.build-before-test }}
+        run: ${{ inputs.build-command }}
+
+      - name: Test
+        run: ${{ inputs.test-command }}
+
+      - name: Coverage
+        run: ${{ inputs.coverage-command }}
+
+      - name: Upload coverage artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report-${{ github.run_id }}
+          path: coverage
+          if-no-files-found: ignore

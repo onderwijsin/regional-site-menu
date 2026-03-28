@@ -57,6 +57,12 @@ Reference:
 2. Keep formatting/linting consistent with project config.
 3. Respect Husky hooks unless intentionally bypassed for specific workflows.
 
+## Testing Conventions
+
+1. Use Vitest for unit/integration tests and keep tests close to behavior contracts.
+2. Use `@nuxt/test-utils` for Nuxt runtime tests and auto-import mocking.
+3. Keep external integrations mocked in tests unless explicitly testing network boundaries.
+
 ## Change Management
 
 1. Prefer small, scoped changes.

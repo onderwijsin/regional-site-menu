@@ -1,0 +1,23 @@
+diff --git a/dist/vitest-environment.d.mts b/dist/vitest-environment.d.mts
+index 9ba4b47888f62ed8c951cc5ab536479bfff74ea7..281952bdc892b4d394b96a1c307ed9155290c858 100644
+--- a/dist/vitest-environment.d.mts
++++ b/dist/vitest-environment.d.mts
+@@ -1,4 +1,4 @@
+-import { Environment } from 'vitest/environments';
++import { Environment } from 'vitest/runtime';
+ import { H3Event as H3Event$1 } from 'h3';
+ import { H3Event } from 'h3-next';
+ import { $Fetch } from 'nitropack';
+diff --git a/dist/vitest-environment.mjs b/dist/vitest-environment.mjs
+index bd473170d84a48842efe54e7695c905d129e245b..948836fd82725f27b247a402882fdb677e2d15c1 100644
+--- a/dist/vitest-environment.mjs
++++ b/dist/vitest-environment.mjs
+@@ -1,7 +1,7 @@
+ import { indexedDB } from 'fake-indexeddb';
+ import { joinURL } from 'ufo';
+ import defu from 'defu';
+-import { populateGlobal } from 'vitest/environments';
++import { populateGlobal } from 'vitest/runtime';
+ import { createFetch } from 'ofetch';
+ import { toRouteMatcher, createRouter, exportMatcher } from 'radix3';
+ import { importModule } from 'local-pkg';

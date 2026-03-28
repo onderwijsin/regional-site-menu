@@ -111,10 +111,44 @@ npx wrangler --cwd .output dev
 pnpm lint
 pnpm lint:fix
 pnpm typecheck
+pnpm test:unit
+pnpm test:coverage
 pnpm format:check
 pnpm format:fix
 pnpm analyze
 ```
+
+---
+
+## Testing
+
+This project uses **Vitest** with **@nuxt/test-utils** for logic-focused testing.
+
+Current scope:
+
+1. Unit tests in Node (`tests/unit/**`) for pure composables, schemas, and server logic.
+2. Nuxt runtime tests (`tests/nuxt/**`) for code that depends on Nuxt runtime/auto-imports.
+3. Coverage reporting in CI as artifact/reporting output (no hard threshold gate yet).
+
+Run:
+
+```bash
+pnpm test:unit
+pnpm test:unit:watch
+pnpm test:coverage
+```
+
+Important note:
+
+- A significant part of the current test baseline has been authored with AI assistance.
+- Treat every failing test as a signal to inspect carefully:
+  - verify whether the production behavior changed intentionally
+  - verify whether test assumptions are still valid
+  - avoid blindly changing app logic only to satisfy a potentially stale test
+
+Detailed testing documentation:
+
+- [Testing Guide](./docs/testing/README.md)
 
 ---
 
@@ -277,6 +311,7 @@ Additional technical docs:
 - [Nuxt Content Usage](./docs/content/README.md)
 - [Auditing Feature](./docs/auditing/README.md)
 - [Project Conventions](./docs/conventions/README.md)
+- [Testing](./docs/testing/README.md)
 - [CI/CD](./docs/ci-cd/README.md)
 - [Report PDF Pipeline](./docs/report-pdf/README.md)
 - [Report Composables Notes](./app/composables/report/README.md)
