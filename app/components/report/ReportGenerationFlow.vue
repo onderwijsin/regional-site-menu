@@ -5,6 +5,7 @@ import type { ReportAiInsights } from '~~/schema/reportAi'
 import type { ReportConfig } from '~~/schema/reportConfig'
 import type { Audit, PillarAverage } from '~~/shared/types/audit'
 import type { Pillar } from '~~/shared/types/primitives'
+import type { Ref } from 'vue'
 
 import { useReportGenerationExecution } from '~/composables/report-generation-execution'
 import {
@@ -25,6 +26,7 @@ type ReportGenerationFlowProps = {
 		audits: Audit<ItemsCollectionItem>[]
 	}
 }
+type AiTurnstileAction = 'ai_website_analysis' | 'ai_briefing'
 
 const props = defineProps<ReportGenerationFlowProps>()
 
@@ -32,6 +34,7 @@ const emit = defineEmits<{
 	(e: 'close'): void
 }>()
 
+const runtimeConfig = useRuntimeConfig()
 const form = useTemplateRef('form')
 const stateStore = useStateStore()
 
@@ -95,9 +98,17 @@ const aiInsights = ref<ReportAiInsights>()
 const briefingDraft = ref('')
 const isAiLoading = ref(false)
 const isGeneratingPdf = ref(false)
+const aiTurnstile = ref<{ reset: () => void }>()
+const aiTurnstileToken = ref<string>()
+const aiTurnstileAction = ref<AiTurnstileAction>('ai_website_analysis')
+const isTurnstileEnabled = computed(
+	() => runtimeConfig.public.turnstile?.siteKey?.trim().length > 0
+)
 
 const { generateReport } = useReportGenerator()
-const { generateAiInsights, progress } = useReportAi()
+const { generateAiInsights, progress } = useReportAi({
+	getTurnstileToken: getAiTurnstileToken
+})
 const { trackReportGenerated } = useTracking()
 const confirm = useConfirmDialog()
 const { getIcon } = useIcons()
@@ -227,6 +238,47 @@ async function navigateToHelp() {
 	await navigateTo('/help')
 }
 
+async function getAiTurnstileToken(action: AiTurnstileAction): Promise<string | undefined> {
+	if (!isTurnstileEnabled.value) {
+		return undefined
+	}
+
+	aiTurnstileAction.value = action
+	aiTurnstileToken.value = undefined
+	await nextTick()
+	aiTurnstile.value?.reset()
+
+	return await waitForTurnstileToken(aiTurnstileToken)
+}
+
+async function waitForTurnstileToken(
+	token: Ref<string | undefined>,
+	timeoutMs = 12_000
+): Promise<string> {
+	const immediateToken = token.value?.trim()
+	if (immediateToken) {
+		return immediateToken
+	}
+
+	return await new Promise<string>((resolve, reject) => {
+		const timeoutId = setTimeout(() => {
+			stopWatcher()
+			reject(new Error('Turnstile token timeout'))
+		}, timeoutMs)
+
+		const stopWatcher = watch(token, (nextToken) => {
+			const normalizedToken = nextToken?.trim()
+			if (!normalizedToken) {
+				return
+			}
+
+			clearTimeout(timeoutId)
+			stopWatcher()
+			resolve(normalizedToken)
+		})
+	})
+}
+
 /**
  * Guarded close handler for footer close button and slideover dismiss actions.
  *
@@ -291,6 +343,14 @@ async function handleClose(): Promise<void> {
 		@close:prevent="handleClose"
 	>
 		<template #body>
+			<NuxtTurnstile
+				v-if="isTurnstileEnabled"
+				ref="aiTurnstile"
+				v-model="aiTurnstileToken"
+				:options="{ action: aiTurnstileAction, appearance: 'interaction-only' }"
+				class="pointer-events-none absolute h-0 w-0 overflow-hidden opacity-0"
+			/>
+
 			<UForm
 				v-if="stage === 'config'"
 				ref="form"

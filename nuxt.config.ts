@@ -29,11 +29,20 @@ const isDev = mode === 'dev'
 const isNext = mode === 'next'
 const isLivePreview = mode === 'live-preview'
 const isTest = process.env.NODE_ENV === 'test' || process.env.VITEST === 'true'
+const turnstileSiteKey =
+	process.env.NUXT_PUBLIC_TURNSTILE_SITE_KEY ||
+	process.env.TURNSTILE_SITE_KEY ||
+	(isDev ? '1x00000000000000000000AA' : undefined)
+const turnstileSecretKey =
+	process.env.NUXT_TURNSTILE_SECRET_KEY ||
+	process.env.TURNSTILE_SECRET_KEY ||
+	(isDev ? '1x0000000000000000000000000000000AA' : undefined)
 
 const appModules = [
 	'@nuxt/eslint',
 	'@nuxt/ui',
 	'@nuxt/image',
+	'@nuxtjs/turnstile',
 	'@nuxtjs/plausible',
 	'@pinia/nuxt',
 	'pinia-plugin-persistedstate/nuxt',
@@ -245,8 +254,15 @@ export default defineNuxtConfig({
 		}
 	},
 
+	turnstile: {
+		siteKey: turnstileSiteKey
+	},
+
 	runtimeConfig: {
 		apiToken: process.env.API_TOKEN,
+		turnstile: {
+			secretKey: turnstileSecretKey
+		},
 		cloudflare: {
 			accountId: process.env.CLOUDFLARE_ACCOUNT_ID,
 			apiToken: process.env.CLOUDFLARE_API_TOKEN,
@@ -278,6 +294,9 @@ export default defineNuxtConfig({
 			},
 			contact: {
 				page: NUXT_BEHAVIOR_CONFIG.publicContactPage
+			},
+			turnstile: {
+				siteKey: turnstileSiteKey
 			}
 		}
 	},

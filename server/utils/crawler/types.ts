@@ -7,6 +7,7 @@ export type CrawlWebsiteArgs = {
 	timeoutMs?: number
 	maxConcurrency?: number
 	maxHtmlBytes?: number
+	crawlBudgetMs?: number
 }
 
 export type ParsedHtmlCrawlData = {
@@ -40,6 +41,7 @@ export type CrawlCacheKeyArgs = {
 	timeoutMs: number
 	maxConcurrency: number
 	maxHtmlBytes: number
+	crawlBudgetMs: number
 }
 
 export type UnknownRecord = Record<string, unknown>

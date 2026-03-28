@@ -18,6 +18,10 @@ declare global {
 			 * API
 			 */
 			API_TOKEN: string
+			TURNSTILE_SITE_KEY?: string
+			TURNSTILE_SECRET_KEY?: string
+			NUXT_PUBLIC_TURNSTILE_SITE_KEY?: string
+			NUXT_TURNSTILE_SECRET_KEY?: string
 
 			/**
 			 * Cloudflare

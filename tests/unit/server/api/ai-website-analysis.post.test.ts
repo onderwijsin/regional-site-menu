@@ -28,6 +28,7 @@ async function loadHandler(
 			output_parsed: createWebsiteAnalysisOutput()
 		})
 	const createImpl = options.createImpl ?? vi.fn()
+	const assertTurnstileTokenMock = vi.fn().mockResolvedValue(undefined)
 	const crawlPages = options.crawlPages ?? [
 		{ url: 'https://example.com', title: 'Home', excerpt: 'Welkom op de site' },
 		{ url: 'https://example.com/contact', title: 'Contact', excerpt: '' }
@@ -71,6 +72,9 @@ async function loadHandler(
 	vi.doMock('~~/server/utils/ai/reference', () => ({
 		fetchLlmsFullReferenceDocument: vi.fn(async () => 'LLMS reference')
 	}))
+	vi.doMock('~~/server/utils/security/turnstile', () => ({
+		assertTurnstileToken: assertTurnstileTokenMock
+	}))
 	vi.doMock('~~/server/utils/crawler/website', () => ({
 		crawlWebsiteForAnalysis: vi.fn(async () => crawlPages)
 	}))
@@ -83,13 +87,14 @@ async function loadHandler(
 	return {
 		handler: module.default,
 		parseImpl,
-		createImpl
+		createImpl,
+		assertTurnstileTokenMock
 	}
 }
 
 describe('POST /api/ai/website-analysis', () => {
 	it('returns structured analysis plus deterministic evidence URLs', async () => {
-		const { handler, parseImpl } = await loadHandler()
+		const { handler, parseImpl, assertTurnstileTokenMock } = await loadHandler()
 
 		const result = await handler({} as never)
 
@@ -98,6 +103,7 @@ describe('POST /api/ai/website-analysis', () => {
 		expect(result.analysedPages).toEqual([{ url: 'https://example.com', title: 'Home' }])
 		expect(result.usedSources).toEqual(['https://example.com'])
 		expect(parseImpl).toHaveBeenCalledTimes(1)
+		expect(assertTurnstileTokenMock).toHaveBeenCalledWith({}, 'ai_website_analysis')
 	})
 
 	it('throws when crawl returns no pages with evidence text', async () => {

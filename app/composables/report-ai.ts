@@ -14,6 +14,7 @@ import {
 import { ReportGenerationError } from './report/errors'
 
 type AiProgressItemStatus = 'running' | 'completed'
+type TurnstileAction = 'ai_briefing' | 'ai_website_analysis'
 
 export type AiProgressItem = {
 	id: string
@@ -184,9 +185,17 @@ function createBriefingPayload(
 	})
 }
 
-export const useReportAi = () => {
+export const useReportAi = (options?: {
+	getTurnstileToken?: (action: TurnstileAction) => Promise<string | undefined> // eslint-disable-line no-unused-vars
+}) => {
 	const progress = ref<AiProgressItem[]>([])
 	const { trackAiInsight } = useTracking()
+	const getTurnstileToken =
+		options?.getTurnstileToken ??
+		(async (action: TurnstileAction): Promise<string | undefined> => {
+			void action
+			return undefined
+		})
 
 	/**
 	 * Adds one progress item in running state.
@@ -380,13 +389,15 @@ export const useReportAi = () => {
 		websiteAnalysisContext?: string
 	): Promise<string> {
 		const payload = createBriefingPayload(config, data, websiteAnalysisContext)
+		const turnstileToken = await getTurnstileToken('ai_briefing')
 
 		// Track only real endpoint usage, not UI toggle state.
 		trackAiInsight({ tool: 'briefing' })
 
 		const response = await $fetch('/api/ai/briefing', {
 			method: 'POST',
-			body: payload
+			body: payload,
+			headers: turnstileToken ? { 'x-turnstile-token': turnstileToken } : undefined
 		})
 		const parsed = AiBriefingResponseSchema.parse(response)
 
@@ -407,13 +418,15 @@ export const useReportAi = () => {
 			region: config.region,
 			maxPages: config.maxPages
 		})
+		const turnstileToken = await getTurnstileToken('ai_website_analysis')
 
 		// Track only real endpoint usage, not UI toggle state.
 		trackAiInsight({ tool: 'website_analysis' })
 
 		const response = await $fetch('/api/ai/website-analysis', {
 			method: 'POST',
-			body: payload
+			body: payload,
+			headers: turnstileToken ? { 'x-turnstile-token': turnstileToken } : undefined
 		})
 		const parsed = AiWebsiteAnalysisResponseSchema.parse(response)
 

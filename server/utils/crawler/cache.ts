@@ -18,7 +18,8 @@ export function createCrawlCacheKey(args: CrawlCacheKeyArgs): string {
 		args.maxQueuedUrls,
 		args.timeoutMs,
 		args.maxConcurrency,
-		args.maxHtmlBytes
+		args.maxHtmlBytes,
+		args.crawlBudgetMs
 	].join(':')
 
 	return [

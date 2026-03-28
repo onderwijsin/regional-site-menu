@@ -1,4 +1,4 @@
-import { CRAWLER_CONFIG } from '~~/config/ai'
+import { AI_WEBSITE_ANALYSIS_CONFIG, CRAWLER_CONFIG } from '~~/config/ai'
 import { crawlWebsiteForAnalysis } from '~~/server/utils/crawler/website'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
@@ -64,7 +64,8 @@ describe('crawler/website', () => {
 			maxQueuedUrls: CRAWLER_CONFIG.defaultMaxQueuedUrls,
 			timeoutMs: CRAWLER_CONFIG.defaultTimeoutMs,
 			maxConcurrency: CRAWLER_CONFIG.maxConcurrency,
-			maxHtmlBytes: CRAWLER_CONFIG.defaultMaxHtmlBytes
+			maxHtmlBytes: CRAWLER_CONFIG.defaultMaxHtmlBytes,
+			crawlBudgetMs: AI_WEBSITE_ANALYSIS_CONFIG.crawlBudgetMs
 		})
 		expect(crawlerDeps.fetchSitemapUrlsMock).not.toHaveBeenCalled()
 		expect(crawlerDeps.fetchHtmlPageMock).not.toHaveBeenCalled()
@@ -218,5 +219,51 @@ describe('crawler/website', () => {
 		expect(result).toEqual([])
 		expect(crawlerDeps.parseHtmlForCrawlMock).not.toHaveBeenCalled()
 		expect(crawlerDeps.setCachedCrawlPagesMock).toHaveBeenCalledWith('crawl-cache-key', [])
+	})
+
+	it('stops crawling when crawl budget is exhausted', async () => {
+		let nowMs = 0
+		vi.spyOn(Date, 'now').mockImplementation(() => nowMs)
+
+		crawlerDeps.fetchHtmlPageMock.mockImplementation(
+			async (url: string): Promise<{ html: string; finalUrl: string } | null> => {
+				if (url === 'https://example.com/start') {
+					nowMs = 10
+					return { html: 'ENTRY', finalUrl: url }
+				}
+
+				if (url === 'https://example.com/next') {
+					return { html: 'NEXT', finalUrl: url }
+				}
+
+				return null
+			}
+		)
+
+		crawlerDeps.parseHtmlForCrawlMock.mockImplementation((html: string) => {
+			if (html === 'ENTRY') {
+				return {
+					excerpt: 'Start',
+					links: ['https://example.com/next']
+				}
+			}
+
+			return {
+				excerpt: 'Volgende pagina',
+				links: []
+			}
+		})
+
+		const result = await crawlWebsiteForAnalysis({
+			startUrl: 'https://example.com/start',
+			allowedDomains: ['example.com'],
+			maxPages: 5,
+			crawlBudgetMs: 5
+		})
+
+		expect(result).toEqual([
+			{ url: 'https://example.com/start', excerpt: 'Start', title: undefined }
+		])
+		expect(crawlerDeps.fetchHtmlPageMock).toHaveBeenCalledTimes(1)
 	})
 })

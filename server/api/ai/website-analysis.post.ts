@@ -22,6 +22,7 @@ import {
 } from '../../utils/ai/response'
 import { countWords, sanitizeAiMarkdown } from '../../utils/ai/text'
 import { crawlWebsiteForAnalysis } from '../../utils/crawler/website'
+import { assertTurnstileToken } from '../../utils/security/turnstile'
 
 /**
  * Controller for `POST /api/ai/website-analysis`.
@@ -40,6 +41,8 @@ import { crawlWebsiteForAnalysis } from '../../utils/crawler/website'
  * @returns Analysis markdown + traceability metadata.
  */
 export default defineEventHandler(async (event) => {
+	await assertTurnstileToken(event, 'ai_website_analysis')
+
 	// 1) Boundary validation.
 	const body = await readBody(event)
 	const input = AiWebsiteAnalysisRequestSchema.parse(body)

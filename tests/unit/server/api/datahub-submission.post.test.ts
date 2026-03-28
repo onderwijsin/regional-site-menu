@@ -3,6 +3,7 @@ import { describe, expect, it, vi } from 'vitest'
 
 async function loadHandler() {
 	vi.resetModules()
+	const assertTurnstileTokenMock = vi.fn().mockResolvedValue(undefined)
 	vi.stubGlobal('defineEventHandler', (handler: unknown) => handler)
 	vi.stubGlobal('createError', (input: { statusCode: number; statusMessage: string }) => {
 		const error = new Error(input.statusMessage) as Error & {
@@ -13,9 +14,15 @@ async function loadHandler() {
 		error.statusMessage = input.statusMessage
 		return error
 	})
+	vi.doMock('~~/server/utils/security/turnstile', () => ({
+		assertTurnstileToken: assertTurnstileTokenMock
+	}))
 
 	const module = await import('~~/server/api/datahub/submission.post')
-	return module.default
+	return {
+		handler: module.default,
+		assertTurnstileTokenMock
+	}
 }
 
 describe('POST /api/datahub/submission', () => {
@@ -42,7 +49,7 @@ describe('POST /api/datahub/submission', () => {
 		vi.stubGlobal('useRuntimeConfig', useRuntimeConfig)
 		vi.stubGlobal('$fetch', fetchSpy)
 
-		const handler = await loadHandler()
+		const { handler, assertTurnstileTokenMock } = await loadHandler()
 		await expect(handler({})).resolves.toEqual({ success: true })
 
 		expect(fetchSpy).toHaveBeenCalledWith('https://datahub.example/items/submissions', {
@@ -58,6 +65,7 @@ describe('POST /api/datahub/submission', () => {
 				fields: [...DATAHUB_CONFIG.responseFields]
 			}
 		})
+		expect(assertTurnstileTokenMock).toHaveBeenCalledWith({}, 'suggestion_submission')
 	})
 
 	it('throws when runtime config misses DATAHUB_URL', async () => {
@@ -75,7 +83,7 @@ describe('POST /api/datahub/submission', () => {
 		vi.stubGlobal('useRuntimeConfig', vi.fn().mockReturnValue({ datahub: { token: 'token' } }))
 		vi.stubGlobal('$fetch', vi.fn())
 
-		const handler = await loadHandler()
+		const { handler } = await loadHandler()
 		await expect(handler({})).rejects.toMatchObject({
 			statusCode: 500,
 			statusMessage: 'DATAHUB_URL ontbreekt in runtimeConfig'
@@ -96,7 +104,7 @@ describe('POST /api/datahub/submission', () => {
 		)
 		vi.stubGlobal('$fetch', fetchSpy)
 
-		const handler = await loadHandler()
+		const { handler } = await loadHandler()
 		await expect(handler({})).rejects.toBeTruthy()
 		expect(fetchSpy).not.toHaveBeenCalled()
 	})

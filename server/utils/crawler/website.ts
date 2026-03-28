@@ -1,6 +1,6 @@
 import type { CrawledWebsitePage, CrawlWebsiteArgs } from './types'
 
-import { CRAWLER_CONFIG } from '@ai'
+import { AI_WEBSITE_ANALYSIS_CONFIG, CRAWLER_CONFIG } from '@ai'
 import pLimit from 'p-limit'
 
 import { createCrawlCacheKey, getCachedCrawlPages, setCachedCrawlPages } from './cache'
@@ -31,6 +31,7 @@ export async function crawlWebsiteForAnalysis(
 	const timeoutMs = args.timeoutMs ?? CRAWLER_CONFIG.defaultTimeoutMs
 	const maxConcurrency = clampConcurrency(args.maxConcurrency)
 	const maxHtmlBytes = args.maxHtmlBytes ?? CRAWLER_CONFIG.defaultMaxHtmlBytes
+	const crawlBudgetMs = args.crawlBudgetMs ?? AI_WEBSITE_ANALYSIS_CONFIG.crawlBudgetMs
 
 	const entryUrl = normalizeUrl(args.startUrl)
 	const normalizedAllowedDomains = [
@@ -44,7 +45,8 @@ export async function crawlWebsiteForAnalysis(
 		maxQueuedUrls,
 		timeoutMs,
 		maxConcurrency,
-		maxHtmlBytes
+		maxHtmlBytes,
+		crawlBudgetMs
 	})
 
 	const cachedPages = await getCachedCrawlPages(crawlCacheKey)
@@ -57,6 +59,9 @@ export async function crawlWebsiteForAnalysis(
 	const visited = new Set<string>()
 	const pages: CrawledWebsitePage[] = []
 	const crawlLimit = pLimit(maxConcurrency)
+	const crawlStartedAt = Date.now()
+
+	const isBudgetExceeded = (): boolean => Date.now() - crawlStartedAt >= crawlBudgetMs
 
 	const enqueueUrl = (url: string): void => {
 		if (queue.length >= maxQueuedUrls || queued.has(url) || visited.has(url)) {
@@ -75,16 +80,25 @@ export async function crawlWebsiteForAnalysis(
 		maxConcurrency
 	)
 	for (const sitemapUrl of sitemapUrls) {
+		if (isBudgetExceeded()) {
+			break
+		}
+
 		enqueueUrl(sitemapUrl)
 	}
 
 	while (queue.length > 0 && pages.length < args.maxPages) {
+		if (isBudgetExceeded()) {
+			break
+		}
+
 		const batch: string[] = []
 
 		while (
 			batch.length < maxConcurrency &&
 			queue.length > 0 &&
-			pages.length + batch.length < args.maxPages
+			pages.length + batch.length < args.maxPages &&
+			!isBudgetExceeded()
 		) {
 			const currentUrl = queue.shift()
 			if (!currentUrl) {
@@ -125,11 +139,15 @@ export async function crawlWebsiteForAnalysis(
 				pages.push(result.page)
 			}
 
-			if (pages.length >= args.maxPages) {
+			if (pages.length >= args.maxPages || isBudgetExceeded()) {
 				continue
 			}
 
 			for (const link of result.links) {
+				if (isBudgetExceeded()) {
+					break
+				}
+
 				enqueueUrl(link)
 			}
 		}
