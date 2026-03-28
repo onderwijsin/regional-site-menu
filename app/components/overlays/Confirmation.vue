@@ -21,6 +21,29 @@ withDefaults(defineProps<ConfirmDialogProps>(), {
 const emits = defineEmits<{
 	close: [value: boolean]
 }>()
+
+type ConfirmAction = Exclude<ConfirmDialogProps['actions'], undefined>[number]
+
+function handleAction(action: ConfirmAction | undefined, event: MouseEvent) {
+	if (!action) {
+		return
+	}
+
+	if ('mode' in action) {
+		emits('close', action.mode === 'confirm')
+		return
+	}
+
+	const { onClick } = action
+	if (Array.isArray(onClick)) {
+		for (const handler of onClick) {
+			handler(event)
+		}
+		return
+	}
+
+	onClick?.(event)
+}
 </script>
 
 <template>
@@ -38,9 +61,7 @@ const emits = defineEmits<{
 				:color="action.mode === 'confirm' ? (color ?? action.color) : action.color"
 				:variant="action.variant"
 				:autofocus="action.mode === 'confirm'"
-				@click="
-					'mode' in action ? emits('close', action.mode === 'confirm') : action.onClick
-				"
+				@click="handleAction(action, $event)"
 			/>
 		</template>
 	</UModal>

@@ -23,8 +23,6 @@ Primary orchestration flow:
   - concrete report pages and section order orchestration
 - `markdown/*`
   - markdown parse/measure/render layer used in notes/comments/AI sections
-- `summaries.ts`
-  - helper logic for score summaries
 - `errors.ts`
   - report generation error contracts
 

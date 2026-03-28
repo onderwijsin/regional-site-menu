@@ -11,15 +11,23 @@ import { app } from './config/head'
 import { siteDescription, siteTitle } from './config/indentity'
 import { robots } from './config/robots'
 
+const SUPPORTED_MODES = ['dev', 'prod', 'preview', 'next', 'live-preview'] as const
+
+function resolveMode(value: string | undefined): Mode {
+	if (!value) {
+		return 'dev'
+	}
+
+	return (SUPPORTED_MODES as readonly string[]).includes(value) ? (value as Mode) : 'dev'
+}
+
+const mode = resolveMode(process.env.MODE)
 const isDebug = process.env.DEBUG === 'true'
-const isProd = process.env.MODE === 'prod'
-const isPreview =
-	process.env.MODE === 'preview' ||
-	process.env.MODE === 'next' ||
-	process.env.MODE === 'live-preview'
-const isDev = process.env.MODE === 'dev'
-const isNext = process.env.MODE === 'next'
-const isLivePreview = process.env.MODE === 'live-preview'
+const isProd = mode === 'prod'
+const isPreview = mode === 'preview' || mode === 'next' || mode === 'live-preview'
+const isDev = mode === 'dev'
+const isNext = mode === 'next'
+const isLivePreview = mode === 'live-preview'
 const isTest = process.env.NODE_ENV === 'test' || process.env.VITEST === 'true'
 
 const appModules = [
@@ -263,7 +271,7 @@ export default defineNuxtConfig({
 				isNext,
 				isDebug,
 				isLivePreview,
-				value: process.env.MODE as Mode
+				value: mode
 			},
 			tracking: {
 				disabled: process.env.DISABLE_TRACKING === 'true'
