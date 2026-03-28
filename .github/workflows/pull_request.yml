@@ -25,8 +25,11 @@ jobs:
       build-command: pnpm nuxt:prepare
       build-before-lint: true
       build-before-typecheck: false
+      build-before-test: false
       typecheck-command: pnpm typecheck
       lint-command: pnpm lint
+      test-command: pnpm test:unit
+      coverage-command: pnpm test:coverage
     secrets:
       GH_PACKAGES_TOKEN: ${{ secrets.GH_PACKAGES_TOKEN }}
 

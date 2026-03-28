@@ -31,6 +31,7 @@ Behavior:
 2. Runs reusable code quality workflow:
    - lint
    - typecheck
+   - unit tests + coverage artifact
 3. If successful, runs preview deployment via reusable worker deploy workflow.
 4. Uses concurrency cancellation per PR branch.
 
@@ -44,7 +45,7 @@ Behavior:
 
 - reusable workflow (`workflow_call`)
 - supports configurable build/lint/typecheck commands
-- runs `lint` and `typecheck` as separate jobs
+- runs `lint`, `typecheck`, and `test` as separate jobs
 
 ## Preview / Environment Deployments
 

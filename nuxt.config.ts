@@ -20,23 +20,28 @@ const isPreview =
 const isDev = process.env.MODE === 'dev'
 const isNext = process.env.MODE === 'next'
 const isLivePreview = process.env.MODE === 'live-preview'
+const isTest = process.env.NODE_ENV === 'test' || process.env.VITEST === 'true'
+
+const appModules = [
+	'@nuxt/eslint',
+	'@nuxt/ui',
+	'@nuxt/image',
+	'@nuxtjs/plausible',
+	'@pinia/nuxt',
+	'pinia-plugin-persistedstate/nuxt',
+	'@vueuse/nuxt',
+	'@nuxthub/core',
+	'nuxt-site-config',
+	'@nuxtjs/robots',
+	'@nuxt/content',
+	'nuxt-llms',
+	'nuxt-studio'
+]
+
+const testModules = ['@pinia/nuxt', 'pinia-plugin-persistedstate/nuxt', '@vueuse/nuxt']
 
 export default defineNuxtConfig({
-	modules: [
-		'@nuxt/eslint',
-		'@nuxt/ui',
-		'@nuxt/image',
-		'@nuxtjs/plausible',
-		'@pinia/nuxt',
-		'pinia-plugin-persistedstate/nuxt',
-		'@vueuse/nuxt',
-		'@nuxthub/core',
-		'nuxt-site-config',
-		'@nuxtjs/robots',
-		'@nuxt/content',
-		'nuxt-llms',
-		'nuxt-studio'
-	],
+	modules: isTest ? testModules : appModules,
 
 	devtools: {
 		enabled: true
