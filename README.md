@@ -236,12 +236,11 @@ To make the content managable outside of the codebase, the application leverages
 [Nuxt Studio](https://nuxt.studio/) module. This module integrates seamlessly with Nuxt Content and
 provides a visual editing experience for the various content collections.
 
-Editor can log in to the studio with their Github Account. Any changes made in the content files (or
-the media) are directly committed to the `main` branch.
+Editor can log in to the studio with their Github Account. Any changes made in the content files are directly committed to the `main` branch.
 
-The ci/cd pipeline will notice a change to either the `public` or `content` directories and trigger
-a rebuild. (This is the only case where a production deployment triggers automatically. In all other
-cases, a manual deploy is required).
+The ci/cd pipeline will notice a change to the `content` directory and trigger a rebuild. (This is
+the only case where a production deployment triggers automatically. In all other cases, a manual
+deploy is required).
 
 For the current temporary Cloudflare Workers build workaround (Nuxt Studio + `sharp`), see:
 
@@ -297,6 +296,13 @@ The app includes a partial AI integration for report generation:
 - staged client orchestration before PDF generation
 - prompt management through Nuxt Content (`content/_prompts/*`)
 - PDF sections for AI output
+
+### AI route rate limiting (Cloudflare)
+
+At infrastructure level, expensive AI routes are protected with Cloudflare Security Rules:
+
+- limit: a single IP can send at most `4` requests per `10` seconds to the AI endpoints
+- enforcement: if exceeded, requests from that IP are blocked for `10` seconds
 
 Detailed integration documentation:
 
