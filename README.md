@@ -202,12 +202,11 @@ To make the content managable outside of the codebase, the application leverages
 [Nuxt Studio](https://nuxt.studio/) module. This module integrates seamlessly with Nuxt Content and
 provides a visual editing experience for the various content collections.
 
-Editor can log in to the studio with their Github Account. Any changes made in the content files (or
-the media) are directly committed to the `main` branch.
+Editor can log in to the studio with their Github Account. Any changes made in the content files are directly committed to the `main` branch.
 
-The ci/cd pipeline will notice a change to either the `public` or `content` directories and trigger
-a rebuild. (This is the only case where a production deployment triggers automatically. In all other
-cases, a manual deploy is required).
+The ci/cd pipeline will notice a change to the `content` directory and trigger a rebuild. (This is
+the only case where a production deployment triggers automatically. In all other cases, a manual
+deploy is required).
 
 For the current temporary Cloudflare Workers build workaround (Nuxt Studio + `sharp`), see:
 
