@@ -264,6 +264,13 @@ The app includes a partial AI integration for report generation:
 - prompt management through Nuxt Content (`content/_prompts/*`)
 - PDF sections for AI output
 
+### AI route rate limiting (Cloudflare)
+
+At infrastructure level, expensive AI routes are protected with Cloudflare Security Rules:
+
+- limit: a single IP can send at most `4` requests per `10` seconds to the AI endpoints
+- enforcement: if exceeded, requests from that IP are blocked for `10` seconds
+
 Detailed integration documentation:
 
 - [AI Integration README](./docs/ai-integration/README.md)
