@@ -37,8 +37,6 @@ jobs:
     outputs:
       content_changes:
         ${{ steps.filter.outputs.content_changes || steps.nonpush.outputs.content_changes }}
-      public_changes:
-        ${{ steps.filter.outputs.public_changes || steps.nonpush.outputs.public_changes }}
       other_changes:
         ${{ steps.filter.outputs.other_changes || steps.nonpush.outputs.other_changes }}
     steps:
@@ -59,12 +57,9 @@ jobs:
           filters: |
             content_changes:
               - 'content/**'
-            public_changes:
-              - 'public/**'
             other_changes:
               - '**'
               - '!content/**'
-              - '!public/**'
 
       - name: Set defaults for manual runs
         id: nonpush
@@ -72,7 +67,6 @@ jobs:
         shell: bash
         run: |
           echo "content_changes=true" >> "$GITHUB_OUTPUT"
-          echo "public_changes=true" >> "$GITHUB_OUTPUT"
           echo "other_changes=false" >> "$GITHUB_OUTPUT"
 
   release:
@@ -97,10 +91,7 @@ jobs:
         || github.ref == 'refs/heads/next'
         || (
           github.ref == 'refs/heads/main'
-          && (
-            needs.changes.outputs.content_changes == 'true'
-            || needs.changes.outputs.public_changes == 'true'
-          )
+          && needs.changes.outputs.content_changes == 'true'
           && needs.changes.outputs.other_changes == 'false'
         )
       }}
