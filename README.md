@@ -151,6 +151,7 @@ Detailed testing documentation:
 
 - [Testing Guide](./docs/testing/README.md)
 - [Turnstile Integration](./docs/turnstile/README.md)
+- [Route Guard](./docs/route-guard/README.md)
 
 ---
 

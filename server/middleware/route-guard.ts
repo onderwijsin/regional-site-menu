@@ -1,3 +1,4 @@
+import { isAdmin } from '../utils/security/admin'
 import { evaluateProtectedPostRequest } from '../utils/security/request-guard'
 
 /**
@@ -9,6 +10,10 @@ import { evaluateProtectedPostRequest } from '../utils/security/request-guard'
 export default defineEventHandler((event) => {
 	const method = event.node.req.method?.toUpperCase()
 	if (method !== 'POST') {
+		return
+	}
+
+	if (isAdmin(event)) {
 		return
 	}
 

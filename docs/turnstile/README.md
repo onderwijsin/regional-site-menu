@@ -84,3 +84,7 @@ Keep these test suites in sync with any Turnstile-related changes:
 - [`tests/unit/server/utils/security/turnstile.test.ts`](../../tests/unit/server/utils/security/turnstile.test.ts)
 - [`tests/nuxt/composables/turnstile.test.ts`](../../tests/nuxt/composables/turnstile.test.ts)
 - [`tests/nuxt/composables/report-generation-execution.test.ts`](../../tests/nuxt/composables/report-generation-execution.test.ts)
+
+Related:
+
+- [Route Guard](../route-guard/README.md)
