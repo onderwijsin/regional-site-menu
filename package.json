@@ -65,6 +65,7 @@
 		"defu": "catalog:",
 		"eslint": "catalog:",
 		"eslint-config-prettier": "catalog:",
+		"eslint-plugin-jsdoc": "catalog:",
 		"fast-xml-parser": "catalog:",
 		"fuse.js": "catalog:",
 		"husky": "catalog:",

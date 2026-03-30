@@ -5,6 +5,12 @@ type SuggestionProps = {
 	description?: string
 }
 
+/**
+ * Creates open/close handlers for the suggestion slideover.
+ *
+ * @param props - Optional title/description shown in the suggestion overlay.
+ * @returns Overlay control methods.
+ */
 export const useSuggestion = (props?: SuggestionProps) => {
 	const overlay = useOverlay()
 

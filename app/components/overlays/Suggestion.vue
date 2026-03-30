@@ -1,16 +1,24 @@
 <script lang="ts" setup>
 import type { FormSubmitEvent } from '@nuxt/ui'
 import type { Submission } from '@schema/submission'
-import type { Ref } from 'vue'
 
-import { SUGGESTION_FORM_CONFIG } from '@constants'
+import { SECURITY_HEADERS, SUGGESTION_FORM_CONFIG } from '@constants'
 import { SubmissionSchema } from '@schema/submission'
 import { GOALS, PILLARS } from '~/composables/content-taxonomy'
 
 const toast = useToast()
 const form = useTemplateRef('form')
 const { getIcon } = useIcons()
-const runtimeConfig = useRuntimeConfig()
+const turnstile = ref<{ reset: () => void }>()
+const {
+	token: turnstileToken,
+	isEnabled: isTurnstileEnabled,
+	getTokenWithRetry,
+	isReady,
+	reset: resetTurnstile,
+	showPendingHint,
+	showMissingTokenErrorHint
+} = useTurnstile()
 
 const emit = defineEmits<{
 	(e: 'close'): void
@@ -51,22 +59,25 @@ const categoryOptions: { label: string; value: Submission['category'] }[] = [
 ]
 
 const isSubmitting = ref(false)
-const turnstileToken = ref<string>()
-const turnstile = ref<{ reset: () => void }>()
-const isTurnstileEnabled = computed(
-	() => runtimeConfig.public.turnstile?.siteKey?.trim().length > 0
-)
 
 async function onSubmit(event: FormSubmitEvent<Submission>) {
 	const formData = event.data
 	isSubmitting.value = true
 	try {
-		const token = await getSuggestionTurnstileToken()
+		if (!isReady()) {
+			showPendingHint()
+		}
+
+		const token = await getTokenWithRetry()
+		if (isTurnstileEnabled.value && !token) {
+			showMissingTokenErrorHint()
+			return
+		}
 
 		await $fetch('/api/datahub/submission', {
 			method: 'POST',
 			body: formData,
-			headers: token ? { 'x-turnstile-token': token } : undefined
+			headers: token ? { [SECURITY_HEADERS.turnstileToken]: token } : undefined
 		})
 		toast.add({
 			title: 'Gelukt!',
@@ -87,51 +98,8 @@ async function onSubmit(event: FormSubmitEvent<Submission>) {
 		})
 	} finally {
 		isSubmitting.value = false
-		if (isTurnstileEnabled.value) {
-			turnstileToken.value = undefined
-			turnstile.value?.reset()
-		}
+		resetTurnstile(turnstile.value)
 	}
-}
-
-async function getSuggestionTurnstileToken(): Promise<string | undefined> {
-	if (!isTurnstileEnabled.value) {
-		return undefined
-	}
-
-	turnstileToken.value = undefined
-	await nextTick()
-	turnstile.value?.reset()
-
-	return await waitForTurnstileToken(turnstileToken)
-}
-
-async function waitForTurnstileToken(
-	token: Ref<string | undefined>,
-	timeoutMs = 12_000
-): Promise<string> {
-	const immediateToken = token.value?.trim()
-	if (immediateToken) {
-		return immediateToken
-	}
-
-	return await new Promise<string>((resolve, reject) => {
-		const timeoutId = setTimeout(() => {
-			stopWatcher()
-			reject(new Error('Turnstile token timeout'))
-		}, timeoutMs)
-
-		const stopWatcher = watch(token, (nextToken) => {
-			const normalizedToken = nextToken?.trim()
-			if (!normalizedToken) {
-				return
-			}
-
-			clearTimeout(timeoutId)
-			stopWatcher()
-			resolve(normalizedToken)
-		})
-	})
 }
 </script>
 

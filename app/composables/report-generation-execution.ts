@@ -35,6 +35,7 @@ type ReportGenerationExecutionArgs = {
 	generateReport: GenerateReportFn
 	generateAiInsights: GenerateAiInsightsFn
 	trackReportGenerated: TrackReportGeneratedFn
+	beforeStartAiGeneration?: () => Promise<boolean>
 	onClose: () => void
 }
 
@@ -181,6 +182,11 @@ export function useReportGenerationExecution(args: ReportGenerationExecutionArgs
 					showGenerationErrorToast(error)
 				}
 
+				return
+			}
+
+			const canStartAiGeneration = (await args.beforeStartAiGeneration?.()) ?? true
+			if (!canStartAiGeneration) {
 				return
 			}
 

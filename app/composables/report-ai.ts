@@ -3,6 +3,7 @@ import type { ReportConfig } from '~~/schema/reportConfig'
 import type { ReportData } from './report/types'
 
 import { REPORT_AI_PROGRESS_CONFIG } from '@ai'
+import { SECURITY_HEADERS } from '@constants'
 import {
 	AI_WEBSITE_ANALYSIS_DEFAULT_PAGES,
 	AiBriefingRequestSchema,
@@ -14,7 +15,6 @@ import {
 import { ReportGenerationError } from './report/errors'
 
 type AiProgressItemStatus = 'running' | 'completed'
-type TurnstileAction = 'ai_briefing' | 'ai_website_analysis'
 
 export type AiProgressItem = {
 	id: string
@@ -185,15 +185,26 @@ function createBriefingPayload(
 	})
 }
 
+/**
+ * Provides report AI actions and staged progress state for UI feedback.
+ *
+ * @param options - Optional hooks for Turnstile token retrieval and consume lifecycle.
+ * @returns AI generation actions, progress state, and progress reset helper.
+ */
 export const useReportAi = (options?: {
-	getTurnstileToken?: (action: TurnstileAction) => Promise<string | undefined> // eslint-disable-line no-unused-vars
+	getTurnstileToken?: () => Promise<string | undefined>
+	onTurnstileConsumed?: () => void
 }) => {
 	const progress = ref<AiProgressItem[]>([])
 	const { trackAiInsight } = useTracking()
+
+	/**
+	 * Retrieves the Turnstile token for the current request.
+	 * @returns Turnstile token or undefined if not available.
+	 */
 	const getTurnstileToken =
 		options?.getTurnstileToken ??
-		(async (action: TurnstileAction): Promise<string | undefined> => {
-			void action
+		(async (): Promise<string | undefined> => {
 			return undefined
 		})
 
@@ -389,19 +400,27 @@ export const useReportAi = (options?: {
 		websiteAnalysisContext?: string
 	): Promise<string> {
 		const payload = createBriefingPayload(config, data, websiteAnalysisContext)
-		const turnstileToken = await getTurnstileToken('ai_briefing')
+		const turnstileToken = await getTurnstileToken()
 
 		// Track only real endpoint usage, not UI toggle state.
 		trackAiInsight({ tool: 'briefing' })
 
-		const response = await $fetch('/api/ai/briefing', {
-			method: 'POST',
-			body: payload,
-			headers: turnstileToken ? { 'x-turnstile-token': turnstileToken } : undefined
-		})
-		const parsed = AiBriefingResponseSchema.parse(response)
+		try {
+			const response = await $fetch('/api/ai/briefing', {
+				method: 'POST',
+				body: payload,
+				headers: turnstileToken
+					? { [SECURITY_HEADERS.turnstileToken]: turnstileToken }
+					: undefined
+			})
+			const parsed = AiBriefingResponseSchema.parse(response)
 
-		return parsed.briefing
+			return parsed.briefing
+		} finally {
+			if (turnstileToken) {
+				options?.onTurnstileConsumed?.()
+			}
+		}
 	}
 
 	/**
@@ -418,24 +437,32 @@ export const useReportAi = (options?: {
 			region: config.region,
 			maxPages: config.maxPages
 		})
-		const turnstileToken = await getTurnstileToken('ai_website_analysis')
+		const turnstileToken = await getTurnstileToken()
 
 		// Track only real endpoint usage, not UI toggle state.
 		trackAiInsight({ tool: 'website_analysis' })
 
-		const response = await $fetch('/api/ai/website-analysis', {
-			method: 'POST',
-			body: payload,
-			headers: turnstileToken ? { 'x-turnstile-token': turnstileToken } : undefined
-		})
-		const parsed = AiWebsiteAnalysisResponseSchema.parse(response)
+		try {
+			const response = await $fetch('/api/ai/website-analysis', {
+				method: 'POST',
+				body: payload,
+				headers: turnstileToken
+					? { [SECURITY_HEADERS.turnstileToken]: turnstileToken }
+					: undefined
+			})
+			const parsed = AiWebsiteAnalysisResponseSchema.parse(response)
 
-		// Debug visibility in browser for prompt/result tuning.
-		if (import.meta.client) {
-			console.info('[AI] website-analysis result', parsed)
+			// Debug visibility in browser for prompt/result tuning.
+			if (import.meta.client) {
+				console.info('[AI] website-analysis result', parsed)
+			}
+
+			return parsed
+		} finally {
+			if (turnstileToken) {
+				options?.onTurnstileConsumed?.()
+			}
 		}
-
-		return parsed
 	}
 
 	return {

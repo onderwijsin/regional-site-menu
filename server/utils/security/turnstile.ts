@@ -1,5 +1,9 @@
 import type { H3Event } from 'h3'
 
+import { SECURITY_HEADERS } from '@constants'
+
+import { isAdmin } from './admin'
+
 /**
  * Validates the Turnstile token sent with a protected request.
  *
@@ -11,6 +15,10 @@ import type { H3Event } from 'h3'
  * @returns Nothing when token is valid.
  */
 export async function assertTurnstileToken(event: H3Event, expectedAction: string): Promise<void> {
+	if (isAdmin(event)) {
+		return
+	}
+
 	const config = useRuntimeConfig(event)
 	const secretKey = config.turnstile?.secretKey?.trim()
 	const isProd = Boolean(config.public?.mode?.isProd)
@@ -26,7 +34,7 @@ export async function assertTurnstileToken(event: H3Event, expectedAction: strin
 		return
 	}
 
-	const token = getRequestHeader(event, 'x-turnstile-token')?.trim()
+	const token = getRequestHeader(event, SECURITY_HEADERS.turnstileToken)?.trim()
 	if (!token) {
 		throw createError({
 			statusCode: 400,

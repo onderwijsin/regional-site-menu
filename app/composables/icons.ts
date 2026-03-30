@@ -74,6 +74,11 @@ const icons = {
 	markdown: 'simple-icons:markdown'
 }
 
+/**
+ * Provides typed access to the project icon registry.
+ *
+ * @returns Icon resolver by canonical icon key.
+ */
 export const useIcons = () => {
 	function getIcon(name: keyof typeof icons) {
 		return icons[name]

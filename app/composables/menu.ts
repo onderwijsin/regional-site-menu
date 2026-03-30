@@ -1,5 +1,10 @@
 import type { NavigationMenuItem } from '@nuxt/ui'
 
+/**
+ * Builds shared navigation items for header, sidebar, and footer menus.
+ *
+ * @returns Navigation item groups used across app navigation surfaces.
+ */
 export const useMenu = () => {
 	const { getIcon } = useIcons()
 

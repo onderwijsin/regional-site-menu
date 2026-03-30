@@ -5,6 +5,7 @@ This document captures practical development rules and conventions for this repo
 ## Primary Sources
 
 - Agent/developer guardrails: [AGENTS.md](../../AGENTS.md)
+- Detailed agent playbook: [docs/agent-guide/README.md](../agent-guide/README.md)
 - Runtime/config constraints: [nuxt.config.ts](../../nuxt.config.ts)
 
 ## Architecture Conventions
@@ -14,6 +15,16 @@ This document captures practical development rules and conventions for this repo
 3. Validate boundary payloads with Zod (`schema/*`).
 4. Reuse shared taxonomy/types instead of duplicating string literals.
 
+## Nuxt Auto-Import Conventions
+
+1. In Nuxt runtime files, rely on Nuxt auto-imports for low-level Vue primitives and Nuxt
+   composables/utilities.
+2. This applies to both runtime code and types.
+3. Do not explicitly import APIs that Nuxt auto-imports in these contexts (for example `ref`,
+   `computed`, `watch`, `Ref`, `ComputedRef`, `useAsyncData`, `useState`).
+4. In files outside Nuxt auto-import scope (for example isolated scripts), explicit imports are
+   acceptable.
+
 ## Type Conventions
 
 1. Prefer shared primitive aliases from:
@@ -22,6 +33,31 @@ This document captures practical development rules and conventions for this repo
    exist.
 3. Keep enum/type source of truth in:
    - [schema/fields.ts](../../schema/fields.ts)
+
+## Function Documentation Conventions
+
+1. Every function should include a concise TSDoc/JSDoc comment.
+2. At minimum, document:
+   - a brief description of behavior
+   - inputs and output (`@param` / `@returns`)
+   - thrown errors (`@throws`) when applicable
+3. Add `@example` for complex functions.
+4. Add additional tags when useful (`@remarks`, `@see`, `@deprecated`, etc.).
+
+## Composable Naming and Import Conventions
+
+1. Standard composables are named `useSomeComposable`.
+2. In explicit-import scenarios, deviation from the `use*` naming pattern is allowed when
+   intentional.
+3. Composables starting with `use` rely on Nuxt auto-imports and should not be explicitly imported.
+4. Files that define `use*` composables should export only that composable, and filename and
+   composable name should match.
+5. Non-`use*` composables/constants/helpers should be explicitly imported so origin remains clear.
+6. Examples:
+   - Explicit import required:
+     - `import { GOALS, PILLARS } from '~/composables/content-taxonomy'`
+   - Explicit import not allowed:
+     - `import { useReportGenerationExecution } from '~/composables/report-generation-execution'`
 
 ## State Conventions
 
@@ -55,7 +91,8 @@ Reference:
 
 1. Run `pnpm lint` and `pnpm typecheck` for meaningful changes.
 2. Keep formatting/linting consistent with project config.
-3. Respect Husky hooks unless intentionally bypassed for specific workflows.
+3. Resolve `eslint-plugin-jsdoc` findings for exported functions in app/server/schema/shared code.
+4. Respect Husky hooks unless intentionally bypassed for specific workflows.
 
 ## Testing Conventions
 

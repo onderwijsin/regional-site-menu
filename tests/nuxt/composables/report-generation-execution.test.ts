@@ -27,6 +27,7 @@ function createExecution(
 		state?: ReportConfig
 		hasAiEnabled?: boolean
 		hasReusableAiInsights?: boolean
+		beforeStartAiGeneration?: () => Promise<boolean>
 		generateAiInsightsResult?: ReportAiInsights
 		generateAiInsightsError?: unknown
 		generateReportError?: unknown
@@ -90,6 +91,7 @@ function createExecution(
 		generateReport: generateReportMock,
 		generateAiInsights: generateAiInsightsMock,
 		trackReportGenerated: trackReportGeneratedMock,
+		beforeStartAiGeneration: overrides.beforeStartAiGeneration,
 		onClose: onCloseMock
 	})
 
@@ -275,6 +277,23 @@ describe('useReportGenerationExecution', () => {
 		await flow.handleConfigSubmit()
 
 		expect(generateAiInsightsMock).toHaveBeenCalledTimes(1)
+	})
+
+	it('does not start AI generation when pre-start guard returns false', async () => {
+		const beforeStartAiGeneration = vi.fn().mockResolvedValue(false)
+		const state = createState({ aiBriefing: true, aiWebsiteAnalysis: true })
+		const { flow, stage, generateAiInsightsMock } = createExecution({
+			state,
+			hasAiEnabled: true,
+			hasReusableAiInsights: false,
+			beforeStartAiGeneration
+		})
+
+		await flow.handleConfigSubmit()
+
+		expect(beforeStartAiGeneration).toHaveBeenCalledTimes(1)
+		expect(generateAiInsightsMock).not.toHaveBeenCalled()
+		expect(stage.value).toBe('config')
 	})
 
 	it('uses default ReportGenerationError copy for non-AI-specific error codes', async () => {

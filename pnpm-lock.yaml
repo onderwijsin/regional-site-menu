@@ -129,6 +129,9 @@ catalogs:
     eslint-config-prettier:
       specifier: 10.1.8
       version: 10.1.8
+    eslint-plugin-jsdoc:
+      specifier: 62.8.0
+      version: 62.8.0
     fast-xml-parser:
       specifier: 5.5.9
       version: 5.5.9
@@ -356,6 +359,9 @@ importers:
       eslint-config-prettier:
         specifier: 'catalog:'
         version: 10.1.8(eslint@9.39.2(jiti@2.6.1))
+      eslint-plugin-jsdoc:
+        specifier: 'catalog:'
+        version: 62.8.0(eslint@9.39.2(jiti@2.6.1))
       fast-xml-parser:
         specifier: 'catalog:'
         version: 5.5.9
@@ -9452,7 +9458,7 @@ snapshots:
   '@es-joy/jsdoccomment@0.84.0':
     dependencies:
       '@types/estree': 1.0.8
-      '@typescript-eslint/types': 8.57.0
+      '@typescript-eslint/types': 8.57.1
       comment-parser: 1.4.5
       esquery: 1.7.0
       jsdoc-type-pratt-parser: 7.1.1
@@ -12273,8 +12279,7 @@ snapshots:
 
   '@typescript-eslint/types@8.57.0': {}
 
-  '@typescript-eslint/types@8.57.1':
-    optional: true
+  '@typescript-eslint/types@8.57.1': {}
 
   '@typescript-eslint/typescript-estree@8.57.0(typescript@5.9.3)':
     dependencies:

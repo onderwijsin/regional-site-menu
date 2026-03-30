@@ -20,14 +20,10 @@ import { getPillarIconName, PILLARS } from '~/composables/content-taxonomy'
 // ----------------------
 
 /**
- * Explicit mapping for score → label
+ * Creates reusable audit helper functions for score labels and aggregate calculations.
  *
- * Using a fixed map instead of ranges allows precise wording control.
+ * @returns Utility functions for score labels, colors, and pillar averages.
  */
-// ----------------------
-// Utils
-// ----------------------
-
 export const useAuditUtils = () => {
 	const { getIcon } = useIcons()
 
@@ -134,7 +130,7 @@ export const useAuditUtils = () => {
 }
 
 /**
- * Audit composable for a single item
+ * Audit composable for a single item.
  *
  * Provides:
  * - reactive score + comment bindings
@@ -142,6 +138,7 @@ export const useAuditUtils = () => {
  * - contextual description
  *
  * @param props - AuditProps (item context)
+ * @returns Reactive audit state and derived display fields for one item.
  */
 export const useAudit = (props: AuditProps) => {
 	const { getScoreColor, getScoreLabel } = useAuditUtils()

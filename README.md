@@ -38,6 +38,7 @@ If you are working on this codebase with an AI coding agent, read [`AGENTS.md`](
 - Pinia + `pinia-plugin-persistedstate`
 - TipTap (rich text input)
 - jsPDF (client-side report generation)
+- Cloudflare Turnstile via `@nuxtjs/turnstile` (abuse protection for server routes)
 - Cloudflare Workers (via NuxtHub / Nitro preset)
 
 ---
@@ -149,6 +150,7 @@ Important note:
 Detailed testing documentation:
 
 - [Testing Guide](./docs/testing/README.md)
+- [Turnstile Integration](./docs/turnstile/README.md)
 
 ---
 
@@ -161,6 +163,8 @@ Use `.example.env` as template.
 - `MODE` (`dev | preview | prod`)
 - `APP_URL`
 - `API_TOKEN`
+- `TURNSTILE_SITE_KEY` (Cloudflare public site key)
+- `TURNSTILE_SECRET_KEY` (Cloudflare server-side secret key)
 - `DISABLE_TRACKING`
 - `PLAUSIBLE_DOMAIN` (optional override)
 

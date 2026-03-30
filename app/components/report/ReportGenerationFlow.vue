@@ -5,7 +5,6 @@ import type { ReportAiInsights } from '~~/schema/reportAi'
 import type { ReportConfig } from '~~/schema/reportConfig'
 import type { Audit, PillarAverage } from '~~/shared/types/audit'
 import type { Pillar } from '~~/shared/types/primitives'
-import type { Ref } from 'vue'
 
 import { useReportGenerationExecution } from '~/composables/report-generation-execution'
 import {
@@ -26,7 +25,6 @@ type ReportGenerationFlowProps = {
 		audits: Audit<ItemsCollectionItem>[]
 	}
 }
-type AiTurnstileAction = 'ai_website_analysis' | 'ai_briefing'
 
 const props = defineProps<ReportGenerationFlowProps>()
 
@@ -34,7 +32,6 @@ const emit = defineEmits<{
 	(e: 'close'): void
 }>()
 
-const runtimeConfig = useRuntimeConfig()
 const form = useTemplateRef('form')
 const stateStore = useStateStore()
 
@@ -99,15 +96,22 @@ const briefingDraft = ref('')
 const isAiLoading = ref(false)
 const isGeneratingPdf = ref(false)
 const aiTurnstile = ref<{ reset: () => void }>()
-const aiTurnstileToken = ref<string>()
-const aiTurnstileAction = ref<AiTurnstileAction>('ai_website_analysis')
-const isTurnstileEnabled = computed(
-	() => runtimeConfig.public.turnstile?.siteKey?.trim().length > 0
-)
+const {
+	token: aiTurnstileToken,
+	isEnabled: isTurnstileEnabled,
+	getTokenWithRetry,
+	isReady: isTurnstileReady,
+	reset: resetTurnstile,
+	showPendingHint,
+	showMissingTokenErrorHint
+} = useTurnstile()
 
 const { generateReport } = useReportGenerator()
 const { generateAiInsights, progress } = useReportAi({
-	getTurnstileToken: getAiTurnstileToken
+	getTurnstileToken: getAiTurnstileToken,
+	onTurnstileConsumed: () => {
+		resetTurnstile(aiTurnstile.value)
+	}
 })
 const { trackReportGenerated } = useTracking()
 const confirm = useConfirmDialog()
@@ -225,6 +229,7 @@ const { handleConfigSubmit, handleBriefingSubmit } = useReportGenerationExecutio
 	generateReport,
 	generateAiInsights,
 	trackReportGenerated,
+	beforeStartAiGeneration: ensureAiTurnstileReadyBeforeAiStage,
 	onClose: () => emit('close')
 })
 
@@ -238,45 +243,30 @@ async function navigateToHelp() {
 	await navigateTo('/help')
 }
 
-async function getAiTurnstileToken(action: AiTurnstileAction): Promise<string | undefined> {
+async function getAiTurnstileToken(): Promise<string | undefined> {
 	if (!isTurnstileEnabled.value) {
 		return undefined
 	}
 
-	aiTurnstileAction.value = action
-	aiTurnstileToken.value = undefined
-	await nextTick()
-	aiTurnstile.value?.reset()
-
-	return await waitForTurnstileToken(aiTurnstileToken)
+	return await getTokenWithRetry()
 }
 
-async function waitForTurnstileToken(
-	token: Ref<string | undefined>,
-	timeoutMs = 12_000
-): Promise<string> {
-	const immediateToken = token.value?.trim()
-	if (immediateToken) {
-		return immediateToken
+async function ensureAiTurnstileReadyBeforeAiStage(): Promise<boolean> {
+	if (!isTurnstileEnabled.value) {
+		return true
 	}
 
-	return await new Promise<string>((resolve, reject) => {
-		const timeoutId = setTimeout(() => {
-			stopWatcher()
-			reject(new Error('Turnstile token timeout'))
-		}, timeoutMs)
+	if (!isTurnstileReady()) {
+		showPendingHint()
+	}
 
-		const stopWatcher = watch(token, (nextToken) => {
-			const normalizedToken = nextToken?.trim()
-			if (!normalizedToken) {
-				return
-			}
+	const token = await getTokenWithRetry()
+	if (token) {
+		return true
+	}
 
-			clearTimeout(timeoutId)
-			stopWatcher()
-			resolve(normalizedToken)
-		})
-	})
+	showMissingTokenErrorHint()
+	return false
 }
 
 /**
@@ -347,7 +337,7 @@ async function handleClose(): Promise<void> {
 				v-if="isTurnstileEnabled"
 				ref="aiTurnstile"
 				v-model="aiTurnstileToken"
-				:options="{ action: aiTurnstileAction, appearance: 'interaction-only' }"
+				:options="{ appearance: 'interaction-only' }"
 				class="pointer-events-none absolute h-0 w-0 overflow-hidden opacity-0"
 			/>
 
