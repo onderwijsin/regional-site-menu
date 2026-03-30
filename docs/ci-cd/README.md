@@ -15,6 +15,8 @@ Key workflows:
 - `code_quality.yml` (reusable)
 - `deploy_worker.yml` (reusable)
 - `deploy.yml`
+- `content_promote.yml`
+- `sync_main_to_content.yml`
 - `release.yml`
 - `gitleaks.yml`
 - `lint_pr_title.yml`
@@ -34,6 +36,29 @@ Behavior:
    - unit tests + coverage artifact
 3. If successful, runs preview deployment via reusable worker deploy workflow.
 4. Uses concurrency cancellation per PR branch.
+
+## Content Promotion Flow
+
+Files:
+
+- `.github/workflows/content_promote.yml`
+- `.github/workflows/sync_main_to_content.yml`
+
+Behavior:
+
+1. `content_promote.yml` triggers on pushes to `content`.
+2. It validates branch diff against `main` using `dorny/paths-filter@v4`.
+3. If any file outside `content/**` is present, it fails.
+4. If changes are content-only, it merges `content` directly into `main` with a GitHub App token.
+5. `sync_main_to_content.yml` triggers on pushes to `main` and merges `main` back into `content` to
+   prevent branch drift.
+6. `pull_request.yml` skips PR quality/deploy jobs when `head.ref == content`, so content promotions
+   do not wait for PR checks.
+
+Required secrets for content promotion:
+
+- `RELEASE_APP_ID`
+- `RELEASE_APP_PRIVATE_KEY`
 
 ## Code Quality Workflow
 
@@ -107,8 +132,9 @@ Behavior:
 
 From deployment orchestration:
 
-- `main` -> `production`
+- `main` -> `production` (automatic only for content-only pushes)
 - PR previews -> `preview` (version uploads)
+- `content` -> promoted to `main` via automation workflow
 
 Manual dispatch in `deploy.yml` can override environment selection.
 

@@ -237,16 +237,28 @@ Practical implications:
 
 ## Nuxt Studio
 
-To make the content managable outside of the codebase, the application leverages the
+To make the content manageable outside of the codebase, the application leverages the
 [Nuxt Studio](https://nuxt.studio/) module. This module integrates seamlessly with Nuxt Content and
 provides a visual editing experience for the various content collections.
 
 Editor can log in to the studio with their Github Account. Any changes made in the content files are
-directly committed to the `main` branch.
+committed to the `content` branch.
 
-The ci/cd pipeline will notice a change to the `content` directory and trigger a rebuild. (This is
-the only case where a production deployment triggers automatically. In all other cases, a manual
-deploy is required).
+CI/CD then handles promotion and drift prevention:
+
+1. `.github/workflows/content_promote.yml` validates that `content` branch changes only touch
+   `content/**`.
+2. If valid, it directly merges `content` into `main` using a GitHub App token (bypass actor for
+   `main` protection).
+3. `.github/workflows/sync_main_to_content.yml` runs on each push to `main` and merges `main` back
+   into `content`, so the editor branch stays aligned with code changes.
+
+The `pull_request` CI workflow is intentionally skipped for `content -> main`, so content promotions
+do not wait for lint/typecheck/tests/preview deployment.
+
+Production auto-deploy remains content-focused: `.github/workflows/deploy.yml` deploys automatically
+only when a push to `main` contains content-only changes. Other `main` updates still require a
+manual deploy trigger.
 
 For the current temporary Cloudflare Workers build workaround (Nuxt Studio + `sharp`), see:
 
@@ -417,7 +429,7 @@ Workflows are defined in `.github/workflows`.
   - lint + typecheck
   - preview deployment (Worker version)
 - **Branches**
-  - `<not-main>` → preview environment
+  - `content` → editor branch, auto-promoted to `main` via direct merge automation
   - `main` → production
 - **Deploy flow**
   1. Build (`pnpm build`)
@@ -425,6 +437,7 @@ Workflows are defined in `.github/workflows`.
   3. Deploy via `wrangler deploy`
   4. Preview deployments use `upload_version=true`
   5. Production uses full deploy
+  6. Automatic production deploys are limited to content-only pushes on `main`
 - Deployment status is reported back to GitHub
 
 ---

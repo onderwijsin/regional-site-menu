@@ -1,0 +1,79 @@
+name: Promote Content To Main
+
+on:
+  push:
+    branches:
+      - content
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: content-promote
+  cancel-in-progress: true
+
+jobs:
+  promote:
+    if: ${{ github.actor != 'github-actions[bot]' }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - name: Fetch main branch
+        run: git fetch origin main:refs/remotes/origin/main
+
+      - name: Detect branch diff against main
+        id: filter
+        uses: dorny/paths-filter@v4
+        with:
+          base: origin/main
+          predicate-quantifier: every
+          filters: |
+            content_changes:
+              - 'content/**'
+            non_content_changes:
+              - '**'
+              - '!content/**'
+
+      - name: Fail on non-content changes
+        if: ${{ steps.filter.outputs.non_content_changes == 'true' }}
+        run: |
+          echo "The content branch contains changes outside content/**."
+          echo "Only content/** updates can be promoted automatically."
+          exit 1
+
+      - name: Generate GitHub App token
+        id: app-token
+        if:
+          ${{ steps.filter.outputs.content_changes == 'true' &&
+          steps.filter.outputs.non_content_changes != 'true' }}
+        uses: actions/create-github-app-token@v3
+        with:
+          app-id: ${{ secrets.RELEASE_APP_ID }}
+          private-key: ${{ secrets.RELEASE_APP_PRIVATE_KEY }}
+
+      - name: Configure git
+        if:
+          ${{ steps.filter.outputs.content_changes == 'true' &&
+          steps.filter.outputs.non_content_changes != 'true' }}
+        run: |
+          git config user.name "release-bot"
+          git config user.email "release-bot@users.noreply.github.com"
+
+      - name: Merge content into main with GitHub App token
+        if:
+          ${{ steps.filter.outputs.content_changes == 'true' &&
+          steps.filter.outputs.non_content_changes != 'true' }}
+        env:
+          APP_TOKEN: ${{ steps.app-token.outputs.token }}
+        run: |
+          git remote set-url origin "https://x-access-token:${APP_TOKEN}@github.com/${{ github.repository }}.git"
+          git fetch origin main:refs/remotes/origin/main
+          git fetch origin content:refs/remotes/origin/content
+          git checkout -B main origin/main
+          git merge --no-ff --no-edit origin/content
+          git push origin HEAD:main

@@ -14,6 +14,12 @@ This project uses Nuxt Content as the source of truth for structured app content
 - Uploaded media is stored in Cloudflare R2 via binding `BLOB`.
 - `CLOUDFLARE_R2_BUCKET` must match the bound bucket in Cloudflare/Wrangler config.
 
+## Studio Branch Flow
+
+- Nuxt Studio commits content changes to the `content` branch.
+- GitHub Actions promotes content-only updates from `content` to `main`.
+- `main` is synced back into `content` after each `main` push to avoid branch drift.
+
 ## Where It Is Defined
 
 - Collection config: [content.config.ts](../../content.config.ts)

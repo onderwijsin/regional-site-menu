@@ -1,0 +1,39 @@
+name: Sync Main Back To Content
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: sync-main-to-content
+  cancel-in-progress: true
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout main
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - name: Configure git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+      - name: Fetch branches
+        run: |
+          git fetch origin main:refs/remotes/origin/main
+          git fetch origin content:refs/remotes/origin/content
+
+      - name: Merge main into content and push
+        run: |
+          git checkout -B content origin/content
+          git merge --no-edit origin/main
+          git push origin HEAD:content

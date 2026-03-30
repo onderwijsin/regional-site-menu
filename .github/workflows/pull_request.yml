@@ -19,6 +19,8 @@ concurrency:
 
 jobs:
   code-quality:
+    if:
+      ${{ github.event_name != 'pull_request' || github.event.pull_request.head.ref != 'content' }}
     uses: ./.github/workflows/code_quality.yml
     with:
       runner: blacksmith-4vcpu-ubuntu-2404
@@ -34,6 +36,8 @@ jobs:
       GH_PACKAGES_TOKEN: ${{ secrets.GH_PACKAGES_TOKEN }}
 
   preview-deployment:
+    if:
+      ${{ github.event_name != 'pull_request' || github.event.pull_request.head.ref != 'content' }}
     needs: code-quality
     uses: ./.github/workflows/deploy_worker.yml
     with:
