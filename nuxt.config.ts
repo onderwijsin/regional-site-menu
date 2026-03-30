@@ -31,7 +31,7 @@ const isTest = process.env.NODE_ENV === 'test' || process.env.VITEST === 'true'
 
 // Resolve Turnstile keys
 const turnstileSiteKey =
-	process.env.TURNSTILE_SITE_KEY ?? (isDev ? '1x00000000000000000000AA' : undefined)
+	process.env.TURNSTILE_SITE_KEY ?? (isDev ? '1x00000000000000000000BB' : undefined)
 const turnstileSecretKey =
 	process.env.TURNSTILE_SECRET_KEY ?? (isDev ? '1x0000000000000000000000000000000AA' : undefined)
 

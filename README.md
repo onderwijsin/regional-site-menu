@@ -391,6 +391,8 @@ Cloudflare resource mapping by environment:
   different D1 database.
 - **R2 media bucket** (`CLOUDFLARE_R2_BUCKET`, binding `BLOB`): preview and production share the
   same bucket.
+- **Turnstile** (`TURNSTILE_SITE_KEY`, `TURNSTILE_SECRET_KEY`): preview and production use the same
+  Turnstile configuration.
 
 Important preview behavior:
 
