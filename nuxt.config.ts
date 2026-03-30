@@ -224,7 +224,7 @@ export default defineNuxtConfig({
 			provider: 'github',
 			owner: 'onderwijsin',
 			repo: 'regional-site-menu',
-			branch: 'main'
+			branch: 'content'
 		},
 		media: {
 			external: true,
