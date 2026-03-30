@@ -1,3 +1,5 @@
+import * as Sentry from '@sentry/nuxt'
+
 import {
 	getSupportedOpenAiValuesFromError,
 	isUnsupportedOpenAiParameterError,
@@ -17,6 +19,7 @@ type OpenAiCompatibilityOptions = {
 
 type RequestWithOpenAiCompatibilityArgs<TResponse> = {
 	label: string
+	model: string
 	maxOutputTokens: number
 	includeReasoning: boolean
 	reasoningEffort: OpenAiReasoningEffort
@@ -64,6 +67,12 @@ export async function requestWithOpenAiCompatibility<TResponse>(
 				console.warn(
 					`[AI] ${args.label} structured parse failed, retrying with plain-text response mode`
 				)
+				captureAiCompatibilityFallback('structured_parse_to_plain_text', {
+					label: args.label,
+					model: args.model,
+					maxOutputTokens: args.maxOutputTokens,
+					errorMessage: readErrorMessage(error)
+				})
 				continue
 			}
 
@@ -85,6 +94,13 @@ export async function requestWithOpenAiCompatibility<TResponse>(
 							reasoningEffort
 						}
 					)
+					captureAiCompatibilityFallback('reasoning_effort_value_fallback', {
+						label: args.label,
+						model: args.model,
+						maxOutputTokens: args.maxOutputTokens,
+						reasoningEffort,
+						errorMessage: readErrorMessage(error)
+					})
 					continue
 				}
 
@@ -92,6 +108,12 @@ export async function requestWithOpenAiCompatibility<TResponse>(
 				console.warn(
 					`[AI] ${args.label} retrying without reasoning.effort for model compatibility`
 				)
+				captureAiCompatibilityFallback('reasoning_effort_disabled', {
+					label: args.label,
+					model: args.model,
+					maxOutputTokens: args.maxOutputTokens,
+					errorMessage: readErrorMessage(error)
+				})
 				continue
 			}
 
@@ -108,6 +130,13 @@ export async function requestWithOpenAiCompatibility<TResponse>(
 					console.warn(`[AI] ${args.label} retrying with fallback text.verbosity value`, {
 						verbosity
 					})
+					captureAiCompatibilityFallback('verbosity_value_fallback', {
+						label: args.label,
+						model: args.model,
+						maxOutputTokens: args.maxOutputTokens,
+						verbosity,
+						errorMessage: readErrorMessage(error)
+					})
 					continue
 				}
 
@@ -115,6 +144,12 @@ export async function requestWithOpenAiCompatibility<TResponse>(
 				console.warn(
 					`[AI] ${args.label} retrying without text.verbosity for model compatibility`
 				)
+				captureAiCompatibilityFallback('verbosity_disabled', {
+					label: args.label,
+					model: args.model,
+					maxOutputTokens: args.maxOutputTokens,
+					errorMessage: readErrorMessage(error)
+				})
 				continue
 			}
 
@@ -205,4 +240,27 @@ function isStructuredOutputJsonParseError(error: unknown): boolean {
 	}
 
 	return error.message.toLowerCase().includes('json')
+}
+
+function readErrorMessage(error: unknown): string | undefined {
+	return error instanceof Error ? error.message : undefined
+}
+
+/**
+ * Captures compatibility fallback behavior in Sentry as warning telemetry.
+ *
+ * @param type - Stable fallback identifier.
+ * @param meta - Additional structured metadata.
+ * @returns Nothing.
+ */
+function captureAiCompatibilityFallback(type: string, meta: Record<string, unknown>): void {
+	Sentry.withScope((scope) => {
+		scope.setLevel('warning')
+		scope.setTag('area', 'ai')
+		scope.setTag('kind', 'compatibility_fallback')
+		scope.setTag('fallback_type', type)
+		scope.setContext('ai_fallback', meta)
+
+		Sentry.captureMessage(`[AI] compatibility fallback: ${type}`)
+	})
 }

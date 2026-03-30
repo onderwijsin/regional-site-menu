@@ -180,9 +180,11 @@ Additional behavior:
 Implemented safeguards:
 
 - strict input/output Zod validation on both endpoints
+- Sentry Zod integration enriches captured `ZodError` events with issue details
 - server-side same-domain crawl with page caps
 - llms-full reference criteria included in analysis prompt
 - structured model output parsing before analysis markdown assembly
+- OpenAI SDK calls are instrumented through the shared client factory (`server/utils/ai/openai.ts`)
 - compatibility fallback for model-specific unsupported reasoning/verbosity params
 - retry with higher output token budget when response ends `incomplete` due `max_output_tokens`
 - fallback from structured parse mode to plain-text mode when SDK JSON parsing fails

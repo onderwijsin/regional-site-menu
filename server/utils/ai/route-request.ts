@@ -1,5 +1,7 @@
 import type { OpenAiReasoningEffort, OpenAiVerbosity } from './response'
 
+import * as Sentry from '@sentry/nuxt'
+
 import { requestWithOpenAiCompatibility, shouldRetryAfterTokenLimitIncomplete } from './response'
 
 /**
@@ -68,6 +70,7 @@ export async function requestAiRouteResponseWithRetry<TResponse>(
 	}): Promise<TResponse> => {
 		return await requestWithOpenAiCompatibility({
 			label: args.label,
+			model: args.model,
 			maxOutputTokens: options.maxOutputTokens,
 			includeReasoning: options.includeReasoning,
 			reasoningEffort: options.reasoningEffort,
@@ -100,6 +103,20 @@ export async function requestAiRouteResponseWithRetry<TResponse>(
 		model: args.model,
 		initialMaxOutputTokens: args.requestConfig.maxOutputTokens,
 		retryMaxOutputTokens: args.requestConfig.maxOutputTokensOnIncompleteRetry
+	})
+	Sentry.withScope((scope) => {
+		scope.setLevel('warning')
+		scope.setTag('area', 'ai')
+		scope.setTag('kind', 'incomplete_retry')
+		scope.setTag('ai_label', args.label)
+		scope.setTag('ai_model', args.model)
+		scope.setContext('ai_incomplete_retry', {
+			label: args.label,
+			model: args.model,
+			initialMaxOutputTokens: args.requestConfig.maxOutputTokens,
+			retryMaxOutputTokens: args.requestConfig.maxOutputTokensOnIncompleteRetry
+		})
+		Sentry.captureMessage('[AI] retry after incomplete max_output_tokens response')
 	})
 
 	response = await requestOnce({

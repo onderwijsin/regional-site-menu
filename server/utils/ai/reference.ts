@@ -1,6 +1,7 @@
 import type { H3Event } from 'h3'
 
 import { AI_REFERENCE_PATHS } from '@ai'
+import * as Sentry from '@sentry/nuxt'
 
 /**
  * Reads a text document from an internal app route within the same Nitro request.
@@ -9,7 +10,10 @@ import { AI_REFERENCE_PATHS } from '@ai'
  * @param path - Route path to fetch.
  * @returns Plain text when available, otherwise an empty string.
  */
-async function fetchInternalTextDocument(event: H3Event, path: string): Promise<string> {
+async function fetchInternalTextDocument(
+	event: H3Event,
+	path: string
+): Promise<{ text: string; didFail: boolean }> {
 	try {
 		const text = await event.$fetch<string>(path, {
 			headers: {
@@ -18,13 +22,13 @@ async function fetchInternalTextDocument(event: H3Event, path: string): Promise<
 		})
 
 		if (typeof text === 'string' && text.trim()) {
-			return text
+			return { text, didFail: false }
 		}
 	} catch {
-		// Try fallback path in caller.
+		return { text: '', didFail: true }
 	}
 
-	return ''
+	return { text: '', didFail: false }
 }
 
 /**
@@ -34,13 +38,29 @@ async function fetchInternalTextDocument(event: H3Event, path: string): Promise<
  * @returns Plain text reference document.
  */
 export async function fetchLlmsFullReferenceDocument(event: H3Event): Promise<string> {
-	const fullText = await fetchInternalTextDocument(event, AI_REFERENCE_PATHS.llmsFull)
+	const fullResult = await fetchInternalTextDocument(event, AI_REFERENCE_PATHS.llmsFull)
+	const fullText = fullResult.text
 	if (fullText) {
 		return fullText
 	}
 
-	const fallbackText = await fetchInternalTextDocument(event, AI_REFERENCE_PATHS.llms)
+	const fallbackResult = await fetchInternalTextDocument(event, AI_REFERENCE_PATHS.llms)
+	const fallbackText = fallbackResult.text
 	if (fallbackText) {
+		if (fullResult.didFail) {
+			Sentry.withScope((scope) => {
+				scope.setLevel('warning')
+				scope.setTag('area', 'ai')
+				scope.setTag('kind', 'reference_fallback')
+				scope.setTag('reference_source', 'llms')
+				scope.setContext('ai_reference_fallback', {
+					primaryPath: AI_REFERENCE_PATHS.llmsFull,
+					fallbackPath: AI_REFERENCE_PATHS.llms
+				})
+				Sentry.captureMessage('[AI] llms-full fetch failed, fell back to llms')
+			})
+		}
+
 		return fallbackText
 	}
 

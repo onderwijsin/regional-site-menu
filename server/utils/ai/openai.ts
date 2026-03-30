@@ -1,6 +1,7 @@
 import type { H3Event } from 'h3'
 
 import { AI_OPENAI_CONFIG } from '@ai'
+import * as Sentry from '@sentry/nuxt'
 import OpenAI from 'openai'
 
 type OpenAiClientUseCase = 'website-analysis' | 'briefing'
@@ -41,7 +42,10 @@ export function getOpenAiClient(
 				: AI_OPENAI_CONFIG.defaultModel
 
 	return {
-		client: new OpenAI({ apiKey: token }),
+		client: Sentry.instrumentOpenAiClient(new OpenAI({ apiKey: token }), {
+			recordInputs: false,
+			recordOutputs: false
+		}),
 		model:
 			preferredModelByUseCase ||
 			config.openai.model ||
