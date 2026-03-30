@@ -10,9 +10,10 @@ Both routes follow the same boundary pattern:
 1. Validate request payload with Zod (`schema/reportAi.ts`).
 2. Load prompt content from Nuxt Content (`content/_prompts`).
 3. Build deterministic input context from validated data.
-4. Call OpenAI using `responses.parse` with structured output where possible.
-5. Apply fallback logic for model/runtime edge cases.
-6. Return the public response contract (validated again with Zod).
+4. Resolve route-specific model + fixed reasoning config.
+5. Call OpenAI using `responses.parse` with structured output where possible.
+6. Apply fallback logic for model/runtime edge cases.
+7. Return the public response contract (validated again with Zod).
 
 ## Reliability and Fallback Strategy
 
@@ -40,6 +41,42 @@ Implemented safeguards:
 These settings are configured in:
 
 - [`config/ai.ts`](../../../config/ai.ts)
+
+## Reasoning Configuration
+
+Both routes use a fixed medium reasoning profile from `AI_OPENAI_CONFIG`:
+
+- `analysisRequest`
+- `briefingRequest`
+
+Current speed-oriented tuning:
+
+- website-analysis: lower verbosity + tighter output token budget
+- briefing: lower verbosity with a moderate output budget
+
+## Model Selection
+
+Model resolution is route-specific:
+
+- `/api/ai/website-analysis` -> `runtimeConfig.openai.models.websiteAnalysis`
+- `/api/ai/briefing` -> `runtimeConfig.openai.models.briefing`
+
+Fallback order:
+
+1. route-specific runtime model
+2. shared runtime model (`runtimeConfig.openai.model`)
+3. static default from `config/ai.ts`
+
+## Observability
+
+Both routes emit step timings via `createServerExecutionTimer`.
+
+Timing logs now include resolved model metadata on:
+
+- `request_composed`
+- `openai_response_received`
+- `openai_response_retry_received` (when applicable)
+- final `done` summary
 
 ## File Ownership
 

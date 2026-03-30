@@ -26,42 +26,30 @@ export const AI_WEBSITE_ANALYSIS_CONFIG = {
 export const AI_OPENAI_CONFIG = {
 	/** Fallback model when runtime config model is not set. */
 	defaultModel: 'gpt-5',
-	/** Generation settings for website-analysis route. */
+	/** Preferred model for website-analysis generation. */
+	defaultWebsiteAnalysisModel: 'gpt-5-mini',
+	/** Preferred model for briefing generation. */
+	defaultBriefingModel: 'gpt-5-mini',
+	/** Generation settings for website-analysis route (fixed medium profile). */
 	analysisRequest: {
-		/** Output token cap for analysis response. */
-		maxOutputTokens: 12_500,
-		/** Higher output cap used when first attempt ends incomplete due token budget. */
-		maxOutputTokensOnIncompleteRetry: 25_000,
-		/** Transport retry count for transient API failures. */
+		maxOutputTokens: 6_500,
+		maxOutputTokensOnIncompleteRetry: 9_000,
 		maxRetries: 2,
-		/** Reasoning depth for analysis quality and strategic recommendations. */
-		reasoningEffort: 'high',
-		/** Whether incomplete-retry should include explicit reasoning settings. */
+		reasoningEffort: 'medium',
 		retryWithReasoningOnIncomplete: false,
-		/** Reasoning effort used in incomplete-retry when enabled. */
-		incompleteRetryReasoningEffort: 'medium',
-		/** Output detail level for analysis quality. */
-		verbosity: 'high',
-		/** Verbosity used in incomplete-retry to reduce response length pressure. */
-		incompleteRetryVerbosity: 'medium'
+		incompleteRetryReasoningEffort: 'low',
+		verbosity: 'low',
+		incompleteRetryVerbosity: 'low'
 	},
-	/** Generation settings for briefing route. */
+	/** Generation settings for briefing route (fixed medium profile). */
 	briefingRequest: {
-		/** Output token cap for briefing response. */
-		maxOutputTokens: 7_500,
-		/** Higher output cap used when first attempt ends incomplete due token budget. */
-		maxOutputTokensOnIncompleteRetry: 12_500,
-		/** Transport retry count for transient API failures. */
+		maxOutputTokens: 5_000,
+		maxOutputTokensOnIncompleteRetry: 8_500,
 		maxRetries: 2,
-		/** Reasoning depth for briefing quality and personalization. */
-		reasoningEffort: 'high',
-		/** Whether incomplete-retry should include explicit reasoning settings. */
+		reasoningEffort: 'medium',
 		retryWithReasoningOnIncomplete: false,
-		/** Reasoning effort used in incomplete-retry when enabled. */
-		incompleteRetryReasoningEffort: 'medium',
-		/** Output detail level for briefing quality. */
-		verbosity: 'medium',
-		/** Verbosity used in incomplete-retry to reduce response length pressure. */
+		incompleteRetryReasoningEffort: 'low',
+		verbosity: 'low',
 		incompleteRetryVerbosity: 'low'
 	}
 } as const
@@ -85,18 +73,21 @@ export const AI_TEXT_SANITIZATION_CONFIG = {
 } as const
 
 /**
- * Multiplier applied to staged AI progress timings outside development.
- */
-export const NON_DEV_STAGE_DURATION_MULTIPLIER = 1.5 as const
-
-/**
  * UI timing model for staged AI progress indicators.
  */
 export const REPORT_AI_PROGRESS_CONFIG = {
 	/** Fixed crawl stage baseline duration before per-page scaling. */
-	crawlStageBaseDurationMs: 15_000,
+	crawlStageBaseDurationMs: 6_000,
 	/** Crawl stage duration multiplier (ms) per requested page. */
-	crawlStageDurationPerPageMs: 3_000,
+	crawlStageDurationPerPageMs: 700,
+	/** Maximum number of pages that increase crawl-stage timing. */
+	crawlStageDurationScalePages: 10,
+	/** Hard upper bound for crawl-stage timing. */
+	crawlStageMaxDurationMs: 13_000,
+	/** Additional model-processing time per extra analysis page (beyond page 1). */
+	analysisModelDurationPerAdditionalPageMs: 2_800,
+	/** Maximum number of extra pages that increase model-processing timing. */
+	analysisModelDurationScalePages: 10,
 	/** Fast-forward delay per skipped analysis stage on quick completion. */
 	analysisFastForwardMs: 240,
 	/** Fast-forward delay per skipped briefing stage on quick completion. */
@@ -104,24 +95,24 @@ export const REPORT_AI_PROGRESS_CONFIG = {
 	/** Fixed durations for analysis stages that are not crawl-dependent. */
 	analysisStageDurationMs: {
 		/** Stage 1: initialize analysis request. */
-		start: 4500,
-		/** Stage 3: interpret collected content. */
-		interpret: 15000,
+		start: 2_000,
+		/** Stage 3: interpret collected content (excludes page-scaled model overhead). */
+		interpret: 12_000,
 		/** Stage 4: evaluate against criteria. */
-		criteria: 8000,
+		criteria: 7_000,
 		/** Stage 5: finalize and format result. */
-		finalize: 6000
+		finalize: 5_000
 	},
 	/** Baseline durations for briefing generation stages. */
 	briefingStageDurationMs: {
 		/** Stage 1: initialize briefing request. */
-		start: 1000,
+		start: 2_000,
 		/** Stage 2: combine available inputs/context. */
-		synthesis: 10000,
+		synthesis: 7_000,
 		/** Stage 3: generate briefing output. */
-		generate: 5000,
+		generate: 11_000,
 		/** Stage 4: finalize and clean output. */
-		finalize: 2000
+		finalize: 5_000
 	}
 } as const
 

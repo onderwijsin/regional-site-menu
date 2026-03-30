@@ -36,7 +36,8 @@ Important details:
 
 Logic is centralized in:
 
-- [app/composables/audit.ts](../../app/composables/audit.ts)
+- [app/composables/use-audit-utils.ts](../../app/composables/use-audit-utils.ts)
+- [app/composables/use-audit.ts](../../app/composables/use-audit.ts)
 
 Responsibilities:
 

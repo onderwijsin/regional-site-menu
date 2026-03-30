@@ -6,7 +6,7 @@ import { AI_WEBSITE_ANALYSIS_MAX_PAGES, AI_WEBSITE_ANALYSIS_MIN_PAGES } from './
  * Report configuration schema
  *
  * Rules:
- * - url is required ONLY when addAiAnalysis === true
+ * - url is required ONLY when aiWebsiteAnalysis === true
  * - otherwise url must be undefined
  */
 export const ReportConfigSchema = z

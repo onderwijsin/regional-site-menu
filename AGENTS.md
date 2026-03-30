@@ -23,6 +23,18 @@ Operational contract for AI coding agents working in this repository.
 - You SHOULD use Zod for boundary validation.
 - You SHOULD prefer small, scoped changes that follow existing patterns.
 
+## Commit and PR Rules
+
+- You MUST use Conventional Commit messages.
+- Commit header format: `<type>(<optional-scope>): <subject>` (for example
+  `feat(report): add AI loading stage toggles`).
+- Allowed commit `type` values: `feat`, `fix`, `docs`, `style`, `refactor`, `test`, `chore`, `ci`,
+  `build`, `perf`, `revert`.
+- You MUST keep commit subject compatible with `commitlint` rules (see `commitlint.config.js`,
+  including max header length).
+- You MUST use semantic PR titles in the same conventional format so PR title lint passes
+  (`.github/workflows/lint_pr_title.yml`).
+
 ## Definition of Done
 
 1. Relevant checks pass: `pnpm lint`, `pnpm typecheck`, `pnpm test:unit`, and `pnpm test:coverage`.

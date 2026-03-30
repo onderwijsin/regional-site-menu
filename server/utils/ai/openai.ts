@@ -3,13 +3,19 @@ import type { H3Event } from 'h3'
 import { AI_OPENAI_CONFIG } from '@ai'
 import OpenAI from 'openai'
 
+type OpenAiClientUseCase = 'website-analysis' | 'briefing'
+
 /**
  * Creates a configured OpenAI client for the current request.
  *
  * @param event - Current server request event.
+ * @param options - Optional route-specific model selection settings.
  * @returns OpenAI client + resolved model name.
  */
-export function getOpenAiClient(event: H3Event): { client: OpenAI; model: string } {
+export function getOpenAiClient(
+	event: H3Event,
+	options?: { useCase?: OpenAiClientUseCase }
+): { client: OpenAI; model: string } {
 	const config = useRuntimeConfig(event)
 	const token = config.openai.token
 
@@ -20,9 +26,27 @@ export function getOpenAiClient(event: H3Event): { client: OpenAI; model: string
 		})
 	}
 
+	const useCase = options?.useCase
+	const preferredModelByUseCase =
+		useCase === 'website-analysis'
+			? config.openai.models?.websiteAnalysis
+			: useCase === 'briefing'
+				? config.openai.models?.briefing
+				: undefined
+	const fallbackModelByUseCase =
+		useCase === 'website-analysis'
+			? AI_OPENAI_CONFIG.defaultWebsiteAnalysisModel
+			: useCase === 'briefing'
+				? AI_OPENAI_CONFIG.defaultBriefingModel
+				: AI_OPENAI_CONFIG.defaultModel
+
 	return {
 		client: new OpenAI({ apiKey: token }),
-		model: config.openai.model || AI_OPENAI_CONFIG.defaultModel
+		model:
+			preferredModelByUseCase ||
+			config.openai.model ||
+			fallbackModelByUseCase ||
+			AI_OPENAI_CONFIG.defaultModel
 	}
 }
 

@@ -1,3 +1,4 @@
+import { AI_OPENAI_CONFIG } from '~~/config/ai'
 import { describe, expect, it, vi } from 'vitest'
 
 function createWebsiteAnalysisOutput() {
@@ -169,6 +170,23 @@ describe('POST /api/ai/website-analysis', () => {
 
 		expect(result.analysis).toContain('## Korte samenvatting')
 		expect(parseImpl).toHaveBeenCalledTimes(2)
+	})
+
+	it('uses the configured medium request budget', async () => {
+		const parseImpl = vi.fn().mockResolvedValue({
+			status: 'completed',
+			output_parsed: createWebsiteAnalysisOutput()
+		})
+
+		const { handler } = await loadHandler({ parseImpl })
+		await handler({} as never)
+
+		expect(parseImpl.mock.calls[0]?.[0]?.max_output_tokens).toBe(
+			AI_OPENAI_CONFIG.analysisRequest.maxOutputTokens
+		)
+		expect(parseImpl.mock.calls[0]?.[0]?.reasoning?.effort).toBe(
+			AI_OPENAI_CONFIG.analysisRequest.reasoningEffort
+		)
 	})
 
 	it('uses JSON-text fallback when output_text contains serialized structured analysis', async () => {

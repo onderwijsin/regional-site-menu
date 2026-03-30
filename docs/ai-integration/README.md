@@ -130,12 +130,24 @@ Key behavior:
 - briefing can include analysis context (`websiteAnalysisContext`)
 - exposes reactive `progress: Ref<AiProgressItem[]>`
   - `text` (stage label)
-  - `reasoning` (expanded context)
+  - `details` (expanded context)
   - `status` (`running`/`completed`)
 - progress timing is configurable via `REPORT_AI_PROGRESS_CONFIG` in `config/ai.ts`
+- stage duration is based on fixed medium-profile durations
+- analysis timing uses a capped crawl scale + capped per-page model-overhead boost
 - if the backend finishes early, remaining visual stages are fast-forwarded sequentially
 - fast-forwarding happens only on success (failed runs do not show fully completed stage output)
+- config stage shows a rounded minute-based ETA hint (`minder dan 1 minuut`, `1-2 minuten`, ...)
 - logs full analysis payload in browser console for debugging
+
+## Reasoning Configuration
+
+The report flow now uses a fixed medium reasoning profile for reliability and predictable runtime.
+
+The user-facing timing hint still adapts to:
+
+- whether analysis, briefing, or both are enabled
+- selected `maxPages` for analysis
 
 ## Data Contracts
 
@@ -177,6 +189,7 @@ Implemented safeguards:
 - output fallback path (`output_text` + JSON-in-text parsing + plain markdown fallback)
 - explicit source URL traceability in API response and PDF output
 - browser debug log of raw analysis payload for quality tuning
+- per-endpoint timing logs include the resolved model and request tuning metadata
 
 Remaining risk:
 
@@ -189,7 +202,9 @@ Remaining risk:
 Runtime config:
 
 - `runtimeConfig.openai.token`
-- `runtimeConfig.openai.model` (default `gpt-5`)
+- `runtimeConfig.openai.model` (shared fallback)
+- `runtimeConfig.openai.models.websiteAnalysis`
+- `runtimeConfig.openai.models.briefing`
 
 Static AI defaults:
 
@@ -200,7 +215,9 @@ Static AI defaults:
 Environment:
 
 - `OPENAI_API_KEY`
-- optional `OPENAI_MODEL`
+- optional `OPENAI_MODEL` (shared fallback)
+- optional `OPENAI_MODEL_WEBSITE_ANALYSIS`
+- optional `OPENAI_MODEL_BRIEFING`
 
 ## Suggested Next Steps
 

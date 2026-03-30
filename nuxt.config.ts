@@ -271,7 +271,13 @@ export default defineNuxtConfig({
 		},
 		openai: {
 			token: process.env.OPENAI_API_KEY,
-			model: process.env.OPENAI_MODEL || AI_OPENAI_CONFIG.defaultModel
+			model: process.env.OPENAI_MODEL || AI_OPENAI_CONFIG.defaultModel,
+			models: {
+				websiteAnalysis:
+					process.env.OPENAI_MODEL_WEBSITE_ANALYSIS ||
+					AI_OPENAI_CONFIG.defaultWebsiteAnalysisModel,
+				briefing: process.env.OPENAI_MODEL_BRIEFING || AI_OPENAI_CONFIG.defaultBriefingModel
+			}
 		},
 		public: {
 			siteUrl: process.env.APP_URL,

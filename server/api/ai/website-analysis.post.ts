@@ -14,12 +14,8 @@ import {
 import { getOpenAiClient } from '../../utils/ai/openai'
 import { getAiSystemPrompt } from '../../utils/ai/prompts'
 import { fetchLlmsFullReferenceDocument } from '../../utils/ai/reference'
-import {
-	extractResponseRefusalText,
-	readRecordField,
-	requestWithOpenAiCompatibility,
-	shouldRetryAfterTokenLimitIncomplete
-} from '../../utils/ai/response'
+import { extractResponseRefusalText, readRecordField } from '../../utils/ai/response'
+import { requestAiRouteResponseWithRetry } from '../../utils/ai/route-request'
 import { countWords, sanitizeAiMarkdown } from '../../utils/ai/text'
 import { crawlWebsiteForAnalysis } from '../../utils/crawler/website'
 import { createServerExecutionTimer } from '../../utils/observability/timing'
@@ -51,6 +47,7 @@ export default defineEventHandler(async (event) => {
 		// 1) Boundary validation.
 		const body = await readBody(event)
 		const input = AiWebsiteAnalysisRequestSchema.parse(body)
+		const requestConfig = AI_OPENAI_CONFIG.analysisRequest
 		timer.mark('request_validated')
 
 		const maxPages = input.maxPages ?? AI_WEBSITE_ANALYSIS_DEFAULT_PAGES
@@ -84,6 +81,9 @@ export default defineEventHandler(async (event) => {
 		timer.mark('system_prompt_loaded')
 		const referenceDocument = await fetchLlmsFullReferenceDocument(event)
 		timer.mark('reference_document_loaded')
+
+		// 4) Create OpenAI client bound to runtime secrets/model configuration.
+		const { client, model } = getOpenAiClient(event, { useCase: 'website-analysis' })
 		const userPrompt = formatWebsiteAnalysisInput({
 			url: input.url,
 			region: input.region,
@@ -91,146 +91,104 @@ export default defineEventHandler(async (event) => {
 			maxPages,
 			crawledPages: evidencePages
 		})
-		timer.mark('request_composed')
+		timer.mark('request_composed', { model })
 
-		// 4) Create OpenAI client bound to runtime secrets/model configuration.
-		const { client, model } = getOpenAiClient(event)
-		/**
-		 * Requests website-analysis output with compatibility fallbacks.
-		 *
-		 * Behavior:
-		 * - starts with structured output (`responses.parse`)
-		 * - degrades unsupported reasoning/verbosity params/values
-		 * - falls back to plain-text mode (`responses.create`) when structured parse
-		 *   fails at SDK JSON parse level
-		 *
-		 * @param options - Request tuning values.
-		 * @returns OpenAI response object normalized to include `output_parsed` key.
-		 */
-		const requestWebsiteAnalysisResponse = async (options: {
-			maxOutputTokens: number
-			includeReasoning: boolean
-			reasoningEffort: 'none' | 'minimal' | 'low' | 'medium' | 'high' | 'xhigh'
-			verbosity: 'low' | 'medium' | 'high'
-		}): Promise<Awaited<ReturnType<typeof client.responses.parse>>> => {
-			return await requestWithOpenAiCompatibility({
-				label: 'website-analysis',
-				maxOutputTokens: options.maxOutputTokens,
-				includeReasoning: options.includeReasoning,
-				reasoningEffort: options.reasoningEffort,
-				verbosity: options.verbosity,
-				requestStructured: async ({
-					maxOutputTokens,
-					includeReasoning,
-					reasoningEffort,
-					includeVerbosity,
-					verbosity
-				}) =>
-					await client.responses.parse(
-						{
-							model,
-							max_output_tokens: maxOutputTokens,
-							...(includeReasoning
-								? {
-										reasoning: {
-											effort: reasoningEffort
-										}
+		const { response, didRetryAfterIncomplete } = await requestAiRouteResponseWithRetry({
+			label: 'website-analysis',
+			model,
+			requestConfig,
+			requestStructured: async ({
+				maxOutputTokens,
+				includeReasoning,
+				reasoningEffort,
+				includeVerbosity,
+				verbosity
+			}) =>
+				await client.responses.parse(
+					{
+						model,
+						max_output_tokens: maxOutputTokens,
+						...(includeReasoning
+							? {
+									reasoning: {
+										effort: reasoningEffort
 									}
-								: {}),
-							text: {
-								...(includeVerbosity ? { verbosity } : {}),
-								format: zodTextFormat(
-									WebsiteAnalysisOutputSchema,
-									'website_analysis_output'
-								)
+								}
+							: {}),
+						text: {
+							...(includeVerbosity ? { verbosity } : {}),
+							format: zodTextFormat(
+								WebsiteAnalysisOutputSchema,
+								'website_analysis_output'
+							)
+						},
+						input: [
+							{
+								role: 'system',
+								content: systemPrompt
 							},
-							input: [
-								{
-									role: 'system',
-									content: systemPrompt
-								},
-								{
-									role: 'user',
-									content: userPrompt
-								}
-							]
-						},
-						{
-							maxRetries: AI_OPENAI_CONFIG.analysisRequest.maxRetries
-						}
-					),
-				requestPlain: async ({
-					maxOutputTokens,
-					includeReasoning,
-					reasoningEffort,
-					includeVerbosity,
-					verbosity
-				}) => {
-					const plainResponse = await client.responses.create(
-						{
-							model,
-							max_output_tokens: maxOutputTokens,
-							...(includeReasoning
-								? {
-										reasoning: {
-											effort: reasoningEffort
-										}
+							{
+								role: 'user',
+								content: userPrompt
+							}
+						]
+					},
+					{
+						maxRetries: requestConfig.maxRetries
+					}
+				),
+			requestPlain: async ({
+				maxOutputTokens,
+				includeReasoning,
+				reasoningEffort,
+				includeVerbosity,
+				verbosity
+			}) => {
+				const plainResponse = await client.responses.create(
+					{
+						model,
+						max_output_tokens: maxOutputTokens,
+						...(includeReasoning
+							? {
+									reasoning: {
+										effort: reasoningEffort
 									}
-								: {}),
-							text: includeVerbosity ? { verbosity } : undefined,
-							input: [
-								{
-									role: 'system',
-									content: systemPrompt
-								},
-								{
-									role: 'user',
-									content: userPrompt
 								}
-							]
-						},
-						{
-							maxRetries: AI_OPENAI_CONFIG.analysisRequest.maxRetries
-						}
-					)
+							: {}),
+						text: includeVerbosity ? { verbosity } : undefined,
+						input: [
+							{
+								role: 'system',
+								content: systemPrompt
+							},
+							{
+								role: 'user',
+								content: userPrompt
+							}
+						]
+					},
+					{
+						maxRetries: requestConfig.maxRetries
+					}
+				)
 
-					return {
-						...plainResponse,
-						output_parsed: null
-					} as Awaited<ReturnType<typeof client.responses.parse>>
-				}
-			})
-		}
-
-		let didRetryAfterIncomplete = false
-		let response = await requestWebsiteAnalysisResponse({
-			maxOutputTokens: AI_OPENAI_CONFIG.analysisRequest.maxOutputTokens,
-			includeReasoning: true,
-			reasoningEffort: AI_OPENAI_CONFIG.analysisRequest.reasoningEffort,
-			verbosity: AI_OPENAI_CONFIG.analysisRequest.verbosity
+				return {
+					...plainResponse,
+					output_parsed: null
+				} as Awaited<ReturnType<typeof client.responses.parse>>
+			},
+			onResponseReceived: ({ isRetry, maxOutputTokens, reasoningEffort, verbosity }) => {
+				timer.mark(
+					isRetry ? 'openai_response_retry_received' : 'openai_response_received',
+					{
+						model,
+						maxOutputTokens,
+						reasoningEffort,
+						verbosity
+					}
+				)
+			}
 		})
-		timer.mark('openai_response_received')
-
-		if (shouldRetryAfterTokenLimitIncomplete(response)) {
-			didRetryAfterIncomplete = true
-			console.warn(
-				'[AI] website-analysis retrying after incomplete max_output_tokens response',
-				{
-					model,
-					initialMaxOutputTokens: AI_OPENAI_CONFIG.analysisRequest.maxOutputTokens,
-					retryMaxOutputTokens:
-						AI_OPENAI_CONFIG.analysisRequest.maxOutputTokensOnIncompleteRetry
-				}
-			)
-
-			response = await requestWebsiteAnalysisResponse({
-				maxOutputTokens: AI_OPENAI_CONFIG.analysisRequest.maxOutputTokensOnIncompleteRetry,
-				includeReasoning: AI_OPENAI_CONFIG.analysisRequest.retryWithReasoningOnIncomplete,
-				reasoningEffort: AI_OPENAI_CONFIG.analysisRequest.incompleteRetryReasoningEffort,
-				verbosity: AI_OPENAI_CONFIG.analysisRequest.incompleteRetryVerbosity
-			})
-			timer.mark('openai_response_retry_received')
-		}
 
 		let analysis: string
 		let analysisSource: 'structured' | 'json_text_fallback' | 'plain_text_fallback'
@@ -304,7 +262,8 @@ export default defineEventHandler(async (event) => {
 			analysedPages: result.analysedPages.length
 		})
 		timer.done({
-			didRetryAfterIncomplete
+			didRetryAfterIncomplete,
+			model
 		})
 		return result
 	} catch (error: unknown) {

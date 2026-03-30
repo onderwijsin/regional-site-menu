@@ -2,7 +2,7 @@ import type { AiWebsiteAnalysisResponse, ReportAiInsights } from '~~/schema/repo
 import type { ReportConfig } from '~~/schema/reportConfig'
 import type { ReportData } from './report/types'
 
-import { NON_DEV_STAGE_DURATION_MULTIPLIER, REPORT_AI_PROGRESS_CONFIG } from '@ai'
+import { REPORT_AI_PROGRESS_CONFIG } from '@ai'
 import { SECURITY_HEADERS } from '@constants'
 import {
 	AI_WEBSITE_ANALYSIS_DEFAULT_PAGES,
@@ -19,14 +19,14 @@ type AiProgressItemStatus = 'running' | 'completed'
 export type AiProgressItem = {
 	id: string
 	text: string
-	reasoning: string
+	details: string
 	status: AiProgressItemStatus
 }
 
 type AiProgressStageDefinition = {
 	id: string
 	text: string
-	reasoning: string
+	details: string
 	/**
 	 * Preferred visible duration for this stage while the async task is pending.
 	 */
@@ -47,49 +47,36 @@ type AiProgressScenario = {
 	fastForwardMs: number
 }
 
-function scaleStageDurationMs(baseDurationMs: number): number {
-	const multiplier = import.meta.dev ? 1 : NON_DEV_STAGE_DURATION_MULTIPLIER
-	return Math.round(baseDurationMs * multiplier)
-}
-
-const AI_PROGRESS_CONFIG: Record<'briefing', AiProgressScenario> = {
-	briefing: {
+function createBriefingProgressScenario(): AiProgressScenario {
+	return {
 		fastForwardMs: REPORT_AI_PROGRESS_CONFIG.briefingFastForwardMs,
 		stages: [
 			{
 				id: 'briefing-start',
 				text: 'AI-briefing starten...',
-				reasoning:
+				details:
 					'De briefing-aanvraag wordt opgebouwd met auditresultaten en opgegeven context.',
-				durationMs: scaleStageDurationMs(
-					REPORT_AI_PROGRESS_CONFIG.briefingStageDurationMs.start
-				)
+				durationMs: REPORT_AI_PROGRESS_CONFIG.briefingStageDurationMs.start
 			},
 			{
 				id: 'briefing-synthesis',
 				text: 'Inzichten combineren...',
-				reasoning:
+				details:
 					'Zelfevaluatie, opmerkingen en eventuele website-analyse worden samengebracht.',
-				durationMs: scaleStageDurationMs(
-					REPORT_AI_PROGRESS_CONFIG.briefingStageDurationMs.synthesis
-				)
+				durationMs: REPORT_AI_PROGRESS_CONFIG.briefingStageDurationMs.synthesis
 			},
 			{
 				id: 'briefing-generate',
 				text: 'Briefing genereren...',
-				reasoning:
+				details:
 					'De server genereert de briefing op basis van de verzamelde inzichten en context.',
-				durationMs: scaleStageDurationMs(
-					REPORT_AI_PROGRESS_CONFIG.briefingStageDurationMs.generate
-				)
+				durationMs: REPORT_AI_PROGRESS_CONFIG.briefingStageDurationMs.generate
 			},
 			{
 				id: 'briefing-finalize',
 				text: 'Briefing afronden...',
-				reasoning: 'De briefing wordt concreet geformuleerd voor gebruik in de rapportage.',
-				durationMs: scaleStageDurationMs(
-					REPORT_AI_PROGRESS_CONFIG.briefingStageDurationMs.finalize
-				)
+				details: 'De briefing wordt concreet geformuleerd voor gebruik in de rapportage.',
+				durationMs: REPORT_AI_PROGRESS_CONFIG.briefingStageDurationMs.finalize
 			}
 		]
 	}
@@ -102,11 +89,39 @@ const AI_PROGRESS_CONFIG: Record<'briefing', AiProgressScenario> = {
  * @returns Duration in milliseconds for the crawl stage.
  */
 function resolveAnalysisCrawlStageDurationMs(maxPages: number | undefined): number {
-	const safeMaxPages = Math.max(maxPages ?? AI_WEBSITE_ANALYSIS_DEFAULT_PAGES, 1)
-	return scaleStageDurationMs(
-		REPORT_AI_PROGRESS_CONFIG.crawlStageBaseDurationMs +
-			REPORT_AI_PROGRESS_CONFIG.crawlStageDurationPerPageMs * safeMaxPages
+	const safeMaxPages = Math.max(
+		1,
+		Math.min(
+			maxPages ?? AI_WEBSITE_ANALYSIS_DEFAULT_PAGES,
+			REPORT_AI_PROGRESS_CONFIG.crawlStageDurationScalePages
+		)
 	)
+	return Math.min(
+		REPORT_AI_PROGRESS_CONFIG.crawlStageBaseDurationMs +
+			REPORT_AI_PROGRESS_CONFIG.crawlStageDurationPerPageMs * safeMaxPages,
+		REPORT_AI_PROGRESS_CONFIG.crawlStageMaxDurationMs
+	)
+}
+
+/**
+ * Resolves additional model-processing duration for larger analysis contexts.
+ *
+ * This captures the practical behavior that model latency grows with more
+ * crawled evidence, but flattens after a certain depth.
+ *
+ * @param maxPages - Requested max pages for website analysis.
+ * @returns Extra duration in milliseconds added to the interpret stage.
+ */
+function resolveAnalysisModelDurationBoostMs(maxPages: number | undefined): number {
+	const safeMaxPages = Math.max(
+		1,
+		Math.min(
+			maxPages ?? AI_WEBSITE_ANALYSIS_DEFAULT_PAGES,
+			REPORT_AI_PROGRESS_CONFIG.analysisModelDurationScalePages
+		)
+	)
+	const additionalPages = Math.max(safeMaxPages - 1, 0)
+	return additionalPages * REPORT_AI_PROGRESS_CONFIG.analysisModelDurationPerAdditionalPageMs
 }
 
 /**
@@ -117,6 +132,7 @@ function resolveAnalysisCrawlStageDurationMs(maxPages: number | undefined): numb
  */
 function createAnalysisProgressScenario(maxPages: number | undefined): AiProgressScenario {
 	const crawlDurationMs = resolveAnalysisCrawlStageDurationMs(maxPages)
+	const modelDurationBoostMs = resolveAnalysisModelDurationBoostMs(maxPages)
 
 	return {
 		fastForwardMs: REPORT_AI_PROGRESS_CONFIG.analysisFastForwardMs,
@@ -124,46 +140,68 @@ function createAnalysisProgressScenario(maxPages: number | undefined): AiProgres
 			{
 				id: 'analysis-start',
 				text: 'AI-analyse starten...',
-				reasoning: 'De aanvraag wordt voorbereid en de websitegegevens worden gevalideerd.',
-				durationMs: scaleStageDurationMs(
-					REPORT_AI_PROGRESS_CONFIG.analysisStageDurationMs.start
-				)
+				details: 'De aanvraag wordt voorbereid en de websitegegevens worden gevalideerd.',
+				durationMs: REPORT_AI_PROGRESS_CONFIG.analysisStageDurationMs.start
 			},
 			{
 				id: 'analysis-crawl',
 				text: "Websitepagina's verzamelen...",
-				reasoning:
+				details:
 					'De server verzamelt relevante pagina’s van je website als context voor de analyse.',
 				durationMs: crawlDurationMs
 			},
 			{
 				id: 'analysis-interpret',
 				text: 'Inhoud interpreteren...',
-				reasoning:
-					'De server interpreteert de verzamelde inhoud om inzichten te genereren.',
-				durationMs: scaleStageDurationMs(
-					REPORT_AI_PROGRESS_CONFIG.analysisStageDurationMs.interpret
-				)
+				details: 'De server interpreteert de verzamelde inhoud om inzichten te genereren.',
+				durationMs:
+					REPORT_AI_PROGRESS_CONFIG.analysisStageDurationMs.interpret +
+					modelDurationBoostMs
 			},
 			{
 				id: 'analysis-criteria',
 				text: 'Criteria toepassen op content...',
-				reasoning: 'De verzamelde inhoud wordt getoetst aan de richtlijnen en criteria.',
-				durationMs: scaleStageDurationMs(
-					REPORT_AI_PROGRESS_CONFIG.analysisStageDurationMs.criteria
-				)
+				details: 'De verzamelde inhoud wordt getoetst aan de richtlijnen en criteria.',
+				durationMs: REPORT_AI_PROGRESS_CONFIG.analysisStageDurationMs.criteria
 			},
 			{
 				id: 'analysis-finalize',
 				text: 'Website-analyse afronden...',
-				reasoning:
+				details:
 					'De uitkomst wordt gestructureerd en klaargezet voor opname in het rapport.',
-				durationMs: scaleStageDurationMs(
-					REPORT_AI_PROGRESS_CONFIG.analysisStageDurationMs.finalize
-				)
+				durationMs: REPORT_AI_PROGRESS_CONFIG.analysisStageDurationMs.finalize
 			}
 		]
 	}
+}
+
+/**
+ * Sums stage durations in one scenario.
+ *
+ * @param scenario - Progress scenario.
+ * @returns Total duration in milliseconds.
+ */
+function sumScenarioDurationMs(scenario: AiProgressScenario): number {
+	return scenario.stages.reduce((total, stage) => total + stage.durationMs, 0)
+}
+
+/**
+ * Returns estimated analysis duration from the same scenario used for staged UI progress.
+ *
+ * @param maxPages - Requested max pages for website analysis.
+ * @returns Estimated duration in milliseconds.
+ */
+export function getEstimatedAnalysisDurationMs(maxPages: number | undefined): number {
+	return sumScenarioDurationMs(createAnalysisProgressScenario(maxPages))
+}
+
+/**
+ * Returns estimated briefing duration from the same scenario used for staged UI progress.
+ *
+ * @returns Estimated duration in milliseconds.
+ */
+export function getEstimatedBriefingDurationMs(): number {
+	return sumScenarioDurationMs(createBriefingProgressScenario())
 }
 
 /**
@@ -242,7 +280,7 @@ export const useReportAi = (options?: {
 		progress.value.push({
 			id: `${stage.id}-${progress.value.length + 1}`,
 			text: stage.text,
-			reasoning: stage.reasoning,
+			details: stage.details,
 			status: 'running'
 		})
 
@@ -271,15 +309,15 @@ export const useReportAi = (options?: {
 	 * - While task is pending, stages are shown using configured durations.
 	 * - If task completes early, remaining stages are fast-forwarded sequentially.
 	 *
-	 * @param scenario - Stage scenario key.
+	 * @param scenario - Stage scenario metadata with ordered progress steps.
 	 * @param task - Async task.
 	 * @returns Task result.
 	 */
 	async function runWithProgressScenario<T>(
-		scenario: keyof typeof AI_PROGRESS_CONFIG | AiProgressScenario,
+		scenario: AiProgressScenario,
 		task: () => Promise<T>
 	): Promise<T> {
-		const config = typeof scenario === 'string' ? AI_PROGRESS_CONFIG[scenario] : scenario
+		const config = scenario
 		if (config.stages.length === 0) {
 			return await task()
 		}
@@ -394,7 +432,7 @@ export const useReportAi = (options?: {
 		let briefing: string | undefined
 		if (config.aiBriefing) {
 			try {
-				briefing = await runWithProgressScenario('briefing', () =>
+				briefing = await runWithProgressScenario(createBriefingProgressScenario(), () =>
 					generateBriefing(config, data, websiteAnalysis)
 				)
 			} catch (error: unknown) {
