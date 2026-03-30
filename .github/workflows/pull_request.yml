@@ -32,6 +32,7 @@ jobs:
       lint-command: pnpm lint
       test-command: pnpm test:unit
       coverage-command: pnpm test:coverage
+      changed-coverage-threshold: 80
     secrets:
       GH_PACKAGES_TOKEN: ${{ secrets.GH_PACKAGES_TOKEN }}
 

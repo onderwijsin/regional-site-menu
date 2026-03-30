@@ -42,6 +42,12 @@ on:
         required: false
         default: pnpm test:coverage
         type: string
+      changed-coverage-threshold:
+        description:
+          'Minimum line coverage percentage for changed TS files in app/config/schema/server/shared'
+        required: false
+        default: 80
+        type: number
       runner:
         description: 'Runner to execute the job on'
         required: false
@@ -68,7 +74,7 @@ jobs:
         run: ${{ inputs.build-command }}
 
       - name: Lint
-        run: ${{ inputs.lint-command }}
+        run: ${{ inputs.lint-command }} --max-warnings 0
 
   typecheck:
     runs-on: ${{ inputs.runner }}
@@ -86,7 +92,18 @@ jobs:
         run: ${{ inputs.build-command }}
 
       - name: Typecheck
-        run: ${{ inputs.typecheck-command }}
+        env:
+          APP_URL: https://example.com
+          CLOUDFLARE_D1_DATABASE_ID: local-test-db
+          CLOUDFLARE_R2_BUCKET: local-test-bucket
+        run: |
+          ${{ inputs.typecheck-command }} > typecheck.log 2>&1
+          cat typecheck.log
+
+          if grep -E 'warning TS[0-9]+' typecheck.log > /dev/null; then
+            echo "Typecheck produced TypeScript warnings, failing due to warning-free CI policy."
+            exit 1
+          fi
 
   test:
     runs-on: ${{ inputs.runner }}
@@ -108,6 +125,18 @@ jobs:
 
       - name: Coverage
         run: ${{ inputs.coverage-command }}
+
+      - name: Changed files coverage gate
+        if: ${{ github.event_name == 'pull_request' }}
+        env:
+          BASE_REF: ${{ github.event.pull_request.base.sha }}
+          HEAD_REF: ${{ github.event.pull_request.head.sha }}
+        run: |
+          git diff --name-only "$BASE_REF" "$HEAD_REF" > changed-files.txt
+          node scripts/ci/changed-coverage-gate.mjs \
+            --coverage coverage/coverage-summary.json \
+            --changed changed-files.txt \
+            --threshold ${{ inputs.changed-coverage-threshold }}
 
       - name: Upload coverage artifact
         if: always()

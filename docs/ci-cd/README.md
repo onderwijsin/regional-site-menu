@@ -71,6 +71,43 @@ Behavior:
 - reusable workflow (`workflow_call`)
 - supports configurable build/lint/typecheck commands
 - runs `lint`, `typecheck`, and `test` as separate jobs
+- enforces warning-free linting by running `pnpm lint --max-warnings 0`
+- enforces warning-free TypeScript diagnostics (fails on `warning TS...` output)
+- enforces changed-file line coverage for touched `app/**`, `config/**`, `schema/**`, `server/**`,
+  and `shared/**` TypeScript files (default threshold: `80%`)
+
+### Changed-file coverage gate
+
+The PR code quality workflow compares changed files between PR base/head SHAs and validates line
+coverage for changed TypeScript files in:
+
+- `app/**`
+- `config/**`
+- `schema/**`
+- `server/**`
+- `shared/**`
+
+Implementation:
+
+- `.github/workflows/code_quality.yml` (`Changed files coverage gate` step)
+- `scripts/ci/changed-coverage-gate.mjs`
+
+If no files in this scope changed, the gate is skipped.
+
+### Local verification commands
+
+Run these before opening/updating a PR:
+
+- `pnpm lint --max-warnings 0`
+- `APP_URL=https://example.com CLOUDFLARE_D1_DATABASE_ID=local-test-db CLOUDFLARE_R2_BUCKET=local-test-bucket pnpm typecheck`
+- `pnpm test:coverage`
+
+To run the changed-file coverage gate locally after generating coverage:
+
+1. Create a changed-files list (example against `origin/main`):
+   - `git diff --name-only origin/main...HEAD > changed-files.txt`
+2. Run gate script:
+   - `node scripts/ci/changed-coverage-gate.mjs --coverage coverage/coverage-summary.json --changed changed-files.txt --threshold 80`
 
 ## Preview / Environment Deployments
 
