@@ -383,6 +383,21 @@ Target: **Cloudflare Workers** via Nitro + NuxtHub.
 - Optimized for Cloudflare
 - Can be adapted to other Nitro targets if needed
 
+Cloudflare resource mapping by environment:
+
+- **KV cache** (`CLOUDFLARE_CACHE_NAMESPACE_ID`): preview and production each use a different KV
+  namespace.
+- **D1 database** (`CLOUDFLARE_D1_DATABASE_ID`, binding `DB`): preview and production each use a
+  different D1 database.
+- **R2 media bucket** (`CLOUDFLARE_R2_BUCKET`, binding `BLOB`): preview and production share the
+  same bucket.
+
+Important preview behavior:
+
+- All preview versions/workers share the same preview KV + preview D1 resources.
+- Nuxt Content database provisioning in preview (based on committed markdown content) writes to the
+  shared preview D1 database, so those changes affect every preview worker/version.
+
 Migration would involve:
 
 1. Removing NuxtHub-specific features (e.g. KV cache)
