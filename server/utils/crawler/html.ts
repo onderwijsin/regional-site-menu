@@ -1,5 +1,6 @@
 import type { ParsedHtmlCrawlData, UnknownRecord } from './types'
 
+import { Readability } from '@mozilla/readability'
 import { parseHTML } from 'linkedom/worker'
 
 import { asRecord, callRecordMethod, toIterableArray } from './records'
@@ -40,15 +41,21 @@ export function parseHtmlForCrawl(
 		}
 
 		const title = normalizeText(getNodeText(querySelectorOneRecord(documentRecord, 'title')))
+		const heading = normalizeText(getNodeText(querySelectorOneRecord(documentRecord, 'h1')))
+		const readabilityExtracted = extractReadableContent(documentRecord, maxCharsPerPage)
 		const contentRoot =
 			querySelectorOneRecord(documentRecord, 'main') ??
 			querySelectorOneRecord(documentRecord, 'article') ??
 			asRecord(documentRecord.body)
-		const excerpt = normalizeText(getNodeText(contentRoot)).slice(0, maxCharsPerPage).trim()
+		const fallbackExcerpt = normalizeText(getNodeText(contentRoot))
+			.slice(0, maxCharsPerPage)
+			.trim()
+		const excerpt = readabilityExtracted.excerpt || fallbackExcerpt
 		const links = extractLinksFromDocument(documentRecord, baseUrl, allowedDomains)
 
 		return {
 			title: title || undefined,
+			heading: resolveHeading(heading, readabilityExtracted.heading, title) || undefined,
 			excerpt,
 			links
 		}
@@ -171,4 +178,56 @@ function readAttribute(nodeRecord: UnknownRecord, attributeName: string): string
  */
 function normalizeText(value: string | null | undefined): string {
 	return value?.replace(/\s+/g, ' ').trim() ?? ''
+}
+
+/**
+ * Attempts lightweight article extraction and falls back when unsuitable.
+ *
+ * @param documentRecord - Parsed HTML document.
+ * @param maxCharsPerPage - Max excerpt length.
+ * @returns Optional heading and excerpt.
+ */
+function extractReadableContent(
+	documentRecord: UnknownRecord,
+	maxCharsPerPage: number
+): { heading: string; excerpt: string } {
+	const defaultResult = { heading: '', excerpt: '' }
+	try {
+		const parsed = new Readability(documentRecord as never).parse()
+		if (!parsed) {
+			return defaultResult
+		}
+
+		const excerpt = normalizeText(parsed.textContent).slice(0, maxCharsPerPage).trim()
+		if (!excerpt) {
+			return defaultResult
+		}
+
+		return {
+			heading: normalizeText(parsed.title),
+			excerpt
+		}
+	} catch {
+		return defaultResult
+	}
+}
+
+/**
+ * Resolves the most suitable heading while avoiding duplicate page-title noise.
+ *
+ * @param heading - H1 extracted from document.
+ * @param readabilityHeading - Readability-provided title/heading.
+ * @param pageTitle - Document title.
+ * @returns Best heading candidate.
+ */
+function resolveHeading(heading: string, readabilityHeading: string, pageTitle: string): string {
+	if (heading) {
+		return heading
+	}
+
+	if (!readabilityHeading) {
+		return ''
+	}
+
+	return readabilityHeading === pageTitle ? '' : readabilityHeading
 }

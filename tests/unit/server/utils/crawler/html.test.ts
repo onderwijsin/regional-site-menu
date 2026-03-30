@@ -29,6 +29,7 @@ describe('crawler/html', () => {
 
 		expect(result.title).toBe('Regionale Scan')
 		expect(result.excerpt).toContain('Belangrijke introductie tekst.')
+		expect(result.heading).toBeUndefined()
 		expect(result.excerpt).not.toContain('window.shouldNotAppear')
 		expect(result.links).toEqual(['https://example.com/over', 'https://sub.example.com/team'])
 	})
@@ -47,8 +48,32 @@ describe('crawler/html', () => {
 		const result = parseHtmlForCrawl(html, 'https://example.com', ['example.com'], 25)
 
 		expect(result.title).toBeUndefined()
+		expect(result.heading).toBeUndefined()
 		expect(result.excerpt).toBe('Deze tekst wordt gebruikt')
 		expect(result.links).toEqual([])
+	})
+
+	it('prefers readability extraction when available', () => {
+		const html = `
+			<html>
+				<head>
+					<title>Mijn site</title>
+				</head>
+				<body>
+					<header>Menu Home Contact</header>
+					<article>
+						<h1>Belangrijke kop</h1>
+						<p>${'Inhoud '.repeat(120)}</p>
+					</article>
+				</body>
+			</html>
+		`
+
+		const result = parseHtmlForCrawl(html, 'https://example.com', ['example.com'], 60)
+
+		expect(result.excerpt.length).toBe(60)
+		expect(result.heading).toBe('Belangrijke kop')
+		expect(result.excerpt).toContain('Inhoud')
 	})
 
 	it('returns an empty result for minimal html without content', () => {

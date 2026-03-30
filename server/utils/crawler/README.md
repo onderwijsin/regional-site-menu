@@ -21,7 +21,8 @@ Primary entrypoint:
 - `fetch.ts`
   - bounded fetch/read helpers with timeout + byte limits
 - `html.ts`
-  - HTML parsing and link/content extraction (`linkedom`)
+  - HTML parsing and link/content extraction (`linkedom` + optional `@mozilla/readability` first
+    pass with fallback)
 - `sitemap.ts`
   - sitemap + robots discovery and recursive sitemap index handling (`fast-xml-parser`)
 - `cache.ts`

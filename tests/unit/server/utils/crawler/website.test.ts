@@ -131,7 +131,12 @@ describe('crawler/website', () => {
 
 		expect(result).toEqual([
 			{ url: 'https://example.com/start', excerpt: '' },
-			{ url: 'https://example.com/landing', excerpt: 'Inhoud van landing', title: undefined }
+			{
+				url: 'https://example.com/landing',
+				excerpt: 'Inhoud van landing',
+				title: undefined,
+				heading: undefined
+			}
 		])
 		expect(crawlerDeps.fetchSitemapUrlsMock).toHaveBeenCalledWith(
 			'https://example.com/start',
@@ -178,8 +183,18 @@ describe('crawler/website', () => {
 		})
 
 		expect(result).toEqual([
-			{ url: 'https://example.com/start', excerpt: 'Start', title: undefined },
-			{ url: 'https://example.com/a', excerpt: 'Pagina A', title: undefined }
+			{
+				url: 'https://example.com/start',
+				excerpt: 'Start',
+				title: undefined,
+				heading: undefined
+			},
+			{
+				url: 'https://example.com/a',
+				excerpt: 'Pagina A',
+				title: undefined,
+				heading: undefined
+			}
 		])
 		expect(crawlerDeps.fetchHtmlPageMock).toHaveBeenCalledTimes(2)
 		expect(crawlerDeps.fetchHtmlPageMock).toHaveBeenNthCalledWith(
@@ -262,7 +277,12 @@ describe('crawler/website', () => {
 		})
 
 		expect(result).toEqual([
-			{ url: 'https://example.com/start', excerpt: 'Start', title: undefined }
+			{
+				url: 'https://example.com/start',
+				excerpt: 'Start',
+				title: undefined,
+				heading: undefined
+			}
 		])
 		expect(crawlerDeps.fetchHtmlPageMock).toHaveBeenCalledTimes(1)
 	})

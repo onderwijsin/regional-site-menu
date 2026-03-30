@@ -12,7 +12,7 @@ files remain focused on boundary handling and orchestration.
 - `reference.ts`
   - fetches llms criteria documents (`/llms-full.txt`, fallback `/llms.txt`)
 - `analysis.ts`
-  - builds website-analysis prompt input blocks from crawl evidence and metadata
+  - builds website-analysis prompt input blocks from compact per-page crawl evidence and metadata
 - `analysis-output.ts`
   - structured schema for website-analysis model output + markdown assembly
 - `briefing.ts`

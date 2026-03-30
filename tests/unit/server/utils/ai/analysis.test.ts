@@ -24,6 +24,7 @@ describe('server/utils/ai/analysis', () => {
 			{
 				url: 'https://example.com/over',
 				title: 'Over ons',
+				heading: 'Welkom',
 				excerpt: 'Informatie over de regio'
 			},
 			{
@@ -32,10 +33,22 @@ describe('server/utils/ai/analysis', () => {
 			}
 		])
 
-		expect(output).toContain('## Pagina 1')
+		expect(output).toContain('## Evidence 1')
 		expect(output).toContain('Titel: Over ons')
+		expect(output).toContain('Hoofdkop: Welkom')
 		expect(output).toContain('Titel: Onbekend')
-		expect(output).toContain('Inhoud (uittreksel): Geen tekst gevonden.')
+		expect(output).toContain('Kerninhoud: Geen tekst gevonden.')
+	})
+
+	it('truncates long evidence excerpts for compact prompt context', () => {
+		const output = formatCrawledPagesForPrompt([
+			{
+				url: 'https://example.com/lang',
+				excerpt: 'A'.repeat(900)
+			}
+		])
+
+		expect(output).toContain(`Kerninhoud: ${'A'.repeat(700)}…`)
 	})
 
 	it('includes crawl coverage + constraints in website-analysis prompt', () => {

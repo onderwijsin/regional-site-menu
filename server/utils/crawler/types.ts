@@ -12,6 +12,7 @@ export type CrawlWebsiteArgs = {
 
 export type ParsedHtmlCrawlData = {
 	title?: string
+	heading?: string
 	excerpt: string
 	links: string[]
 }
@@ -24,6 +25,7 @@ export type SitemapDocumentEntries = {
 export type CrawledWebsitePage = {
 	url: string
 	title?: string
+	heading?: string
 	excerpt: string
 }
 

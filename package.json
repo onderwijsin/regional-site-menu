@@ -39,6 +39,7 @@
 		"@nuxt/test-utils": "catalog:",
 		"@nuxt/ui": "catalog:",
 		"@nuxthub/core": "catalog:",
+		"@mozilla/readability": "catalog:",
 		"@nuxtjs/eslint-module": "catalog:",
 		"@nuxtjs/plausible": "catalog:",
 		"@nuxtjs/robots": "catalog:",

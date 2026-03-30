@@ -65,10 +65,12 @@ export function formatCrawledPagesForPrompt(pages: CrawledWebsitePage[]): string
 
 	const lines: string[] = []
 	for (const [index, page] of pages.entries()) {
-		lines.push(`## Pagina ${index + 1}`)
+		const compactExcerpt = toCompactExcerpt(page.excerpt)
+		lines.push(`## Evidence ${index + 1}`)
 		lines.push(`URL: ${page.url}`)
 		lines.push(`Titel: ${page.title || 'Onbekend'}`)
-		lines.push(`Inhoud (uittreksel): ${page.excerpt || 'Geen tekst gevonden.'}`)
+		lines.push(`Hoofdkop: ${page.heading || 'Onbekend'}`)
+		lines.push(`Kerninhoud: ${compactExcerpt || 'Geen tekst gevonden.'}`)
 		lines.push('')
 	}
 
@@ -128,4 +130,24 @@ function countTopPathSegments(pages: CrawledWebsitePage[]): string {
 		.map(([segment, count]) => `${segment} (${count})`)
 
 	return top.length > 0 ? top.join(', ') : 'Geen'
+}
+
+/**
+ * Compacts and truncates evidence text for prompt readability.
+ *
+ * @param excerpt - Crawled page excerpt.
+ * @returns Compact text for model evidence input.
+ */
+function toCompactExcerpt(excerpt: string): string {
+	const normalized = excerpt.replace(/\s+/g, ' ').trim()
+	if (!normalized) {
+		return ''
+	}
+
+	const compactLimit = 700
+	if (normalized.length <= compactLimit) {
+		return normalized
+	}
+
+	return `${normalized.slice(0, compactLimit).trimEnd()}…`
 }

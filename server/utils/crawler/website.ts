@@ -201,6 +201,7 @@ async function crawlSinglePage(
 		page: {
 			url: resolvedUrl,
 			title: parsed.title,
+			heading: parsed.heading,
 			excerpt: parsed.excerpt
 		},
 		links: parsed.links

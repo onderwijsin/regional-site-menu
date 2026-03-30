@@ -16,6 +16,7 @@ catalog:
   '@nuxt/test-utils': 4.0.0
   '@nuxt/ui': 4.6.0
   '@nuxthub/core': 0.10.7
+  '@mozilla/readability': 0.6.0
   '@nuxtjs/eslint-module': 4.1.0
   '@nuxtjs/plausible': 3.0.2
   '@nuxtjs/robots': 5.7.1
