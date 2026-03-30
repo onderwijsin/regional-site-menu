@@ -3,6 +3,7 @@ import eslint from '@eslint/js'
 import json from '@eslint/json'
 import markdown from '@eslint/markdown'
 import eslintConfigPrettier from 'eslint-config-prettier'
+import jsdoc from 'eslint-plugin-jsdoc'
 
 import withNuxt from './.nuxt/eslint.config.mjs'
 
@@ -17,6 +18,53 @@ export default withNuxt(
 	{
 		files: ['**/*.{js,ts,jsx,tsx}'],
 		...eslint.configs.recommended
+	},
+
+	// Function docs in source code
+	{
+		files: [
+			'app/**/*.{js,ts}',
+			'server/**/*.{js,ts}',
+			'schema/**/*.{js,ts}',
+			'shared/**/*.{js,ts}'
+		],
+		plugins: {
+			jsdoc
+		},
+		settings: {
+			jsdoc: {
+				mode: 'typescript'
+			}
+		},
+		rules: {
+			'jsdoc/check-tag-names': 'error',
+			'jsdoc/require-description': 'warn',
+			'jsdoc/require-jsdoc': [
+				'warn',
+				{
+					require: {
+						ClassDeclaration: false,
+						FunctionDeclaration: false,
+						FunctionExpression: false,
+						ArrowFunctionExpression: false,
+						MethodDefinition: false
+					},
+					contexts: [
+						'ExportNamedDeclaration > FunctionDeclaration',
+						'ExportDefaultDeclaration > FunctionDeclaration',
+						'ExportNamedDeclaration > VariableDeclaration > VariableDeclarator > ArrowFunctionExpression',
+						'ExportNamedDeclaration > VariableDeclaration > VariableDeclarator > FunctionExpression',
+						'ExportDefaultDeclaration > ArrowFunctionExpression',
+						'ExportDefaultDeclaration > FunctionExpression'
+					]
+				}
+			],
+			'jsdoc/require-param': ['warn', { checkDestructured: false }],
+			'jsdoc/require-param-description': 'warn',
+			'jsdoc/require-returns': 'warn',
+			'jsdoc/require-returns-description': 'warn',
+			'jsdoc/require-throws-description': 'warn'
+		}
 	},
 
 	// JSON

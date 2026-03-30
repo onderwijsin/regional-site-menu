@@ -46,6 +46,6 @@ export async function fetchLlmsFullReferenceDocument(event: H3Event): Promise<st
 
 	throw createError({
 		statusCode: 500,
-		statusMessage: 'Kon llms referentiedocument niet ophalen'
+		statusMessage: 'Could not fetch llms reference document'
 	})
 }

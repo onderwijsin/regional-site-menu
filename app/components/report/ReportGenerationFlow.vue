@@ -95,9 +95,24 @@ const aiInsights = ref<ReportAiInsights>()
 const briefingDraft = ref('')
 const isAiLoading = ref(false)
 const isGeneratingPdf = ref(false)
+const aiTurnstile = ref<{ reset: () => void }>()
+const {
+	token: aiTurnstileToken,
+	isEnabled: isTurnstileEnabled,
+	getTokenWithRetry,
+	isReady: isTurnstileReady,
+	reset: resetTurnstile,
+	showPendingHint,
+	showMissingTokenErrorHint
+} = useTurnstile()
 
 const { generateReport } = useReportGenerator()
-const { generateAiInsights, progress } = useReportAi()
+const { generateAiInsights, progress } = useReportAi({
+	getTurnstileToken: getAiTurnstileToken,
+	onTurnstileConsumed: () => {
+		resetTurnstile(aiTurnstile.value)
+	}
+})
 const { trackReportGenerated } = useTracking()
 const confirm = useConfirmDialog()
 const { getIcon } = useIcons()
@@ -214,6 +229,7 @@ const { handleConfigSubmit, handleBriefingSubmit } = useReportGenerationExecutio
 	generateReport,
 	generateAiInsights,
 	trackReportGenerated,
+	beforeStartAiGeneration: ensureAiTurnstileReadyBeforeAiStage,
 	onClose: () => emit('close')
 })
 
@@ -225,6 +241,40 @@ const { handleConfigSubmit, handleBriefingSubmit } = useReportGenerationExecutio
 async function navigateToHelp() {
 	useOverlay().closeAll()
 	await navigateTo('/help')
+}
+
+async function getAiTurnstileToken(): Promise<string | undefined> {
+	if (!isTurnstileEnabled.value) {
+		return undefined
+	}
+
+	const token = await getTokenWithRetry()
+	if (token) {
+		return token
+	}
+
+	// In preview/prod a new token can occasionally arrive late after a previous
+	// token was consumed by the first AI request. Force one refresh and retry.
+	aiTurnstile.value?.reset()
+	return await getTokenWithRetry()
+}
+
+async function ensureAiTurnstileReadyBeforeAiStage(): Promise<boolean> {
+	if (!isTurnstileEnabled.value) {
+		return true
+	}
+
+	if (!isTurnstileReady()) {
+		showPendingHint()
+	}
+
+	const token = await getTokenWithRetry()
+	if (token) {
+		return true
+	}
+
+	showMissingTokenErrorHint()
+	return false
 }
 
 /**
@@ -291,6 +341,14 @@ async function handleClose(): Promise<void> {
 		@close:prevent="handleClose"
 	>
 		<template #body>
+			<NuxtTurnstile
+				v-if="isTurnstileEnabled"
+				ref="aiTurnstile"
+				v-model="aiTurnstileToken"
+				:options="{ appearance: 'interaction-only' }"
+				class="pointer-events-none absolute h-0 w-0 overflow-hidden opacity-0"
+			/>
+
 			<UForm
 				v-if="stage === 'config'"
 				ref="form"

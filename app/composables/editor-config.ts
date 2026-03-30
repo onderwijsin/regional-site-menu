@@ -4,6 +4,8 @@ import type { EditorSuggestionMenuItem, EditorToolbarItem } from '@nuxt/ui'
  * Factory for editor config
  *
  * Keeps all editor-related config DRY and consistent
+ *
+ * @returns Suggestion menu and toolbar configuration for the rich-text editor.
  */
 export const useEditorConfig = () => {
 	const { getIcon } = useIcons()

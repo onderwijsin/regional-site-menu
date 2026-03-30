@@ -13,6 +13,7 @@ import {
 	shouldRetryAfterTokenLimitIncomplete
 } from '../../utils/ai/response'
 import { countWords, sanitizeAiMarkdown } from '../../utils/ai/text'
+import { assertTurnstileToken } from '../../utils/security/turnstile'
 
 /**
  * Structured response shape expected from the LLM.
@@ -40,6 +41,8 @@ const BriefingOutputSchema = z.object({
  * @returns Briefing text + metadata.
  */
 export default defineEventHandler(async (event) => {
+	await assertTurnstileToken(event, 'ai_briefing')
+
 	// 1) Boundary validation: fail fast on malformed payloads.
 	const body = await readBody(event)
 	const input = AiBriefingRequestSchema.parse(body)
@@ -212,7 +215,7 @@ export default defineEventHandler(async (event) => {
 			})
 			throw createError({
 				statusCode: 502,
-				statusMessage: 'AI briefing kon niet worden gegenereerd'
+				statusMessage: 'AI briefing could not be generated'
 			})
 		}
 	}

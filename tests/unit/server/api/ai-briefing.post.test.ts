@@ -39,6 +39,7 @@ async function loadHandler(
 			}
 		})
 	const createImpl = options.createImpl ?? vi.fn()
+	const assertTurnstileTokenMock = vi.fn().mockResolvedValue(undefined)
 
 	vi.stubGlobal('defineEventHandler', (handler: unknown) => handler)
 	vi.stubGlobal(
@@ -72,6 +73,9 @@ async function loadHandler(
 	vi.doMock('~~/server/utils/ai/prompts', () => ({
 		getAiSystemPrompt: vi.fn(async () => 'System prompt')
 	}))
+	vi.doMock('~~/server/utils/security/turnstile', () => ({
+		assertTurnstileToken: assertTurnstileTokenMock
+	}))
 	vi.doMock('~~/server/utils/ai/text', () => ({
 		sanitizeAiMarkdown: (value: string) => value.trim(),
 		countWords: (value: string) => value.trim().split(/\s+/).filter(Boolean).length
@@ -81,13 +85,14 @@ async function loadHandler(
 	return {
 		handler: module.default,
 		parseImpl,
-		createImpl
+		createImpl,
+		assertTurnstileTokenMock
 	}
 }
 
 describe('POST /api/ai/briefing', () => {
 	it('returns structured briefing output', async () => {
-		const { handler, parseImpl, createImpl } = await loadHandler()
+		const { handler, parseImpl, createImpl, assertTurnstileTokenMock } = await loadHandler()
 
 		const result = await handler({} as never)
 
@@ -97,6 +102,7 @@ describe('POST /api/ai/briefing', () => {
 		})
 		expect(parseImpl).toHaveBeenCalledTimes(1)
 		expect(createImpl).not.toHaveBeenCalled()
+		expect(assertTurnstileTokenMock).toHaveBeenCalledWith({}, 'ai_briefing')
 	})
 
 	it('retries with increased token budget after incomplete max-output response', async () => {
@@ -158,7 +164,7 @@ describe('POST /api/ai/briefing', () => {
 
 		await expect(handler({} as never)).rejects.toMatchObject({
 			statusCode: 502,
-			statusMessage: 'AI briefing kon niet worden gegenereerd'
+			statusMessage: 'AI briefing could not be generated'
 		})
 	})
 

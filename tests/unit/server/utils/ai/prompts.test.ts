@@ -64,11 +64,11 @@ describe('server/utils/ai/prompts', () => {
 
 		await expect(getAiSystemPrompt({} as never, 'ai-briefing-system')).rejects.toMatchObject({
 			statusCode: 500,
-			statusMessage: 'Prompt niet gevonden: ai-briefing-system'
+			statusMessage: 'Prompt not found: ai-briefing-system'
 		})
 		expect(createErrorMock).toHaveBeenCalledWith({
 			statusCode: 500,
-			statusMessage: 'Prompt niet gevonden: ai-briefing-system'
+			statusMessage: 'Prompt not found: ai-briefing-system'
 		})
 	})
 })

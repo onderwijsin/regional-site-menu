@@ -11,7 +11,7 @@ import { app } from './config/head'
 import { siteDescription, siteTitle } from './config/indentity'
 import { robots } from './config/robots'
 
-const SUPPORTED_MODES = ['dev', 'prod', 'preview', 'next', 'live-preview'] as const
+const SUPPORTED_MODES = ['dev', 'prod', 'preview'] as const
 
 function resolveMode(value: string | undefined): Mode {
 	if (!value) {
@@ -21,19 +21,25 @@ function resolveMode(value: string | undefined): Mode {
 	return (SUPPORTED_MODES as readonly string[]).includes(value) ? (value as Mode) : 'dev'
 }
 
+// Runtime modes
 const mode = resolveMode(process.env.MODE)
 const isDebug = process.env.DEBUG === 'true'
 const isProd = mode === 'prod'
-const isPreview = mode === 'preview' || mode === 'next' || mode === 'live-preview'
+const isPreview = mode === 'preview'
 const isDev = mode === 'dev'
-const isNext = mode === 'next'
-const isLivePreview = mode === 'live-preview'
 const isTest = process.env.NODE_ENV === 'test' || process.env.VITEST === 'true'
+
+// Resolve Turnstile keys
+const turnstileSiteKey =
+	process.env.TURNSTILE_SITE_KEY ?? (isDev ? '1x00000000000000000000BB' : undefined)
+const turnstileSecretKey =
+	process.env.TURNSTILE_SECRET_KEY ?? (isDev ? '1x0000000000000000000000000000000AA' : undefined)
 
 const appModules = [
 	'@nuxt/eslint',
 	'@nuxt/ui',
 	'@nuxt/image',
+	'@nuxtjs/turnstile',
 	'@nuxtjs/plausible',
 	'@pinia/nuxt',
 	'pinia-plugin-persistedstate/nuxt',
@@ -245,8 +251,15 @@ export default defineNuxtConfig({
 		}
 	},
 
+	turnstile: {
+		siteKey: turnstileSiteKey
+	},
+
 	runtimeConfig: {
 		apiToken: process.env.API_TOKEN,
+		turnstile: {
+			secretKey: turnstileSecretKey
+		},
 		cloudflare: {
 			accountId: process.env.CLOUDFLARE_ACCOUNT_ID,
 			apiToken: process.env.CLOUDFLARE_API_TOKEN,
@@ -268,9 +281,7 @@ export default defineNuxtConfig({
 				isDev,
 				isProd,
 				isPreview,
-				isNext,
 				isDebug,
-				isLivePreview,
 				value: mode
 			},
 			tracking: {
@@ -278,6 +289,9 @@ export default defineNuxtConfig({
 			},
 			contact: {
 				page: NUXT_BEHAVIOR_CONFIG.publicContactPage
+			},
+			turnstile: {
+				siteKey: turnstileSiteKey
 			}
 		}
 	},

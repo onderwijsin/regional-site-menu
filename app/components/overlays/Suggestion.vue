@@ -2,13 +2,23 @@
 import type { FormSubmitEvent } from '@nuxt/ui'
 import type { Submission } from '@schema/submission'
 
-import { SUGGESTION_FORM_CONFIG } from '@constants'
+import { SECURITY_HEADERS, SUGGESTION_FORM_CONFIG } from '@constants'
 import { SubmissionSchema } from '@schema/submission'
 import { GOALS, PILLARS } from '~/composables/content-taxonomy'
 
 const toast = useToast()
 const form = useTemplateRef('form')
 const { getIcon } = useIcons()
+const turnstile = ref<{ reset: () => void }>()
+const {
+	token: turnstileToken,
+	isEnabled: isTurnstileEnabled,
+	getTokenWithRetry,
+	isReady,
+	reset: resetTurnstile,
+	showPendingHint,
+	showMissingTokenErrorHint
+} = useTurnstile()
 
 const emit = defineEmits<{
 	(e: 'close'): void
@@ -54,9 +64,20 @@ async function onSubmit(event: FormSubmitEvent<Submission>) {
 	const formData = event.data
 	isSubmitting.value = true
 	try {
+		if (!isReady()) {
+			showPendingHint()
+		}
+
+		const token = await getTokenWithRetry()
+		if (isTurnstileEnabled.value && !token) {
+			showMissingTokenErrorHint()
+			return
+		}
+
 		await $fetch('/api/datahub/submission', {
 			method: 'POST',
-			body: formData
+			body: formData,
+			headers: token ? { [SECURITY_HEADERS.turnstileToken]: token } : undefined
 		})
 		toast.add({
 			title: 'Gelukt!',
@@ -77,6 +98,7 @@ async function onSubmit(event: FormSubmitEvent<Submission>) {
 		})
 	} finally {
 		isSubmitting.value = false
+		resetTurnstile(turnstile.value)
 	}
 }
 </script>
@@ -88,6 +110,14 @@ async function onSubmit(event: FormSubmitEvent<Submission>) {
 		:ui="{ content: 'max-w-3xl' }"
 	>
 		<template #body>
+			<NuxtTurnstile
+				v-if="isTurnstileEnabled"
+				ref="turnstile"
+				v-model="turnstileToken"
+				:options="{ action: 'suggestion_submission', appearance: 'interaction-only' }"
+				class="pointer-events-none absolute h-0 w-0 overflow-hidden opacity-0"
+			/>
+
 			<UForm
 				ref="form"
 				:state="state"

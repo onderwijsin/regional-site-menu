@@ -194,6 +194,16 @@ export const DATAHUB_CONFIG = {
 } as const
 
 /**
+ * Header names used by request security middleware/helpers.
+ */
+export const SECURITY_HEADERS = {
+	/** Turnstile token header sent by clients to protected routes. */
+	turnstileToken: 'x-turnstile-token',
+	/** Admin bypass token header used for server-to-server testing. */
+	adminToken: 'x-admin-token'
+} as const
+
+/**
  * Labels shown for each integer audit score.
  */
 export const AUDIT_SCORE_LABELS = {

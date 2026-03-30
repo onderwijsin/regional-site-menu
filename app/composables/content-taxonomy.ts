@@ -52,6 +52,12 @@ const PRIORITY_HINTS: Record<Priority, string> = {
 	'Nice to have': 'Dit element is optioneel, maar kan de gebruikerservaring verbeteren.'
 }
 
+/**
+ * Returns explanatory helper text for a pillar value.
+ *
+ * @param value - Pillar taxonomy value.
+ * @returns Pillar hint text.
+ */
 export function getPillarHint(value: Pillar): string {
 	return (
 		PILLAR_HINTS[value] ??
@@ -59,10 +65,22 @@ export function getPillarHint(value: Pillar): string {
 	)
 }
 
+/**
+ * Returns explanatory helper text for a goal value.
+ *
+ * @param value - Goal taxonomy value.
+ * @returns Goal hint text.
+ */
 export function getGoalHint(value: Goal): string {
 	return GOAL_HINTS[value] ?? 'Eén van de doelen van de website van jouw regionale onderwijsloket'
 }
 
+/**
+ * Returns explanatory helper text for a scope value.
+ *
+ * @param value - Scope taxonomy value.
+ * @returns Scope hint text.
+ */
 export function getScopeHint(value: Scope): string {
 	return (
 		SCOPE_HINTS[value] ??
@@ -70,10 +88,22 @@ export function getScopeHint(value: Scope): string {
 	)
 }
 
+/**
+ * Returns explanatory helper text for a priority value.
+ *
+ * @param value - Priority taxonomy value.
+ * @returns Priority hint text.
+ */
 export function getPriorityHint(value: Priority): string {
 	return PRIORITY_HINTS[value] ?? 'Geeft aan hoe belangrijk dit element is voor de gebruiker.'
 }
 
+/**
+ * Maps a pillar to the canonical icon key used throughout the UI.
+ *
+ * @param value - Pillar taxonomy value.
+ * @returns Icon key for the provided pillar.
+ */
 export function getPillarIconName(
 	value: Pillar
 ): 'inzicht' | 'verdieping' | 'activatie' | 'ondersteuning' {

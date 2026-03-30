@@ -1,5 +1,10 @@
 import { Welcome } from '#components'
 
+/**
+ * Creates helpers for controlling the welcome modal.
+ *
+ * @returns Open action and reactive visibility signal for the welcome flow.
+ */
 export const useWelcome = () => {
 	const overlay = useOverlay()
 	const state = useStateStore()

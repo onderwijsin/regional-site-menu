@@ -51,11 +51,11 @@ describe('server/utils/ai/openai', () => {
 		)
 
 		expect(() => getOpenAiClient({} as never)).toThrow(
-			'OPENAI_API_KEY ontbreekt in runtimeConfig'
+			'OPENAI_API_KEY is missing in runtimeConfig'
 		)
 		expect(createErrorMock).toHaveBeenCalledWith({
 			statusCode: 500,
-			statusMessage: 'OPENAI_API_KEY ontbreekt in runtimeConfig'
+			statusMessage: 'OPENAI_API_KEY is missing in runtimeConfig'
 		})
 	})
 

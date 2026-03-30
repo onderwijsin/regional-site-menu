@@ -28,7 +28,8 @@ describe('crawler/cache', () => {
 			maxQueuedUrls: 50,
 			timeoutMs: 3000,
 			maxConcurrency: 4,
-			maxHtmlBytes: 100000
+			maxHtmlBytes: 100000,
+			crawlBudgetMs: 225000
 		})
 
 		expect(key).toContain(CRAWLER_CONFIG.cacheKeyPrefix)

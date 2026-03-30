@@ -38,6 +38,7 @@ If you are working on this codebase with an AI coding agent, read [`AGENTS.md`](
 - Pinia + `pinia-plugin-persistedstate`
 - TipTap (rich text input)
 - jsPDF (client-side report generation)
+- Cloudflare Turnstile via `@nuxtjs/turnstile` (abuse protection for server routes)
 - Cloudflare Workers (via NuxtHub / Nitro preset)
 
 ---
@@ -149,6 +150,8 @@ Important note:
 Detailed testing documentation:
 
 - [Testing Guide](./docs/testing/README.md)
+- [Turnstile Integration](./docs/turnstile/README.md)
+- [Route Guard](./docs/route-guard/README.md)
 
 ---
 
@@ -158,9 +161,11 @@ Use `.example.env` as template.
 
 ### Core
 
-- `MODE` (`dev | next | preview | live-preview | prod`)
+- `MODE` (`dev | preview | prod`)
 - `APP_URL`
 - `API_TOKEN`
+- `TURNSTILE_SITE_KEY` (Cloudflare public site key)
+- `TURNSTILE_SECRET_KEY` (Cloudflare server-side secret key)
 - `DISABLE_TRACKING`
 - `PLAUSIBLE_DOMAIN` (optional override)
 
@@ -236,7 +241,8 @@ To make the content managable outside of the codebase, the application leverages
 [Nuxt Studio](https://nuxt.studio/) module. This module integrates seamlessly with Nuxt Content and
 provides a visual editing experience for the various content collections.
 
-Editor can log in to the studio with their Github Account. Any changes made in the content files are directly committed to the `main` branch.
+Editor can log in to the studio with their Github Account. Any changes made in the content files are
+directly committed to the `main` branch.
 
 The ci/cd pipeline will notice a change to the `content` directory and trigger a rebuild. (This is
 the only case where a production deployment triggers automatically. In all other cases, a manual
@@ -377,6 +383,23 @@ Target: **Cloudflare Workers** via Nitro + NuxtHub.
 - Optimized for Cloudflare
 - Can be adapted to other Nitro targets if needed
 
+Cloudflare resource mapping by environment:
+
+- **KV cache** (`CLOUDFLARE_CACHE_NAMESPACE_ID`): preview and production each use a different KV
+  namespace.
+- **D1 database** (`CLOUDFLARE_D1_DATABASE_ID`, binding `DB`): preview and production each use a
+  different D1 database.
+- **R2 media bucket** (`CLOUDFLARE_R2_BUCKET`, binding `BLOB`): preview and production share the
+  same bucket.
+- **Turnstile** (`TURNSTILE_SITE_KEY`, `TURNSTILE_SECRET_KEY`): preview and production use the same
+  Turnstile configuration.
+
+Important preview behavior:
+
+- All preview versions/workers share the same preview KV + preview D1 resources.
+- Nuxt Content database provisioning in preview (based on committed markdown content) writes to the
+  shared preview D1 database, so those changes affect every preview worker/version.
+
 Migration would involve:
 
 1. Removing NuxtHub-specific features (e.g. KV cache)
@@ -394,7 +417,7 @@ Workflows are defined in `.github/workflows`.
   - lint + typecheck
   - preview deployment (Worker version)
 - **Branches**
-  - `next` → staging environment
+  - `<not-main>` → preview environment
   - `main` → production
 - **Deploy flow**
   1. Build (`pnpm build`)

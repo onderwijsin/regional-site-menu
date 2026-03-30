@@ -2,6 +2,8 @@ import { DATAHUB_CONFIG } from '@constants'
 import { SubmissionSchema } from '@schema/submission'
 import { joinURL } from 'ufo'
 
+import { assertTurnstileToken } from '../../utils/security/turnstile'
+
 /**
  * Controller for `POST /api/datahub/submission`.
  *
@@ -14,6 +16,8 @@ import { joinURL } from 'ufo'
  * @returns `{ success: true }` when downstream submission succeeds.
  */
 export default defineEventHandler(async (event) => {
+	await assertTurnstileToken(event, 'suggestion_submission')
+
 	const body = await readBody(event)
 	const parsedData = SubmissionSchema.parse(body)
 
@@ -24,14 +28,14 @@ export default defineEventHandler(async (event) => {
 	if (!datahubUrl) {
 		throw createError({
 			statusCode: 500,
-			statusMessage: 'DATAHUB_URL ontbreekt in runtimeConfig'
+			statusMessage: 'DATAHUB_URL is missing in runtimeConfig'
 		})
 	}
 
 	if (!datahubToken) {
 		throw createError({
 			statusCode: 500,
-			statusMessage: 'DATAHUB_TOKEN ontbreekt in runtimeConfig'
+			statusMessage: 'DATAHUB_TOKEN is missing in runtimeConfig'
 		})
 	}
 

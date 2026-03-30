@@ -22,6 +22,52 @@ pnpm test:coverage
 Nuxt runtime tests run with a test-focused Nuxt module set (`isTest` in `nuxt.config.ts`) to keep
 the environment deterministic and avoid unrelated plugin/runtime noise.
 
+## Module Usage In Tests
+
+The test environment intentionally does **not** load the full production module list. When `isTest`
+is true, Nuxt uses a smaller `testModules` set in `nuxt.config.ts`.
+
+### Why we keep `testModules` small
+
+1. Keep tests fast and deterministic.
+2. Avoid module side effects unrelated to the behavior under test.
+3. Avoid requiring external/runtime integrations (analytics, studio, platform bindings) during
+   logic-focused test runs.
+4. Keep failures actionable by reducing environment noise.
+
+### When a module SHOULD be included in `testModules`
+
+Add a module when one or more of these apply:
+
+1. App logic under test directly depends on that module's runtime behavior/injections.
+2. It is part of a core behavior contract we must preserve in tests.
+3. Excluding it makes the target tests unrealistic or invalid.
+
+Do not include a module only because it exists in production.
+
+### Current included examples
+
+- `@pinia/nuxt`
+- `pinia-plugin-persistedstate/nuxt`
+- `@vueuse/nuxt`
+
+These are included because state and composable logic in this project depends on them.
+
+### How to include a module in tests
+
+1. Add it to the `testModules` array in [`nuxt.config.ts`](../../nuxt.config.ts).
+2. Add/update tests proving the module-dependent behavior.
+3. Verify:
+   - `pnpm test:unit`
+   - `pnpm lint`
+   - `pnpm typecheck`
+4. Update this section with a short reason for inclusion.
+
+### When to remove a module from `testModules`
+
+Remove a module when no tests depend on its runtime behavior. After removal, run the same
+verification commands and confirm behavior/coverage remain correct.
+
 ## Structure
 
 - `tests/unit/**`:

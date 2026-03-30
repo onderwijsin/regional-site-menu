@@ -16,7 +16,7 @@ export function getOpenAiClient(event: H3Event): { client: OpenAI; model: string
 	if (!token) {
 		throw createError({
 			statusCode: 500,
-			statusMessage: 'OPENAI_API_KEY ontbreekt in runtimeConfig'
+			statusMessage: 'OPENAI_API_KEY is missing in runtimeConfig'
 		})
 	}
 

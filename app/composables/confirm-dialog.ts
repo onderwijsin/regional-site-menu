@@ -9,6 +9,11 @@ export interface ConfirmDialogProps {
 	actions?: (ButtonProps & { mode?: 'confirm' | 'cancel' })[]
 }
 
+/**
+ * Creates a reusable confirmation dialog launcher.
+ *
+ * @returns Function that opens a confirmation modal and resolves to user choice.
+ */
 export const useConfirmDialog = () => {
 	const overlay = useOverlay()
 
