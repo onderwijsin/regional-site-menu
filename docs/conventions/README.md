@@ -107,3 +107,13 @@ Reference:
 2. Avoid introducing dependencies unless required.
 3. Avoid broad rewrites in high-risk modules (PDF/report generation) without explicit need.
 4. Document non-obvious architectural changes in `docs/`.
+
+## Commit and PR Conventions
+
+1. Use Conventional Commit messages: `<type>(<optional-scope>): <subject>`.
+2. Keep commit `type` in the allowed set from [`commitlint.config.js`](../../commitlint.config.js):
+   - `feat`, `fix`, `docs`, `style`, `refactor`, `test`, `chore`, `ci`, `build`, `perf`, `revert`
+3. Keep commit subjects compliant with commitlint checks (for example max header length and subject
+   rules).
+4. Use semantic PR titles in the same conventional format so CI title validation passes
+   ([`.github/workflows/lint_pr_title.yml`](../../.github/workflows/lint_pr_title.yml)).
