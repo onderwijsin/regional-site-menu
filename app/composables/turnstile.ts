@@ -21,7 +21,7 @@ export function useTurnstile() {
 		return token.value?.trim() || undefined
 	}
 
-	async function getTokenWithRetry(retries = 3, delayMs = 250): Promise<string | undefined> {
+	async function getTokenWithRetry(retries = 12, delayMs = 250): Promise<string | undefined> {
 		if (!isEnabled.value) {
 			return undefined
 		}

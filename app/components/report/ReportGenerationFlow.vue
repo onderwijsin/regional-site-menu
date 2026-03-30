@@ -248,6 +248,14 @@ async function getAiTurnstileToken(): Promise<string | undefined> {
 		return undefined
 	}
 
+	const token = await getTokenWithRetry()
+	if (token) {
+		return token
+	}
+
+	// In preview/prod a new token can occasionally arrive late after a previous
+	// token was consumed by the first AI request. Force one refresh and retry.
+	aiTurnstile.value?.reset()
 	return await getTokenWithRetry()
 }
 
