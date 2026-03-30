@@ -94,10 +94,8 @@ jobs:
           echo '${{ toJson(secrets) }}' \
           | jq -r 'to_entries[] | "\(.key)=\(.value)"' >> .env
 
-          # Dump SENTRY_RELEASE into .env if enabled
-          if [ "${{ inputs.set-sentry-release }}" = "true" ]; then
-            echo "SENTRY_RELEASE=${{ steps.sentry.outputs.sentry-release }}" >> .env
-          fi
+          # Keep build/upload/runtime release alignment for server-side source map matching
+          echo "SENTRY_RELEASE=${GITHUB_SHA}" >> .env
 
           echo "Generated .env with $(wc -l < .env) entries"
 

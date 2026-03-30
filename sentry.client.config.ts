@@ -4,6 +4,7 @@ const runtimeConfig = useRuntimeConfig()
 
 Sentry.init({
 	dsn: runtimeConfig.public.sentry?.dsn,
+	release: runtimeConfig.public.sentry?.release,
 	environment: runtimeConfig.public.sentry?.environment,
 	debug: runtimeConfig.public.mode.isDebug,
 	sampleRate: 1.0,

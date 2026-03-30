@@ -311,6 +311,7 @@ export default defineNuxtConfig({
 			language: NUXT_BEHAVIOR_CONFIG.language, // prefer more explicit language codes like `en-AU` over `en`
 			sentry: {
 				dsn: process.env.SENTRY_DSN,
+				release: process.env.SENTRY_RELEASE,
 				environment: sentryEnvironment
 			},
 			mode: {
