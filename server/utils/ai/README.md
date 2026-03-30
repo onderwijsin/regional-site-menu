@@ -21,6 +21,7 @@ files remain focused on boundary handling and orchestration.
   - markdown sanitization and word counting utilities
 - `openai.ts`
   - OpenAI client construction + route-specific model resolution
+  - Sentry OpenAI instrumentation (`instrumentOpenAiClient`) at a single shared boundary
   - compatibility error parsing helpers for model fallback handling
 - `response.ts`
   - shared compatibility fallback orchestration for structured/plain responses
