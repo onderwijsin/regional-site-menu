@@ -59,6 +59,7 @@ These are included because state and composable logic in this project depends on
 2. Add/update tests proving the module-dependent behavior.
 3. Verify:
    - `pnpm test:unit`
+   - `pnpm test:coverage`
    - `pnpm lint`
    - `pnpm typecheck`
 4. Update this section with a short reason for inclusion.
@@ -122,5 +123,6 @@ Remove the patch once all of the following are true:
 3. Remove `@nuxt/test-utils@4.0.0` from `pnpm.patchedDependencies` in `package.json`.
 4. Run `pnpm install` and re-run:
    - `pnpm test:unit`
+   - `pnpm test:coverage`
    - `pnpm lint`
    - `pnpm typecheck`

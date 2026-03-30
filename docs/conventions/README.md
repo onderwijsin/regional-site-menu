@@ -89,7 +89,8 @@ Reference:
 
 ## Tooling and Quality Gates
 
-1. Run `pnpm lint` and `pnpm typecheck` for meaningful changes.
+1. Run `pnpm lint`, `pnpm typecheck`, `pnpm test:unit`, and `pnpm test:coverage` for meaningful
+   changes.
 2. Keep formatting/linting consistent with project config.
 3. Resolve `eslint-plugin-jsdoc` findings for exported functions in app/server/schema/shared code.
 4. Respect Husky hooks unless intentionally bypassed for specific workflows.

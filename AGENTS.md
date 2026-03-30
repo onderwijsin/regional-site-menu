@@ -25,7 +25,7 @@ Operational contract for AI coding agents working in this repository.
 
 ## Definition of Done
 
-1. Relevant checks pass: `pnpm lint` and `pnpm typecheck`.
+1. Relevant checks pass: `pnpm lint`, `pnpm typecheck`, `pnpm test:unit`, and `pnpm test:coverage`.
 2. For PDF-related changes, a real report is generated and visually verified.
 3. Persisted store semantics remain intact.
 4. Any non-obvious convention/architecture changes are reflected in `docs/`.
@@ -66,4 +66,6 @@ pnpm build
 pnpm preview
 pnpm lint
 pnpm typecheck
+pnpm test:unit
+pnpm test:coverage
 ```
