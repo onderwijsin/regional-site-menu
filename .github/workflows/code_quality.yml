@@ -96,11 +96,18 @@ jobs:
           APP_URL: https://example.com
           CLOUDFLARE_D1_DATABASE_ID: local-test-db
           CLOUDFLARE_R2_BUCKET: local-test-bucket
+        shell: bash
         run: |
-          ${{ inputs.typecheck-command }} > typecheck.log 2>&1
+          TYPECHECK_EXIT_CODE=0
+          ${{ inputs.typecheck-command }} > typecheck.log 2>&1 || TYPECHECK_EXIT_CODE=$?
           cat typecheck.log
 
-          if grep -E 'warning TS[0-9]+' typecheck.log > /dev/null; then
+          if [ "$TYPECHECK_EXIT_CODE" -ne 0 ]; then
+            echo "Typecheck command failed."
+            exit "$TYPECHECK_EXIT_CODE"
+          fi
+
+          if grep -Ei 'warning TS[0-9]+:' typecheck.log > /dev/null; then
             echo "Typecheck produced TypeScript warnings, failing due to warning-free CI policy."
             exit 1
           fi

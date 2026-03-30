@@ -1,7 +1,10 @@
 import fs from 'node:fs'
 import path from 'node:path'
+import { fileURLToPath } from 'node:url'
 
-const COVERED_SOURCE_PATTERN = /^(app|config|schema|server|shared)\/.*\.ts$/
+const COVERAGE_GATE_DIRECTORIES = ['app', 'config', 'schema', 'server', 'shared']
+const DEFAULT_THRESHOLD = '80'
+const COVERED_SOURCE_PATTERN = new RegExp(`^(${COVERAGE_GATE_DIRECTORIES.join('|')})/.*\\.ts$`)
 
 /**
  * Selects changed files that are in coverage scope.
@@ -57,18 +60,36 @@ export function evaluateChangedCoverage({ coverageSummary, changedFiles, thresho
 	return { checkedFiles, failures }
 }
 
-function parseArg(name, fallback = '') {
-	const index = process.argv.indexOf(name)
+export function parseArg(args, name, fallback = '') {
+	const index = args.indexOf(name)
 	if (index === -1) {
 		return fallback
 	}
-	return process.argv[index + 1] || fallback
+	const value = args[index + 1]
+	if (value === undefined || value.startsWith('--')) {
+		return fallback
+	}
+	return value
 }
 
-if (import.meta.url === `file://${process.argv[1]}`) {
-	const coveragePath = parseArg('--coverage')
-	const changedPath = parseArg('--changed')
-	const threshold = Number.parseFloat(parseArg('--threshold', '80'))
+const IS_MAIN_MODULE = (() => {
+	if (typeof process.argv[1] !== 'string') {
+		return false
+	}
+
+	try {
+		const mainPath = fs.realpathSync(path.resolve(process.argv[1]))
+		const modulePath = fs.realpathSync(fileURLToPath(import.meta.url))
+		return mainPath === modulePath
+	} catch {
+		return false
+	}
+})()
+
+if (IS_MAIN_MODULE) {
+	const coveragePath = parseArg(process.argv, '--coverage')
+	const changedPath = parseArg(process.argv, '--changed')
+	const threshold = Number.parseFloat(parseArg(process.argv, '--threshold', DEFAULT_THRESHOLD))
 
 	if (!coveragePath || !changedPath || !Number.isFinite(threshold)) {
 		console.error(

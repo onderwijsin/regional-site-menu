@@ -2,7 +2,8 @@ import { describe, expect, it } from 'vitest'
 
 import {
 	evaluateChangedCoverage,
-	getCoveredChangedFiles
+	getCoveredChangedFiles,
+	parseArg
 } from '../../../../scripts/ci/changed-coverage-gate.mjs'
 
 describe('scripts/ci/changed-coverage-gate', () => {
@@ -50,5 +51,26 @@ describe('scripts/ci/changed-coverage-gate', () => {
 				reason: 'No coverage data found for changed file'
 			}
 		])
+	})
+
+	it('parses cli args and handles missing values safely', () => {
+		const args = [
+			'node',
+			'script.mjs',
+			'--coverage',
+			'coverage/coverage-summary.json',
+			'--changed'
+		]
+
+		expect(parseArg(args, '--coverage')).toBe('coverage/coverage-summary.json')
+		expect(parseArg(args, '--changed', 'fallback.txt')).toBe('fallback.txt')
+		expect(parseArg(args, '--threshold', '80')).toBe('80')
+		expect(
+			parseArg(
+				['node', 'script.mjs', '--coverage', '--changed', 'files.txt'],
+				'--coverage',
+				'missing'
+			)
+		).toBe('missing')
 	})
 })
