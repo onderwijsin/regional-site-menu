@@ -38,8 +38,12 @@ UX behavior:
 Relevant files:
 
 - [ReportGenerationFlow.vue](../../app/components/report/ReportGenerationFlow.vue)
+- [ReportGenerationConfigStage.vue](../../app/components/report/generation/ReportGenerationConfigStage.vue)
+- [ReportGenerationAiLoadingStage.vue](../../app/components/report/generation/ReportGenerationAiLoadingStage.vue)
+- [ReportGenerationBriefingReviewStage.vue](../../app/components/report/generation/ReportGenerationBriefingReviewStage.vue)
 - [report-ai.ts](../../app/composables/report-ai.ts)
 - [report-generation-flow.ts](../../app/composables/report-generation-flow.ts)
+- [report-generation-ui.ts](../../app/composables/report-generation-ui.ts)
 - [sections/ai.ts](../../app/composables/report/sections/ai.ts)
 
 ## Server Endpoints
