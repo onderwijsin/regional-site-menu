@@ -6,7 +6,10 @@ import type { ReportConfig } from '~~/schema/reportConfig'
 import type { Audit, PillarAverage } from '~~/shared/types/audit'
 import type { Pillar } from '~~/shared/types/primitives'
 
-import { useReportGenerationExecution } from '~/composables/report-generation-execution'
+import {
+	getEstimatedAnalysisDurationMs,
+	getEstimatedBriefingDurationMs
+} from '~/composables/report-ai'
 import {
 	buildReportPdfAiInsights,
 	createReportAiInputSignature,
@@ -199,6 +202,47 @@ const configSubmitLabel = computed(() => {
 })
 
 /**
+ * Converts a raw duration estimate into a user-facing minute range label.
+ *
+ * @param durationMs - Estimated duration in milliseconds.
+ * @returns Dutch minute-based ETA label without second-level precision.
+ */
+function formatDurationRangeLabel(durationMs: number): string {
+	const lowerBoundMinutes = (durationMs * 0.85) / 60_000
+	const upperBoundMinutes = (durationMs * 1.2) / 60_000
+
+	if (upperBoundMinutes < 1) {
+		return 'minder dan 1 minuut'
+	}
+
+	const lowerMinutes = Math.max(1, Math.floor(lowerBoundMinutes))
+	const upperMinutes = Math.max(lowerMinutes, Math.ceil(upperBoundMinutes))
+	if (lowerMinutes === upperMinutes) {
+		return `ongeveer ${upperMinutes} ${upperMinutes === 1 ? 'minuut' : 'minuten'}`
+	}
+
+	return `ongeveer ${lowerMinutes}-${upperMinutes} minuten`
+}
+
+const aiEstimatedDurationLabel = computed(() => {
+	let totalMs = 0
+
+	if (state.aiWebsiteAnalysis) {
+		totalMs += getEstimatedAnalysisDurationMs(state.maxPages)
+	}
+
+	if (state.aiBriefing) {
+		totalMs += getEstimatedBriefingDurationMs()
+	}
+
+	if (totalMs === 0) {
+		return 'onbekend'
+	}
+
+	return formatDurationRangeLabel(totalMs)
+})
+
+/**
  * Builds final AI insights payload for PDF generation.
  *
  * Briefing uses the editable draft from stage 3 when enabled.
@@ -380,6 +424,14 @@ async function handleClose(): Promise<void> {
 					/>
 				</UFormField>
 				<UAlert
+					v-if="hasAiEnabled"
+					:icon="getIcon('help')"
+					color="info"
+					variant="subtle"
+					title="Verwachte wachttijd"
+					:description="`Voor je huidige AI-selectie duurt dit meestal ${aiEstimatedDurationLabel}.`"
+				/>
+				<UAlert
 					v-if="hasReusableAiInsights"
 					:icon="getIcon('success')"
 					color="success"
@@ -476,7 +528,7 @@ async function handleClose(): Promise<void> {
 					class="transition-opacity duration-300"
 					:class="entry.status === 'completed' ? 'opacity-45' : 'opacity-100'"
 				>
-					{{ entry.reasoning }}
+					{{ entry.details }}
 				</UChatTool>
 			</div>
 

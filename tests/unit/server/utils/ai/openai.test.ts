@@ -30,6 +30,28 @@ describe('server/utils/ai/openai', () => {
 		expect(result.model).toBe('gpt-5')
 	})
 
+	it('resolves route-specific models when use-case is provided', () => {
+		vi.stubGlobal(
+			'useRuntimeConfig',
+			vi.fn().mockReturnValue({
+				openai: {
+					token: 'secret',
+					model: 'gpt-fallback',
+					models: {
+						websiteAnalysis: 'gpt-analysis',
+						briefing: 'gpt-briefing'
+					}
+				}
+			})
+		)
+
+		const analysis = getOpenAiClient({} as never, { useCase: 'website-analysis' })
+		const briefing = getOpenAiClient({} as never, { useCase: 'briefing' })
+
+		expect(analysis.model).toBe('gpt-analysis')
+		expect(briefing.model).toBe('gpt-briefing')
+	})
+
 	it('throws a typed runtime error when API key is missing', () => {
 		const createErrorMock = vi.fn((input: { statusCode: number; statusMessage: string }) => {
 			const error = new Error(input.statusMessage) as Error & {

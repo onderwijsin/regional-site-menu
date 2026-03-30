@@ -52,6 +52,11 @@ export function useReportGenerationExecution(args: ReportGenerationExecutionArgs
 	const toast = useToast()
 	const { getIcon } = useIcons()
 
+	/**
+	 * Returns normalized report data input for PDF and AI generation helpers.
+	 *
+	 * @returns Report data object with audits and pillar averages.
+	 */
 	const getReportData = (): ReportData => ({
 		audits: args.data.audits,
 		averages: args.data.averages
@@ -122,7 +127,7 @@ export function useReportGenerationExecution(args: ReportGenerationExecutionArgs
 	}
 
 	/**
-	 * Runs stage 2 AI generation and routes to the next stage.
+	 * Runs AI generation and routes to the next stage.
 	 *
 	 * - When briefing is enabled: open review editor
 	 * - Otherwise: continue directly to PDF generation

@@ -1,3 +1,5 @@
+import type { OpenAiReasoningEffort, OpenAiVerbosity } from '../../utils/ai/response'
+
 import { AI_OPENAI_CONFIG } from '@ai'
 import { AiBriefingRequestSchema, AiBriefingResponseSchema } from '@schema/reportAi'
 import { zodTextFormat } from 'openai/helpers/zod'
@@ -51,6 +53,7 @@ export default defineEventHandler(async (event) => {
 		// 1) Boundary validation: fail fast on malformed payloads.
 		const body = await readBody(event)
 		const input = AiBriefingRequestSchema.parse(body)
+		const requestConfig = AI_OPENAI_CONFIG.briefingRequest
 		timer.mark('request_validated')
 
 		// 2) Load system prompt from server-side prompt content.
@@ -58,9 +61,9 @@ export default defineEventHandler(async (event) => {
 		timer.mark('system_prompt_loaded')
 
 		// 3) Compose model input from validated request data.
-		const { client, model } = getOpenAiClient(event)
+		const { client, model } = getOpenAiClient(event, { useCase: 'briefing' })
 		const userPrompt = formatBriefingInput(input)
-		timer.mark('request_composed')
+		timer.mark('request_composed', { model })
 
 		// 4) Request a structured response so parsing is deterministic.
 		/**
@@ -78,8 +81,8 @@ export default defineEventHandler(async (event) => {
 		const requestBriefingResponse = async (options: {
 			maxOutputTokens: number
 			includeReasoning: boolean
-			reasoningEffort: 'none' | 'minimal' | 'low' | 'medium' | 'high' | 'xhigh'
-			verbosity: 'low' | 'medium' | 'high'
+			reasoningEffort: OpenAiReasoningEffort
+			verbosity: OpenAiVerbosity
 		}): Promise<Awaited<ReturnType<typeof client.responses.parse>>> => {
 			return await requestWithOpenAiCompatibility({
 				label: 'briefing',
@@ -121,7 +124,7 @@ export default defineEventHandler(async (event) => {
 							}
 						},
 						{
-							maxRetries: AI_OPENAI_CONFIG.briefingRequest.maxRetries
+							maxRetries: requestConfig.maxRetries
 						}
 					),
 				requestPlain: async ({
@@ -155,7 +158,7 @@ export default defineEventHandler(async (event) => {
 							text: includeVerbosity ? { verbosity } : undefined
 						},
 						{
-							maxRetries: AI_OPENAI_CONFIG.briefingRequest.maxRetries
+							maxRetries: requestConfig.maxRetries
 						}
 					)
 
@@ -169,29 +172,38 @@ export default defineEventHandler(async (event) => {
 
 		let didRetryAfterIncomplete = false
 		let response = await requestBriefingResponse({
-			maxOutputTokens: AI_OPENAI_CONFIG.briefingRequest.maxOutputTokens,
+			maxOutputTokens: requestConfig.maxOutputTokens,
 			includeReasoning: true,
-			reasoningEffort: AI_OPENAI_CONFIG.briefingRequest.reasoningEffort,
-			verbosity: AI_OPENAI_CONFIG.briefingRequest.verbosity
+			reasoningEffort: requestConfig.reasoningEffort,
+			verbosity: requestConfig.verbosity
 		})
-		timer.mark('openai_response_received')
+		timer.mark('openai_response_received', {
+			model,
+			maxOutputTokens: requestConfig.maxOutputTokens,
+			reasoningEffort: requestConfig.reasoningEffort,
+			verbosity: requestConfig.verbosity
+		})
 
 		if (shouldRetryAfterTokenLimitIncomplete(response)) {
 			didRetryAfterIncomplete = true
 			console.warn('[AI] briefing retrying after incomplete max_output_tokens response', {
 				model,
-				initialMaxOutputTokens: AI_OPENAI_CONFIG.briefingRequest.maxOutputTokens,
-				retryMaxOutputTokens:
-					AI_OPENAI_CONFIG.briefingRequest.maxOutputTokensOnIncompleteRetry
+				initialMaxOutputTokens: requestConfig.maxOutputTokens,
+				retryMaxOutputTokens: requestConfig.maxOutputTokensOnIncompleteRetry
 			})
 
 			response = await requestBriefingResponse({
-				maxOutputTokens: AI_OPENAI_CONFIG.briefingRequest.maxOutputTokensOnIncompleteRetry,
-				includeReasoning: AI_OPENAI_CONFIG.briefingRequest.retryWithReasoningOnIncomplete,
-				reasoningEffort: AI_OPENAI_CONFIG.briefingRequest.incompleteRetryReasoningEffort,
-				verbosity: AI_OPENAI_CONFIG.briefingRequest.incompleteRetryVerbosity
+				maxOutputTokens: requestConfig.maxOutputTokensOnIncompleteRetry,
+				includeReasoning: requestConfig.retryWithReasoningOnIncomplete,
+				reasoningEffort: requestConfig.incompleteRetryReasoningEffort,
+				verbosity: requestConfig.incompleteRetryVerbosity
 			})
-			timer.mark('openai_response_retry_received')
+			timer.mark('openai_response_retry_received', {
+				model,
+				maxOutputTokens: requestConfig.maxOutputTokensOnIncompleteRetry,
+				reasoningEffort: requestConfig.incompleteRetryReasoningEffort,
+				verbosity: requestConfig.incompleteRetryVerbosity
+			})
 		}
 
 		let briefing: string
@@ -249,7 +261,8 @@ export default defineEventHandler(async (event) => {
 		})
 		timer.mark('response_validated')
 		timer.done({
-			didRetryAfterIncomplete
+			didRetryAfterIncomplete,
+			model
 		})
 		return result
 	} catch (error: unknown) {

@@ -1,3 +1,5 @@
+import type { OpenAiReasoningEffort, OpenAiVerbosity } from '../../utils/ai/response'
+
 import { AI_OPENAI_CONFIG } from '@ai'
 import {
 	AI_WEBSITE_ANALYSIS_DEFAULT_PAGES,
@@ -51,6 +53,7 @@ export default defineEventHandler(async (event) => {
 		// 1) Boundary validation.
 		const body = await readBody(event)
 		const input = AiWebsiteAnalysisRequestSchema.parse(body)
+		const requestConfig = AI_OPENAI_CONFIG.analysisRequest
 		timer.mark('request_validated')
 
 		const maxPages = input.maxPages ?? AI_WEBSITE_ANALYSIS_DEFAULT_PAGES
@@ -84,6 +87,9 @@ export default defineEventHandler(async (event) => {
 		timer.mark('system_prompt_loaded')
 		const referenceDocument = await fetchLlmsFullReferenceDocument(event)
 		timer.mark('reference_document_loaded')
+
+		// 4) Create OpenAI client bound to runtime secrets/model configuration.
+		const { client, model } = getOpenAiClient(event, { useCase: 'website-analysis' })
 		const userPrompt = formatWebsiteAnalysisInput({
 			url: input.url,
 			region: input.region,
@@ -91,10 +97,8 @@ export default defineEventHandler(async (event) => {
 			maxPages,
 			crawledPages: evidencePages
 		})
-		timer.mark('request_composed')
+		timer.mark('request_composed', { model })
 
-		// 4) Create OpenAI client bound to runtime secrets/model configuration.
-		const { client, model } = getOpenAiClient(event)
 		/**
 		 * Requests website-analysis output with compatibility fallbacks.
 		 *
@@ -110,8 +114,8 @@ export default defineEventHandler(async (event) => {
 		const requestWebsiteAnalysisResponse = async (options: {
 			maxOutputTokens: number
 			includeReasoning: boolean
-			reasoningEffort: 'none' | 'minimal' | 'low' | 'medium' | 'high' | 'xhigh'
-			verbosity: 'low' | 'medium' | 'high'
+			reasoningEffort: OpenAiReasoningEffort
+			verbosity: OpenAiVerbosity
 		}): Promise<Awaited<ReturnType<typeof client.responses.parse>>> => {
 			return await requestWithOpenAiCompatibility({
 				label: 'website-analysis',
@@ -156,7 +160,7 @@ export default defineEventHandler(async (event) => {
 							]
 						},
 						{
-							maxRetries: AI_OPENAI_CONFIG.analysisRequest.maxRetries
+							maxRetries: requestConfig.maxRetries
 						}
 					),
 				requestPlain: async ({
@@ -190,7 +194,7 @@ export default defineEventHandler(async (event) => {
 							]
 						},
 						{
-							maxRetries: AI_OPENAI_CONFIG.analysisRequest.maxRetries
+							maxRetries: requestConfig.maxRetries
 						}
 					)
 
@@ -204,12 +208,17 @@ export default defineEventHandler(async (event) => {
 
 		let didRetryAfterIncomplete = false
 		let response = await requestWebsiteAnalysisResponse({
-			maxOutputTokens: AI_OPENAI_CONFIG.analysisRequest.maxOutputTokens,
+			maxOutputTokens: requestConfig.maxOutputTokens,
 			includeReasoning: true,
-			reasoningEffort: AI_OPENAI_CONFIG.analysisRequest.reasoningEffort,
-			verbosity: AI_OPENAI_CONFIG.analysisRequest.verbosity
+			reasoningEffort: requestConfig.reasoningEffort,
+			verbosity: requestConfig.verbosity
 		})
-		timer.mark('openai_response_received')
+		timer.mark('openai_response_received', {
+			model,
+			maxOutputTokens: requestConfig.maxOutputTokens,
+			reasoningEffort: requestConfig.reasoningEffort,
+			verbosity: requestConfig.verbosity
+		})
 
 		if (shouldRetryAfterTokenLimitIncomplete(response)) {
 			didRetryAfterIncomplete = true
@@ -217,19 +226,23 @@ export default defineEventHandler(async (event) => {
 				'[AI] website-analysis retrying after incomplete max_output_tokens response',
 				{
 					model,
-					initialMaxOutputTokens: AI_OPENAI_CONFIG.analysisRequest.maxOutputTokens,
-					retryMaxOutputTokens:
-						AI_OPENAI_CONFIG.analysisRequest.maxOutputTokensOnIncompleteRetry
+					initialMaxOutputTokens: requestConfig.maxOutputTokens,
+					retryMaxOutputTokens: requestConfig.maxOutputTokensOnIncompleteRetry
 				}
 			)
 
 			response = await requestWebsiteAnalysisResponse({
-				maxOutputTokens: AI_OPENAI_CONFIG.analysisRequest.maxOutputTokensOnIncompleteRetry,
-				includeReasoning: AI_OPENAI_CONFIG.analysisRequest.retryWithReasoningOnIncomplete,
-				reasoningEffort: AI_OPENAI_CONFIG.analysisRequest.incompleteRetryReasoningEffort,
-				verbosity: AI_OPENAI_CONFIG.analysisRequest.incompleteRetryVerbosity
+				maxOutputTokens: requestConfig.maxOutputTokensOnIncompleteRetry,
+				includeReasoning: requestConfig.retryWithReasoningOnIncomplete,
+				reasoningEffort: requestConfig.incompleteRetryReasoningEffort,
+				verbosity: requestConfig.incompleteRetryVerbosity
 			})
-			timer.mark('openai_response_retry_received')
+			timer.mark('openai_response_retry_received', {
+				model,
+				maxOutputTokens: requestConfig.maxOutputTokensOnIncompleteRetry,
+				reasoningEffort: requestConfig.incompleteRetryReasoningEffort,
+				verbosity: requestConfig.incompleteRetryVerbosity
+			})
 		}
 
 		let analysis: string
@@ -304,7 +317,8 @@ export default defineEventHandler(async (event) => {
 			analysedPages: result.analysedPages.length
 		})
 		timer.done({
-			didRetryAfterIncomplete
+			didRetryAfterIncomplete,
+			model
 		})
 		return result
 	} catch (error: unknown) {
