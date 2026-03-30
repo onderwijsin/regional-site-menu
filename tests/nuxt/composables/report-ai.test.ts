@@ -2,7 +2,11 @@ import type { ReportData } from '~/composables/report/types'
 import type { ReportConfig } from '~~/schema/reportConfig'
 
 import { mockNuxtImport } from '@nuxt/test-utils/runtime'
-import { useReportAi } from '~/composables/report-ai'
+import {
+	getEstimatedAnalysisDurationMs,
+	getEstimatedBriefingDurationMs,
+	useReportAi
+} from '~/composables/report-ai'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
 const { trackAiInsightMock } = vi.hoisted(() => ({
@@ -49,28 +53,34 @@ afterEach(() => {
 })
 
 describe('useReportAi', () => {
+	it('derives capped stage estimates for analysis and briefing', () => {
+		expect(getEstimatedAnalysisDurationMs(1)).toBe(32_700)
+		expect(getEstimatedAnalysisDurationMs(10)).toBe(64_200)
+		expect(getEstimatedAnalysisDurationMs(50)).toBe(64_200)
+		expect(getEstimatedBriefingDurationMs()).toBe(25_000)
+	})
+
 	it('runs analysis + briefing flow and marks progress stages as completed', async () => {
 		vi.useFakeTimers()
 
-		vi.stubGlobal(
-			'$fetch',
-			vi.fn(async (url: string) => {
-				if (url === '/api/ai/website-analysis') {
-					return {
-						analysis: 'Website analyse',
-						wordCount: 2,
-						crawledPages: [{ url: 'https://example.com', title: 'Home' }],
-						analysedPages: [{ url: 'https://example.com', title: 'Home' }],
-						usedSources: ['https://example.com']
-					}
-				}
-
+		const fetchMock = vi.fn(async (url: string, options?: unknown) => {
+			void options
+			if (url === '/api/ai/website-analysis') {
 				return {
-					briefing: 'AI briefing',
-					wordCount: 2
+					analysis: 'Website analyse',
+					wordCount: 2,
+					crawledPages: [{ url: 'https://example.com', title: 'Home' }],
+					analysedPages: [{ url: 'https://example.com', title: 'Home' }],
+					usedSources: ['https://example.com']
 				}
-			})
-		)
+			}
+
+			return {
+				briefing: 'AI briefing',
+				wordCount: 2
+			}
+		})
+		vi.stubGlobal('$fetch', fetchMock)
 
 		const reportAi = useReportAi()
 		const promise = reportAi.generateAiInsights(baseConfig, baseData)
@@ -86,7 +96,18 @@ describe('useReportAi', () => {
 		})
 		expect(trackAiInsightMock).toHaveBeenCalledWith({ tool: 'website_analysis' })
 		expect(trackAiInsightMock).toHaveBeenCalledWith({ tool: 'briefing' })
+		expect(fetchMock.mock.calls[0]?.[1]).toMatchObject({
+			body: expect.objectContaining({
+				url: 'https://example.com'
+			})
+		})
+		expect(fetchMock.mock.calls[1]?.[1]).toMatchObject({
+			body: expect.objectContaining({
+				region: 'Utrecht'
+			})
+		})
 		expect(reportAi.progress.value.length).toBeGreaterThan(0)
+		expect(reportAi.progress.value[0]).toHaveProperty('details')
 		expect(reportAi.progress.value.every((item) => item.status === 'completed')).toBe(true)
 	})
 

@@ -6,12 +6,8 @@ import { z } from 'zod'
 import { formatBriefingInput } from '../../utils/ai/briefing'
 import { getOpenAiClient } from '../../utils/ai/openai'
 import { getAiSystemPrompt } from '../../utils/ai/prompts'
-import {
-	extractResponseRefusalText,
-	readRecordField,
-	requestWithOpenAiCompatibility,
-	shouldRetryAfterTokenLimitIncomplete
-} from '../../utils/ai/response'
+import { extractResponseRefusalText, readRecordField } from '../../utils/ai/response'
+import { requestAiRouteResponseWithRetry } from '../../utils/ai/route-request'
 import { countWords, sanitizeAiMarkdown } from '../../utils/ai/text'
 import { createServerExecutionTimer } from '../../utils/observability/timing'
 import { assertTurnstileToken } from '../../utils/security/turnstile'
@@ -51,6 +47,7 @@ export default defineEventHandler(async (event) => {
 		// 1) Boundary validation: fail fast on malformed payloads.
 		const body = await readBody(event)
 		const input = AiBriefingRequestSchema.parse(body)
+		const requestConfig = AI_OPENAI_CONFIG.briefingRequest
 		timer.mark('request_validated')
 
 		// 2) Load system prompt from server-side prompt content.
@@ -58,141 +55,104 @@ export default defineEventHandler(async (event) => {
 		timer.mark('system_prompt_loaded')
 
 		// 3) Compose model input from validated request data.
-		const { client, model } = getOpenAiClient(event)
+		const { client, model } = getOpenAiClient(event, { useCase: 'briefing' })
 		const userPrompt = formatBriefingInput(input)
-		timer.mark('request_composed')
+		timer.mark('request_composed', { model })
 
 		// 4) Request a structured response so parsing is deterministic.
-		/**
-		 * Requests briefing output with compatibility fallbacks.
-		 *
-		 * Behavior:
-		 * - starts with structured output (`responses.parse`)
-		 * - degrades unsupported reasoning/verbosity params/values
-		 * - falls back to plain-text mode (`responses.create`) when structured parse
-		 *   fails at SDK JSON parse level
-		 *
-		 * @param options - Request tuning values.
-		 * @returns OpenAI response object normalized to include `output_parsed` key.
-		 */
-		const requestBriefingResponse = async (options: {
-			maxOutputTokens: number
-			includeReasoning: boolean
-			reasoningEffort: 'none' | 'minimal' | 'low' | 'medium' | 'high' | 'xhigh'
-			verbosity: 'low' | 'medium' | 'high'
-		}): Promise<Awaited<ReturnType<typeof client.responses.parse>>> => {
-			return await requestWithOpenAiCompatibility({
-				label: 'briefing',
-				maxOutputTokens: options.maxOutputTokens,
-				includeReasoning: options.includeReasoning,
-				reasoningEffort: options.reasoningEffort,
-				verbosity: options.verbosity,
-				requestStructured: async ({
-					maxOutputTokens,
-					includeReasoning,
-					reasoningEffort,
-					includeVerbosity,
-					verbosity
-				}) =>
-					await client.responses.parse(
-						{
-							model,
-							max_output_tokens: maxOutputTokens,
-							...(includeReasoning
-								? {
-										reasoning: {
-											effort: reasoningEffort
-										}
+		const { response, didRetryAfterIncomplete } = await requestAiRouteResponseWithRetry({
+			label: 'briefing',
+			model,
+			requestConfig,
+			requestStructured: async ({
+				maxOutputTokens,
+				includeReasoning,
+				reasoningEffort,
+				includeVerbosity,
+				verbosity
+			}) =>
+				await client.responses.parse(
+					{
+						model,
+						max_output_tokens: maxOutputTokens,
+						...(includeReasoning
+							? {
+									reasoning: {
+										effort: reasoningEffort
 									}
-								: {}),
-							input: [
-								{
-									role: 'system',
-									content: systemPrompt
-								},
-								{
-									role: 'user',
-									content: userPrompt
 								}
-							],
-							text: {
-								...(includeVerbosity ? { verbosity } : {}),
-								format: zodTextFormat(BriefingOutputSchema, 'briefing_output')
+							: {}),
+						input: [
+							{
+								role: 'system',
+								content: systemPrompt
+							},
+							{
+								role: 'user',
+								content: userPrompt
 							}
-						},
-						{
-							maxRetries: AI_OPENAI_CONFIG.briefingRequest.maxRetries
+						],
+						text: {
+							...(includeVerbosity ? { verbosity } : {}),
+							format: zodTextFormat(BriefingOutputSchema, 'briefing_output')
 						}
-					),
-				requestPlain: async ({
-					maxOutputTokens,
-					includeReasoning,
-					reasoningEffort,
-					includeVerbosity,
-					verbosity
-				}) => {
-					const plainResponse = await client.responses.create(
-						{
-							model,
-							max_output_tokens: maxOutputTokens,
-							...(includeReasoning
-								? {
-										reasoning: {
-											effort: reasoningEffort
-										}
+					},
+					{
+						maxRetries: requestConfig.maxRetries
+					}
+				),
+			requestPlain: async ({
+				maxOutputTokens,
+				includeReasoning,
+				reasoningEffort,
+				includeVerbosity,
+				verbosity
+			}) => {
+				const plainResponse = await client.responses.create(
+					{
+						model,
+						max_output_tokens: maxOutputTokens,
+						...(includeReasoning
+							? {
+									reasoning: {
+										effort: reasoningEffort
 									}
-								: {}),
-							input: [
-								{
-									role: 'system',
-									content: systemPrompt
-								},
-								{
-									role: 'user',
-									content: userPrompt
 								}
-							],
-							text: includeVerbosity ? { verbosity } : undefined
-						},
-						{
-							maxRetries: AI_OPENAI_CONFIG.briefingRequest.maxRetries
-						}
-					)
+							: {}),
+						input: [
+							{
+								role: 'system',
+								content: systemPrompt
+							},
+							{
+								role: 'user',
+								content: userPrompt
+							}
+						],
+						text: includeVerbosity ? { verbosity } : undefined
+					},
+					{
+						maxRetries: requestConfig.maxRetries
+					}
+				)
 
-					return {
-						...plainResponse,
-						output_parsed: null
-					} as Awaited<ReturnType<typeof client.responses.parse>>
-				}
-			})
-		}
-
-		let didRetryAfterIncomplete = false
-		let response = await requestBriefingResponse({
-			maxOutputTokens: AI_OPENAI_CONFIG.briefingRequest.maxOutputTokens,
-			includeReasoning: true,
-			reasoningEffort: AI_OPENAI_CONFIG.briefingRequest.reasoningEffort,
-			verbosity: AI_OPENAI_CONFIG.briefingRequest.verbosity
+				return {
+					...plainResponse,
+					output_parsed: null
+				} as Awaited<ReturnType<typeof client.responses.parse>>
+			},
+			onResponseReceived: ({ isRetry, maxOutputTokens, reasoningEffort, verbosity }) => {
+				timer.mark(
+					isRetry ? 'openai_response_retry_received' : 'openai_response_received',
+					{
+						model,
+						maxOutputTokens,
+						reasoningEffort,
+						verbosity
+					}
+				)
+			}
 		})
-		timer.mark('openai_response_received')
-
-		if (shouldRetryAfterTokenLimitIncomplete(response)) {
-			didRetryAfterIncomplete = true
-			console.warn('[AI] briefing retrying after incomplete max_output_tokens response', {
-				model,
-				initialMaxOutputTokens: AI_OPENAI_CONFIG.briefingRequest.maxOutputTokens,
-				retryMaxOutputTokens:
-					AI_OPENAI_CONFIG.briefingRequest.maxOutputTokensOnIncompleteRetry
-			})
-
-			response = await requestBriefingResponse({
-				maxOutputTokens: AI_OPENAI_CONFIG.briefingRequest.maxOutputTokensOnIncompleteRetry,
-				includeReasoning: AI_OPENAI_CONFIG.briefingRequest.retryWithReasoningOnIncomplete,
-				reasoningEffort: AI_OPENAI_CONFIG.briefingRequest.incompleteRetryReasoningEffort,
-				verbosity: AI_OPENAI_CONFIG.briefingRequest.incompleteRetryVerbosity
-			})
-			timer.mark('openai_response_retry_received')
-		}
 
 		let briefing: string
 		let briefingSource: 'structured' | 'json_text_fallback' | 'plain_text_fallback'
@@ -249,7 +209,8 @@ export default defineEventHandler(async (event) => {
 		})
 		timer.mark('response_validated')
 		timer.done({
-			didRetryAfterIncomplete
+			didRetryAfterIncomplete,
+			model
 		})
 		return result
 	} catch (error: unknown) {

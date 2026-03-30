@@ -17,7 +17,9 @@ Main goals:
 
 - [report-generator.ts](../../app/composables/report-generator.ts) orchestrates generation and
   saving.
-- [report.ts](../../app/composables/report.ts) controls the report/config overlays.
+- [use-report.ts](../../app/composables/use-report.ts) controls report preview overlays.
+- [use-report-config.ts](../../app/composables/use-report-config.ts) controls report generation
+  overlays.
 - [sections/document.ts](../../app/composables/report/sections/document.ts) defines canonical page
   order.
 
@@ -82,7 +84,7 @@ Invariant to preserve:
 After changing report/PDF logic:
 
 1. Run:
-   `pnpm exec eslint app/composables/report app/composables/report.ts app/composables/report-generator.ts`
+   `pnpm exec eslint app/composables/report app/composables/use-report.ts app/composables/use-report-config.ts app/composables/report-generator.ts`
 2. Run: `pnpm typecheck`
 3. Generate a real report and verify:
    - notes rendering

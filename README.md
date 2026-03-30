@@ -194,7 +194,9 @@ Use `.example.env` as template.
 ### OpenAI
 
 - `OPENAI_API_KEY`
-- `OPENAI_MODEL`
+- `OPENAI_MODEL` (optional shared fallback)
+- `OPENAI_MODEL_WEBSITE_ANALYSIS` (optional endpoint-specific override)
+- `OPENAI_MODEL_BRIEFING` (optional endpoint-specific override)
 
 ### Nuxt Studio
 

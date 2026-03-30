@@ -6,12 +6,20 @@ import type { ReportConfig } from '~~/schema/reportConfig'
 import type { Audit, PillarAverage } from '~~/shared/types/audit'
 import type { Pillar } from '~~/shared/types/primitives'
 
-import { useReportGenerationExecution } from '~/composables/report-generation-execution'
+import {
+	getEstimatedAnalysisDurationMs,
+	getEstimatedBriefingDurationMs
+} from '~/composables/report-ai'
 import {
 	buildReportPdfAiInsights,
 	createReportAiInputSignature,
 	hasGeneratedReportAiInsights
 } from '~/composables/report-generation-flow'
+import {
+	applyReportLoadingToolActiveTransition,
+	applyReportLoadingToolOpenChange,
+	isReportLoadingToolOpen
+} from '~/composables/report-loading-tools'
 import {
 	AI_WEBSITE_ANALYSIS_DEFAULT_PAGES,
 	AI_WEBSITE_ANALYSIS_MAX_PAGES,
@@ -124,6 +132,7 @@ const aiInsightsInputSignature = ref<string>()
 const activeLoadingToolId = computed(
 	() => progress.value.findLast((entry) => entry.status === 'running')?.id
 )
+const loadingToolOpenState = ref<Record<string, boolean>>({})
 
 /**
  * Flow overview:
@@ -199,6 +208,47 @@ const configSubmitLabel = computed(() => {
 })
 
 /**
+ * Converts a raw duration estimate into a user-facing minute range label.
+ *
+ * @param durationMs - Estimated duration in milliseconds.
+ * @returns Dutch minute-based ETA label without second-level precision.
+ */
+function formatDurationRangeLabel(durationMs: number): string {
+	const lowerBoundMinutes = (durationMs * 0.85) / 60_000
+	const upperBoundMinutes = (durationMs * 1.2) / 60_000
+
+	if (upperBoundMinutes < 1) {
+		return 'minder dan 1 minuut'
+	}
+
+	const lowerMinutes = Math.max(1, Math.floor(lowerBoundMinutes))
+	const upperMinutes = Math.max(lowerMinutes, Math.ceil(upperBoundMinutes))
+	if (lowerMinutes === upperMinutes) {
+		return `ongeveer ${upperMinutes} ${upperMinutes === 1 ? 'minuut' : 'minuten'}`
+	}
+
+	return `ongeveer ${lowerMinutes}-${upperMinutes} minuten`
+}
+
+const aiEstimatedDurationLabel = computed(() => {
+	let totalMs = 0
+
+	if (state.aiWebsiteAnalysis) {
+		totalMs += getEstimatedAnalysisDurationMs(state.maxPages)
+	}
+
+	if (state.aiBriefing) {
+		totalMs += getEstimatedBriefingDurationMs()
+	}
+
+	if (totalMs === 0) {
+		return 'onbekend'
+	}
+
+	return formatDurationRangeLabel(totalMs)
+})
+
+/**
  * Builds final AI insights payload for PDF generation.
  *
  * Briefing uses the editable draft from stage 3 when enabled.
@@ -212,6 +262,59 @@ function getFinalAiInsights(): ReportAiInsights | undefined {
 		briefingDraft: briefingDraft.value
 	})
 }
+
+/**
+ * Resolves open state for one loading tool entry.
+ *
+ * Active tools are always forced open. Completed tools use remembered
+ * user-toggle state.
+ *
+ * @param toolId - Progress tool id.
+ * @returns Whether the tool details should be expanded.
+ */
+function isLoadingToolOpen(toolId: string): boolean {
+	return isReportLoadingToolOpen({
+		toolId,
+		activeToolId: activeLoadingToolId.value,
+		openState: loadingToolOpenState.value
+	})
+}
+
+/**
+ * Persists user-driven open-state changes for completed loading tools.
+ *
+ * Active tools keep enforced open state.
+ *
+ * @param toolId - Progress tool id.
+ * @param isOpen - Next open state from UI interaction.
+ * @returns Nothing.
+ */
+function handleLoadingToolOpenChange(toolId: string, isOpen: boolean): void {
+	loadingToolOpenState.value = applyReportLoadingToolOpenChange({
+		openState: loadingToolOpenState.value,
+		toolId,
+		isOpen,
+		activeToolId: activeLoadingToolId.value
+	})
+}
+
+watch(activeLoadingToolId, (nextActiveToolId, previousActiveToolId) => {
+	loadingToolOpenState.value = applyReportLoadingToolActiveTransition({
+		openState: loadingToolOpenState.value,
+		nextActiveToolId,
+		previousActiveToolId
+	})
+})
+
+watch(
+	() => progress.value.length,
+	(entryCount) => {
+		// New AI run starts with a fresh progress list.
+		if (entryCount === 0) {
+			loadingToolOpenState.value = {}
+		}
+	}
+)
 
 const { handleConfigSubmit, handleBriefingSubmit } = useReportGenerationExecution({
 	state,
@@ -380,6 +483,14 @@ async function handleClose(): Promise<void> {
 					/>
 				</UFormField>
 				<UAlert
+					v-if="hasAiEnabled"
+					:icon="getIcon('help')"
+					color="info"
+					variant="subtle"
+					title="Verwachte wachttijd"
+					:description="`Voor je huidige AI-selectie duurt dit meestal ${aiEstimatedDurationLabel}.`"
+				/>
+				<UAlert
 					v-if="hasReusableAiInsights"
 					:icon="getIcon('success')"
 					color="success"
@@ -470,13 +581,14 @@ async function handleClose(): Promise<void> {
 					:loading="entry.status === 'running'"
 					:icon="entry.status === 'running' ? getIcon('refresh') : getIcon('success')"
 					:disabled="entry.status === 'running'"
-					:open="entry.id === activeLoadingToolId"
+					:open="isLoadingToolOpen(entry.id)"
 					chevron="leading"
 					variant="inline"
 					class="transition-opacity duration-300"
 					:class="entry.status === 'completed' ? 'opacity-45' : 'opacity-100'"
+					@update:open="handleLoadingToolOpenChange(entry.id, $event)"
 				>
-					{{ entry.reasoning }}
+					{{ entry.details }}
 				</UChatTool>
 			</div>
 

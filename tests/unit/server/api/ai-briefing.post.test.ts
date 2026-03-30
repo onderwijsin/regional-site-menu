@@ -134,6 +134,25 @@ describe('POST /api/ai/briefing', () => {
 		)
 	})
 
+	it('uses the configured medium request budget', async () => {
+		const parseImpl = vi.fn().mockResolvedValue({
+			status: 'completed',
+			output_parsed: {
+				briefing: 'Lage inspanning briefing'
+			}
+		})
+
+		const { handler } = await loadHandler({ parseImpl })
+		await handler({} as never)
+
+		expect(parseImpl.mock.calls[0]?.[0]?.max_output_tokens).toBe(
+			AI_OPENAI_CONFIG.briefingRequest.maxOutputTokens
+		)
+		expect(parseImpl.mock.calls[0]?.[0]?.reasoning?.effort).toBe(
+			AI_OPENAI_CONFIG.briefingRequest.reasoningEffort
+		)
+	})
+
 	it('falls back to plain response mode when structured parse throws JSON syntax error', async () => {
 		const parseImpl = vi.fn().mockRejectedValue(new SyntaxError('Unexpected token in JSON'))
 		const createImpl = vi.fn().mockResolvedValue({
