@@ -35,6 +35,7 @@ Sentry configuration is split intentionally:
   - `sentry.authToken`
 - Runtime Sentry config in `runtimeConfig.public.sentry`:
   - `dsn`
+  - `release`
   - `environment`
 
 Important convention:
@@ -109,3 +110,5 @@ For this project’s Nitro `cloudflare_module` preset:
 - `SENTRY_PROJECT` (build-time project slug)
 - `SENTRY_ORG` (build-time organization slug)
 - `SENTRY_DSN` (runtime event ingestion DSN)
+- `SENTRY_RELEASE` (recommended for server-side release/artifact matching; in CI this is set to
+  `GITHUB_SHA`)
