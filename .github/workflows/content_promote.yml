@@ -30,13 +30,12 @@ jobs:
         id: filter
         uses: dorny/paths-filter@v4
         with:
-          base: origin/main
+          base: main
           predicate-quantifier: every
           filters: |
             content_changes:
               - 'content/**'
             non_content_changes:
-              - '**'
               - '!content/**'
 
       - name: Fail on non-content changes
