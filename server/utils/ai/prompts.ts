@@ -65,7 +65,7 @@ export async function getAiSystemPrompt(event: H3Event, key: AiSystemPromptKey):
 	if (!prompt) {
 		throw createError({
 			statusCode: 500,
-			statusMessage: `Prompt niet gevonden: ${key}`
+			statusMessage: `Prompt not found: ${key}`
 		})
 	}
 

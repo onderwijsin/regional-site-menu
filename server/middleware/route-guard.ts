@@ -29,7 +29,7 @@ export default defineEventHandler((event) => {
 	if (!decision.allowed) {
 		throw createError({
 			statusCode: 403,
-			statusMessage: 'Ongeldige request-herkomst'
+			statusMessage: 'Invalid request origin'
 		})
 	}
 })

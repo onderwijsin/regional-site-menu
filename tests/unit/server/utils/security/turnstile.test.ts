@@ -73,7 +73,7 @@ describe('security/turnstile', () => {
 
 		await expect(assertTurnstileToken({} as never, 'ai_briefing')).rejects.toMatchObject({
 			statusCode: 400,
-			statusMessage: 'Turnstile token ontbreekt'
+			statusMessage: 'Turnstile token is missing'
 		})
 	})
 
@@ -101,7 +101,7 @@ describe('security/turnstile', () => {
 
 		await expect(assertTurnstileToken({} as never, 'ai_briefing')).rejects.toMatchObject({
 			statusCode: 403,
-			statusMessage: 'Turnstile actie komt niet overeen'
+			statusMessage: 'Turnstile action does not match'
 		})
 	})
 })

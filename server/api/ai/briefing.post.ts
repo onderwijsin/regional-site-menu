@@ -215,7 +215,7 @@ export default defineEventHandler(async (event) => {
 			})
 			throw createError({
 				statusCode: 502,
-				statusMessage: 'AI briefing kon niet worden gegenereerd'
+				statusMessage: 'AI briefing could not be generated'
 			})
 		}
 	}

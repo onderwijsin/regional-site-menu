@@ -34,7 +34,7 @@ For each incoming request:
 1. Ignore non-`POST` methods.
 2. If `isAdmin(event)` is true, bypass route-origin checks.
 3. For protected paths, enforce browser-origin metadata checks.
-4. Reject invalid origin context with `403 Ongeldige request-herkomst`.
+4. Reject invalid origin context with `403 Invalid request origin`.
 
 ## Origin Checks
 

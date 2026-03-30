@@ -27,7 +27,7 @@ export async function assertTurnstileToken(event: H3Event, expectedAction: strin
 		if (isProd) {
 			throw createError({
 				statusCode: 500,
-				statusMessage: 'TURNSTILE_SECRET_KEY ontbreekt in runtimeConfig'
+				statusMessage: 'TURNSTILE_SECRET_KEY is missing in runtimeConfig'
 			})
 		}
 
@@ -38,7 +38,7 @@ export async function assertTurnstileToken(event: H3Event, expectedAction: strin
 	if (!token) {
 		throw createError({
 			statusCode: 400,
-			statusMessage: 'Turnstile token ontbreekt'
+			statusMessage: 'Turnstile token is missing'
 		})
 	}
 
@@ -52,21 +52,21 @@ export async function assertTurnstileToken(event: H3Event, expectedAction: strin
 
 		throw createError({
 			statusCode: 502,
-			statusMessage: 'Turnstile validatie kon niet worden uitgevoerd'
+			statusMessage: 'Turnstile validation could not be performed'
 		})
 	}
 
 	if (!verification.success) {
 		throw createError({
 			statusCode: 403,
-			statusMessage: 'Turnstile validatie mislukt'
+			statusMessage: 'Turnstile validation failed'
 		})
 	}
 
 	if (verification.action && verification.action !== expectedAction) {
 		throw createError({
 			statusCode: 403,
-			statusMessage: 'Turnstile actie komt niet overeen'
+			statusMessage: 'Turnstile action does not match'
 		})
 	}
 }

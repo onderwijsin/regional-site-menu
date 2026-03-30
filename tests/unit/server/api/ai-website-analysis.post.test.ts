@@ -114,7 +114,7 @@ describe('POST /api/ai/website-analysis', () => {
 		await expect(handler({} as never)).rejects.toMatchObject({
 			statusCode: 502,
 			statusMessage:
-				'AI website-analyse kon geen bruikbare pagina-inhoud ophalen van de opgegeven website'
+				'AI website analysis could not retrieve usable page content from the provided website'
 		})
 		expect(parseImpl).not.toHaveBeenCalled()
 	})
@@ -146,7 +146,7 @@ describe('POST /api/ai/website-analysis', () => {
 
 		await expect(handler({} as never)).rejects.toMatchObject({
 			statusCode: 502,
-			statusMessage: 'AI website-analyse kon niet worden gegenereerd'
+			statusMessage: 'AI website analysis could not be generated'
 		})
 	})
 

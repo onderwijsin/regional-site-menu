@@ -82,7 +82,7 @@ describe('server/middleware/route-guard', () => {
 		})
 
 		expect(() => handler({ node: { req: { method: 'POST' } } } as never)).toThrow(
-			'Ongeldige request-herkomst'
+			'Invalid request origin'
 		)
 		expect(evaluateProtectedPostRequestMock).toHaveBeenCalledWith({
 			pathname: '/api/datahub/submission',

@@ -164,7 +164,7 @@ describe('POST /api/ai/briefing', () => {
 
 		await expect(handler({} as never)).rejects.toMatchObject({
 			statusCode: 502,
-			statusMessage: 'AI briefing kon niet worden gegenereerd'
+			statusMessage: 'AI briefing could not be generated'
 		})
 	})
 

@@ -85,7 +85,7 @@ export function useReportGenerationExecution(args: ReportGenerationExecutionArgs
 	 * @returns Nothing.
 	 */
 	function showGenerationErrorToast(error: unknown): void {
-		console.error('Rapport generatie mislukt', error)
+		console.error('Report generation failed', error)
 
 		toast.add({
 			icon: getIcon('error'),

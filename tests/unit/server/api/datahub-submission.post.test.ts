@@ -86,7 +86,7 @@ describe('POST /api/datahub/submission', () => {
 		const { handler } = await loadHandler()
 		await expect(handler({})).rejects.toMatchObject({
 			statusCode: 500,
-			statusMessage: 'DATAHUB_URL ontbreekt in runtimeConfig'
+			statusMessage: 'DATAHUB_URL is missing in runtimeConfig'
 		})
 	})
 

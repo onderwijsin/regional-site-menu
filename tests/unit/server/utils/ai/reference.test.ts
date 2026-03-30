@@ -68,11 +68,11 @@ describe('server/utils/ai/reference', () => {
 
 		await expect(fetchLlmsFullReferenceDocument(event)).rejects.toMatchObject({
 			statusCode: 500,
-			statusMessage: 'Kon llms referentiedocument niet ophalen'
+			statusMessage: 'Could not fetch llms reference document'
 		})
 		expect(createErrorMock).toHaveBeenCalledWith({
 			statusCode: 500,
-			statusMessage: 'Kon llms referentiedocument niet ophalen'
+			statusMessage: 'Could not fetch llms reference document'
 		})
 	})
 })

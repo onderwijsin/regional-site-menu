@@ -28,14 +28,14 @@ export default defineEventHandler(async (event) => {
 	if (!datahubUrl) {
 		throw createError({
 			statusCode: 500,
-			statusMessage: 'DATAHUB_URL ontbreekt in runtimeConfig'
+			statusMessage: 'DATAHUB_URL is missing in runtimeConfig'
 		})
 	}
 
 	if (!datahubToken) {
 		throw createError({
 			statusCode: 500,
-			statusMessage: 'DATAHUB_TOKEN ontbreekt in runtimeConfig'
+			statusMessage: 'DATAHUB_TOKEN is missing in runtimeConfig'
 		})
 	}
 
