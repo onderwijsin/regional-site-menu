@@ -70,15 +70,6 @@ const testModules = ['@pinia/nuxt', 'pinia-plugin-persistedstate/nuxt', '@vueuse
 export default defineNuxtConfig({
 	modules: isTest ? testModules : appModules,
 
-	sentry: {
-		org: process.env.SENTRY_ORG,
-		project: process.env.SENTRY_PROJECT,
-		authToken: process.env.SENTRY_AUTH_TOKEN,
-		sourcemaps: {
-			disable: isPreview
-		}
-	},
-
 	devtools: {
 		enabled: true
 	},
@@ -97,7 +88,8 @@ export default defineNuxtConfig({
 	css: ['~/assets/css/main.css'],
 
 	sourcemap: {
-		client: 'hidden'
+		client: 'hidden',
+		server: 'hidden'
 	},
 
 	experimental: {
@@ -179,6 +171,7 @@ export default defineNuxtConfig({
 			nodeCompat: true,
 			wrangler: {
 				name: process.env.WORKER_NAME,
+				no_bundle: true,
 				assets: {
 					directory: './.output/public/',
 					binding: 'ASSETS'
@@ -279,6 +272,16 @@ export default defineNuxtConfig({
 
 	turnstile: {
 		siteKey: turnstileSiteKey
+	},
+
+	sentry: {
+		org: process.env.SENTRY_ORG,
+		project: process.env.SENTRY_PROJECT,
+		authToken: process.env.SENTRY_AUTH_TOKEN,
+		sourcemaps: {
+			disable: process.env.SENTRY_UPLOAD_SOURCE_MAPS !== 'true',
+			assets: ['.output/public/**/*', '.output/server/**/*']
+		}
 	},
 
 	runtimeConfig: {

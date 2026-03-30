@@ -102,6 +102,8 @@ Reference:
    - `zodErrorsIntegration` in Sentry init (client + server) for enriched Zod validation context.
    - OpenAI instrumentation via `Sentry.instrumentOpenAiClient(...)` in the shared OpenAI client
      factory (`server/utils/ai/openai.ts`), not ad-hoc per route.
+5. For Cloudflare deploys, keep `nitro.cloudflare.wrangler.no_bundle = true` to avoid Wrangler
+   rebundling Nitro server output, which can break server-side Sentry source map matching.
 
 ## Tooling and Quality Gates
 

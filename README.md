@@ -209,6 +209,7 @@ Use `.example.env` as template.
 - `SENTRY_DSN` (required runtime DSN for event ingestion)
 - `SENTRY_RELEASE` (recommended; should match deployed commit SHA for server-side source map
   resolution)
+- `SENTRY_UPLOAD_SOURCE_MAPS` (true | false; enable/disable source map upload)
 
 ### Nuxt Studio
 
