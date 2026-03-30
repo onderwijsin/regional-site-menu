@@ -5,12 +5,12 @@ withDefaults(defineProps<Omit<ButtonProps, 'icon' | 'aria-label'>>(), {
 	variant: 'ghost',
 	color: 'neutral'
 })
-const site = useSiteConfig()
+const origin = useRequestOrigin()
 const { trackAiAction } = useTracking()
 const { getIcon } = useIcons()
 
 const prompt = computed(
-	() => `Lees deze documentatie ${site.url}/llms-full.txt zodat we erover kunnen sparren. 
+	() => `Lees deze documentatie ${origin}/llms-full.txt zodat we erover kunnen sparren. 
 
 Het document bevat de volledige lijst items uit de tool "Menukaart voor regionale onderwijsloket 
 websites". Deze tool biedt een overzicht van features, inhoud en andere functionailiteiten die een 

@@ -60,8 +60,11 @@ Highlights:
 - deploys via Wrangler
 - supports:
   - normal deploys (`wrangler deploy`)
-  - preview version uploads (`wrangler versions upload`)
-- posts preview URL comments back to PRs for version-upload preview runs
+  - preview version uploads (`wrangler versions upload`) followed by promotion
+    (`wrangler versions deploy <version-id>@100% --env preview`)
+- auto-promotion for preview uploads is controlled by `promote_uploaded_version` (`true` by default)
+- keeps the preview environment URL on the latest uploaded preview version
+- posts preview URL comments back to PRs for preview runs
 - can optionally apply D1 migrations
   - controlled via `apply_db_migrations` workflow input (defaults to `false`)
 
@@ -113,10 +116,12 @@ Manual dispatch in `deploy.yml` can override environment selection.
 
 1. Deployment uses exported `.env` assembled from GitHub vars + secrets.
 2. Preview uploads are restricted to preview environment.
-3. `APP_URL` is required for non-preview deployments.
-4. Worker deployment status is reflected via GitHub deployment status updates.
-5. Cloudflare environments must expose the D1 binding `DB` (including `CLOUDFLARE_D1_DATABASE_ID`).
-6. Cloudflare environments must expose the R2 binding `BLOB` (including `CLOUDFLARE_R2_BUCKET`).
+3. For preview uploads, promotion to deployed (`100%`) in `preview` is enabled by default and can be
+   disabled with `promote_uploaded_version: false`.
+4. `APP_URL` is required for non-preview deployments.
+5. Worker deployment status is reflected via GitHub deployment status updates.
+6. Cloudflare environments must expose the D1 binding `DB` (including `CLOUDFLARE_D1_DATABASE_ID`).
+7. Cloudflare environments must expose the R2 binding `BLOB` (including `CLOUDFLARE_R2_BUCKET`).
 
 ## Known Build Workaround
 

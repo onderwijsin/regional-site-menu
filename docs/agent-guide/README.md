@@ -212,6 +212,8 @@ Validation rules:
 4. Run verification:
    - `pnpm lint` (or scoped eslint command)
    - `pnpm typecheck`
+   - `pnpm test:unit`
+   - `pnpm test:coverage`
 5. For PDF-related changes: generate and visually verify a report.
 
 ## Pre-Commit / Pre-Push Hooks

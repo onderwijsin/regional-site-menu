@@ -18,6 +18,11 @@ on:
           'Whether this deployment should upload a new Worker version (or be an actual deployment)'
         default: false
         type: boolean
+      promote_uploaded_version:
+        required: false
+        description: 'Whether uploaded preview versions should be promoted to deployed'
+        default: true
+        type: boolean
       fetch-depth:
         required: false
         description: 'The git fetch depth for the checkout action'
@@ -160,10 +165,21 @@ jobs:
 
             if [ -z "$VERSION_ID" ]; then
               echo "❌ Failed to extract Worker Version ID"
-              echo "Deployment URL will use an APP_URL fallback."
-              DEPLOYMENT_URL="$APP_URL"
+              echo "Cannot promote preview deployment without a version ID."
+              exit 1
             else 
               echo "✅ Extracted Worker Version ID: $VERSION_ID"
+
+              if [ "${{ inputs.promote_uploaded_version }}" = "true" ]; then
+                # Promote the uploaded version so the preview environment URL points
+                # to the latest uploaded version.
+                wrangler versions deploy "${VERSION_ID}@100%" \
+                  --env preview \
+                  --yes \
+                  --message "Preview deploy for ${SHORT_SHA}"
+              else
+                echo "Skipping preview version promotion (promote_uploaded_version=false)."
+              fi
 
               # Construct the deployment URL using the version ID
               DEPLOYMENT_URL="https://${VERSION_PREFIX}-${WORKER_NAME}.${CLOUDFLARE_ACCOUNT_SLUG}.workers.dev"

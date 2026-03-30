@@ -46,11 +46,7 @@ describe('report/sections/cover', () => {
 	it('renders cover with logo and normalized footer host', async () => {
 		const ctx = createContext()
 		loadImageAsBase64Mock.mockResolvedValue('base64-logo')
-		vi.stubGlobal('useRuntimeConfig', () => ({
-			public: {
-				siteUrl: 'https://www.example.com/path'
-			}
-		}))
+		vi.stubGlobal('useRequestOrigin', () => 'https://www.example.com/path')
 		vi.spyOn(Date.prototype, 'toLocaleDateString').mockReturnValue('28-03-2026')
 
 		await renderCoverPage(ctx as never, 'Regio Utrecht')
@@ -67,11 +63,7 @@ describe('report/sections/cover', () => {
 	it('keeps rendering when logo loading fails', async () => {
 		const ctx = createContext()
 		loadImageAsBase64Mock.mockRejectedValue(new Error('missing logo'))
-		vi.stubGlobal('useRuntimeConfig', () => ({
-			public: {
-				siteUrl: 'https://example.com'
-			}
-		}))
+		vi.stubGlobal('useRequestOrigin', () => 'https://example.com')
 
 		await renderCoverPage(ctx as never, 'Regio Groningen')
 
