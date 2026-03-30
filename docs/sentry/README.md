@@ -78,12 +78,7 @@ OpenAI instrumentation defaults in this project:
 
 Source map support is enabled as follows:
 
-- Nuxt client and server sourcemaps:
-  - `sourcemap.client = "hidden"`
-  - `sourcemap.server = "hidden"`
-- Sentry upload assets are explicitly scoped to:
-  - `.output/public/**/*`
-  - `.output/server/**/*`
+- Nuxt client sourcemaps are enabled with `sourcemap.client = "hidden"`.
 - Sentry build upload uses:
   - `SENTRY_AUTH_TOKEN`
   - `SENTRY_ORG`
@@ -95,8 +90,6 @@ For this project’s Nitro `cloudflare_module` preset:
 
 - Do not manually add `compatibility_flags: ["nodejs_compat"]` in wrangler config unless explicitly
   needed.
-- Keep `nitro.cloudflare.wrangler.no_bundle = true` so Wrangler does not rebundle Nitro output.
-  Rebundling can break server-side Sentry source map matching.
 - Keep Cloudflare Sentry plugin setup in `server/plugins/sentry-cloudflare-plugin.ts`.
 
 ## Manual Verification
