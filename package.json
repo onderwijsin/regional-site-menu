@@ -15,7 +15,8 @@
 		"prepare": "husky || true && pnpm nuxt:prepare",
 		"format:check": "prettier --check .",
 		"format:fix": "prettier --write .",
-		"lint": "eslint .",
+		"check:conventions": "node ./scripts/check-conventions.mjs",
+		"lint": "eslint . && pnpm check:conventions",
 		"lint:fix": "eslint . --fix",
 		"typecheck": "nuxi typecheck",
 		"nuxt:upgrade": "pnpm dlx nuxt upgrade --dedupe"

@@ -22,6 +22,8 @@ Operational contract for AI coding agents working in this repository.
 - You SHOULD keep server route logic in `server/api/*` and helper logic in `server/utils/*`.
 - You SHOULD use Zod for boundary validation.
 - You SHOULD prefer small, scoped changes that follow existing patterns.
+- You SHOULD run `pnpm check:conventions` (or `pnpm lint`, which includes it) when touching runtime
+  conventions.
 
 ## Commit and PR Rules
 
@@ -78,6 +80,7 @@ pnpm dev
 pnpm build
 pnpm preview
 pnpm lint
+pnpm check:conventions
 pnpm typecheck
 pnpm test:unit
 pnpm test:coverage

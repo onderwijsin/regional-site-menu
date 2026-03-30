@@ -23,7 +23,7 @@ Main integration files:
 - [server/plugins/sentry-cloudflare-plugin.ts](../../server/plugins/sentry-cloudflare-plugin.ts)
 - [server/utils/ai/openai.ts](../../server/utils/ai/openai.ts)
 - [server/api/\_sentry/test.get.ts](../../server/api/_sentry/test.get.ts)
-- [app/pages/\_sentry.vue](../../app/pages/_sentry.vue)
+- [app/pages/(misc)/\_sentry.vue](<../../app/pages/(misc)/_sentry.vue>)
 
 ## Runtime and Build Config
 

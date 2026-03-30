@@ -24,6 +24,8 @@ This document captures practical development rules and conventions for this repo
    `computed`, `watch`, `Ref`, `ComputedRef`, `useAsyncData`, `useState`).
 4. In files outside Nuxt auto-import scope (for example isolated scripts), explicit imports are
    acceptable.
+5. Automated enforcement entry point:
+   - `pnpm check:conventions` (also runs automatically in `pnpm lint`).
 
 ## Type Conventions
 
@@ -58,6 +60,10 @@ This document captures practical development rules and conventions for this repo
      - `import { GOALS, PILLARS } from '~/composables/content-taxonomy'`
    - Explicit import not allowed:
      - `import { useReportGenerationExecution } from '~/composables/report-generation-execution'`
+7. Automated checks enforce:
+   - one exported `use*` composable per `app/composables/*.ts` file
+   - filename ↔ exported `use*` composable name matching
+   - explicit allowlist for intentional legacy exceptions
 
 ## State Conventions
 
@@ -110,6 +116,9 @@ Reference:
 2. Keep formatting/linting consistent with project config.
 3. Resolve `eslint-plugin-jsdoc` findings for exported functions in app/server/schema/shared code.
 4. Respect Husky hooks unless intentionally bypassed for specific workflows.
+5. `pnpm lint` includes automated convention enforcement via `pnpm check:conventions`.
+6. Convention checks validate composable contracts, Nuxt runtime auto-import usage, and stale docs
+   links.
 
 ## Testing Conventions
 
