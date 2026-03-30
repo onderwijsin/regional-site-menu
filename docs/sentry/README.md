@@ -91,6 +91,8 @@ For this project’s Nitro `cloudflare_module` preset:
 - Do not manually add `compatibility_flags: ["nodejs_compat"]` in wrangler config unless explicitly
   needed.
 - Keep Cloudflare Sentry plugin setup in `server/plugins/sentry-cloudflare-plugin.ts`.
+- CI deploy also uploads Wrangler's final bundled worker sourcemaps (`index.js` / `index.js.map`) to
+  Sentry for server-frame matching in Cloudflare runtime stack traces.
 
 ## Manual Verification
 
