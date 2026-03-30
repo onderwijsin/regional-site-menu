@@ -207,8 +207,7 @@ Use `.example.env` as template.
 - `SENTRY_PROJECT` (required Sentry project slug)
 - `SENTRY_ORG` (required Sentry organization slug)
 - `SENTRY_DSN` (required runtime DSN for event ingestion)
-- `SENTRY_RELEASE` (recommended; should match deployed commit SHA for server-side source map
-  resolution)
+- `SENTRY_RELEASE` (optional runtime release identifier)
 - `SENTRY_UPLOAD_SOURCE_MAPS` (true | false; enable/disable source map upload)
 
 ### Nuxt Studio
