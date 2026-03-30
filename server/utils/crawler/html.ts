@@ -41,7 +41,9 @@ export function parseHtmlForCrawl(
 		}
 
 		const title = normalizeText(getNodeText(querySelectorOneRecord(documentRecord, 'title')))
-		const heading = normalizeText(getNodeText(querySelectorOneRecord(documentRecord, 'h1')))
+		const fallbackHeading = normalizeText(
+			getNodeText(querySelectorOneRecord(documentRecord, 'h1'))
+		)
 		const readabilityExtracted = extractReadableContent(documentRecord, maxCharsPerPage)
 		const contentRoot =
 			querySelectorOneRecord(documentRecord, 'main') ??
@@ -55,7 +57,9 @@ export function parseHtmlForCrawl(
 
 		return {
 			title: title || undefined,
-			heading: resolveHeading(heading, readabilityExtracted.heading, title) || undefined,
+			heading:
+				resolveHeading(() => fallbackHeading, readabilityExtracted.heading, title) ||
+				undefined,
 			excerpt,
 			links
 		}
@@ -193,7 +197,9 @@ function extractReadableContent(
 ): { heading: string; excerpt: string } {
 	const defaultResult = { heading: '', excerpt: '' }
 	try {
-		const parsed = new Readability(documentRecord as never).parse()
+		const parsed = new Readability(
+			documentRecord as unknown as ConstructorParameters<typeof Readability>[0]
+		).parse()
 		if (!parsed) {
 			return defaultResult
 		}
@@ -215,19 +221,23 @@ function extractReadableContent(
 /**
  * Resolves the most suitable heading while avoiding duplicate page-title noise.
  *
- * @param heading - H1 extracted from document.
+ * @param getFallbackHeading - Lazily resolves H1 extracted from document.
  * @param readabilityHeading - Readability-provided title/heading.
  * @param pageTitle - Document title.
  * @returns Best heading candidate.
  */
-function resolveHeading(heading: string, readabilityHeading: string, pageTitle: string): string {
-	if (heading) {
-		return heading
-	}
-
+function resolveHeading(
+	getFallbackHeading: () => string,
+	readabilityHeading: string,
+	pageTitle: string
+): string {
 	if (!readabilityHeading) {
-		return ''
+		return getFallbackHeading()
 	}
 
-	return readabilityHeading === pageTitle ? '' : readabilityHeading
+	if (readabilityHeading === pageTitle) {
+		return getFallbackHeading()
+	}
+
+	return readabilityHeading
 }

@@ -33,7 +33,7 @@ describe('server/utils/ai/analysis', () => {
 			}
 		])
 
-		expect(output).toContain('## Evidence 1')
+		expect(output).toContain('## Bewijs 1')
 		expect(output).toContain('Titel: Over ons')
 		expect(output).toContain('Hoofdkop: Welkom')
 		expect(output).toContain('Titel: Onbekend')

@@ -1,5 +1,7 @@
 import type { CrawledWebsitePage } from '../crawler/types'
 
+const COMPACT_EVIDENCE_EXCERPT_MAX_CHARS = 700
+
 /**
  * Builds an allowlist for domain-constrained web search.
  *
@@ -65,8 +67,9 @@ export function formatCrawledPagesForPrompt(pages: CrawledWebsitePage[]): string
 
 	const lines: string[] = []
 	for (const [index, page] of pages.entries()) {
+		// Keep compact excerpt as a named value to avoid repeated normalization/truncation.
 		const compactExcerpt = toCompactExcerpt(page.excerpt)
-		lines.push(`## Evidence ${index + 1}`)
+		lines.push(`## Bewijs ${index + 1}`)
 		lines.push(`URL: ${page.url}`)
 		lines.push(`Titel: ${page.title || 'Onbekend'}`)
 		lines.push(`Hoofdkop: ${page.heading || 'Onbekend'}`)
@@ -144,10 +147,9 @@ function toCompactExcerpt(excerpt: string): string {
 		return ''
 	}
 
-	const compactLimit = 700
-	if (normalized.length <= compactLimit) {
+	if (normalized.length <= COMPACT_EVIDENCE_EXCERPT_MAX_CHARS) {
 		return normalized
 	}
 
-	return `${normalized.slice(0, compactLimit).trimEnd()}…`
+	return `${normalized.slice(0, COMPACT_EVIDENCE_EXCERPT_MAX_CHARS).trimEnd()}…`
 }
