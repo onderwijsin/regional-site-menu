@@ -75,7 +75,7 @@ describe('useReportAi', () => {
 		const reportAi = useReportAi()
 		const promise = reportAi.generateAiInsights(baseConfig, baseData)
 
-		await vi.advanceTimersByTimeAsync(15_000)
+		await vi.advanceTimersByTimeAsync(45_000)
 		const result = await promise
 
 		expect(result).toEqual({
@@ -112,7 +112,7 @@ describe('useReportAi', () => {
 			name: 'ReportGenerationError',
 			code: 'AI_WEBSITE_ANALYSIS_FAILED'
 		})
-		await vi.advanceTimersByTimeAsync(15_000)
+		await vi.advanceTimersByTimeAsync(45_000)
 		await expectation
 	})
 
@@ -147,7 +147,7 @@ describe('useReportAi', () => {
 			name: 'ReportGenerationError',
 			code: 'AI_BRIEFING_FAILED'
 		})
-		await vi.advanceTimersByTimeAsync(15_000)
+		await vi.advanceTimersByTimeAsync(45_000)
 		await expectation
 	})
 

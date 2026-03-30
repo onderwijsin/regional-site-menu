@@ -85,9 +85,16 @@ export const AI_TEXT_SANITIZATION_CONFIG = {
 } as const
 
 /**
+ * Multiplier applied to staged AI progress timings outside development.
+ */
+export const NON_DEV_STAGE_DURATION_MULTIPLIER = 1.5 as const
+
+/**
  * UI timing model for staged AI progress indicators.
  */
 export const REPORT_AI_PROGRESS_CONFIG = {
+	/** Fixed crawl stage baseline duration before per-page scaling. */
+	crawlStageBaseDurationMs: 15_000,
 	/** Crawl stage duration multiplier (ms) per requested page. */
 	crawlStageDurationPerPageMs: 3_000,
 	/** Fast-forward delay per skipped analysis stage on quick completion. */
