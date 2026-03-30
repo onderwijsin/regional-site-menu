@@ -3,7 +3,6 @@ import type { ReportAiInsights } from '~~/schema/reportAi'
 import type { ReportConfig } from '~~/schema/reportConfig'
 import type { Audit, PillarAverage } from '~~/shared/types/audit'
 import type { Pillar } from '~~/shared/types/primitives'
-import type { ComputedRef, Ref } from 'vue'
 import type { ReportData } from './report/types'
 
 import { ReportGenerationError } from './report/errors'
@@ -127,6 +126,19 @@ export function useReportGenerationExecution(args: ReportGenerationExecutionArgs
 	}
 
 	/**
+	 * Runs PDF generation and maps any thrown error to the standard flow toast.
+	 *
+	 * @returns Nothing.
+	 */
+	async function startPdfGenerationWithToast(): Promise<void> {
+		try {
+			await startPdfGeneration()
+		} catch (error: unknown) {
+			showGenerationErrorToast(error)
+		}
+	}
+
+	/**
 	 * Runs AI generation and routes to the next stage.
 	 *
 	 * - When briefing is enabled: open review editor
@@ -181,11 +193,7 @@ export function useReportGenerationExecution(args: ReportGenerationExecutionArgs
 					return
 				}
 
-				try {
-					await startPdfGeneration()
-				} catch (error: unknown) {
-					showGenerationErrorToast(error)
-				}
+				await startPdfGenerationWithToast()
 
 				return
 			}
@@ -199,11 +207,7 @@ export function useReportGenerationExecution(args: ReportGenerationExecutionArgs
 			return
 		}
 
-		try {
-			await startPdfGeneration()
-		} catch (error: unknown) {
-			showGenerationErrorToast(error)
-		}
+		await startPdfGenerationWithToast()
 	}
 
 	/**
@@ -212,11 +216,7 @@ export function useReportGenerationExecution(args: ReportGenerationExecutionArgs
 	 * @returns Nothing.
 	 */
 	async function handleBriefingSubmit(): Promise<void> {
-		try {
-			await startPdfGeneration()
-		} catch (error: unknown) {
-			showGenerationErrorToast(error)
-		}
+		await startPdfGenerationWithToast()
 	}
 
 	return {

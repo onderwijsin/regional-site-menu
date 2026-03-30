@@ -16,6 +16,11 @@ import {
 	hasGeneratedReportAiInsights
 } from '~/composables/report-generation-flow'
 import {
+	applyReportLoadingToolActiveTransition,
+	applyReportLoadingToolOpenChange,
+	isReportLoadingToolOpen
+} from '~/composables/report-loading-tools'
+import {
 	AI_WEBSITE_ANALYSIS_DEFAULT_PAGES,
 	AI_WEBSITE_ANALYSIS_MAX_PAGES,
 	AI_WEBSITE_ANALYSIS_MIN_PAGES
@@ -127,6 +132,7 @@ const aiInsightsInputSignature = ref<string>()
 const activeLoadingToolId = computed(
 	() => progress.value.findLast((entry) => entry.status === 'running')?.id
 )
+const loadingToolOpenState = ref<Record<string, boolean>>({})
 
 /**
  * Flow overview:
@@ -256,6 +262,59 @@ function getFinalAiInsights(): ReportAiInsights | undefined {
 		briefingDraft: briefingDraft.value
 	})
 }
+
+/**
+ * Resolves open state for one loading tool entry.
+ *
+ * Active tools are always forced open. Completed tools use remembered
+ * user-toggle state.
+ *
+ * @param toolId - Progress tool id.
+ * @returns Whether the tool details should be expanded.
+ */
+function isLoadingToolOpen(toolId: string): boolean {
+	return isReportLoadingToolOpen({
+		toolId,
+		activeToolId: activeLoadingToolId.value,
+		openState: loadingToolOpenState.value
+	})
+}
+
+/**
+ * Persists user-driven open-state changes for completed loading tools.
+ *
+ * Active tools keep enforced open state.
+ *
+ * @param toolId - Progress tool id.
+ * @param isOpen - Next open state from UI interaction.
+ * @returns Nothing.
+ */
+function handleLoadingToolOpenChange(toolId: string, isOpen: boolean): void {
+	loadingToolOpenState.value = applyReportLoadingToolOpenChange({
+		openState: loadingToolOpenState.value,
+		toolId,
+		isOpen,
+		activeToolId: activeLoadingToolId.value
+	})
+}
+
+watch(activeLoadingToolId, (nextActiveToolId, previousActiveToolId) => {
+	loadingToolOpenState.value = applyReportLoadingToolActiveTransition({
+		openState: loadingToolOpenState.value,
+		nextActiveToolId,
+		previousActiveToolId
+	})
+})
+
+watch(
+	() => progress.value.length,
+	(entryCount) => {
+		// New AI run starts with a fresh progress list.
+		if (entryCount === 0) {
+			loadingToolOpenState.value = {}
+		}
+	}
+)
 
 const { handleConfigSubmit, handleBriefingSubmit } = useReportGenerationExecution({
 	state,
@@ -522,11 +581,12 @@ async function handleClose(): Promise<void> {
 					:loading="entry.status === 'running'"
 					:icon="entry.status === 'running' ? getIcon('refresh') : getIcon('success')"
 					:disabled="entry.status === 'running'"
-					:open="entry.id === activeLoadingToolId"
+					:open="isLoadingToolOpen(entry.id)"
 					chevron="leading"
 					variant="inline"
 					class="transition-opacity duration-300"
 					:class="entry.status === 'completed' ? 'opacity-45' : 'opacity-100'"
+					@update:open="handleLoadingToolOpenChange(entry.id, $event)"
 				>
 					{{ entry.details }}
 				</UChatTool>

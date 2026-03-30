@@ -131,7 +131,8 @@ Nuxt config:
 ### Overlays
 
 - Overlay/open-close orchestration lives in composables:
-  - `app/composables/report.ts`
+  - `app/composables/use-report.ts`
+  - `app/composables/use-report-config.ts`
   - `app/composables/suggestion.ts`
   - `app/composables/welcome.ts`
   - `app/composables/comments.ts`

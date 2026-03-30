@@ -26,6 +26,9 @@ files remain focused on boundary handling and orchestration.
   - shared compatibility fallback orchestration for structured/plain responses
   - token-limit incomplete retry guard helpers
   - response parsing helpers (`refusal`, safe field reads)
+- `route-request.ts`
+  - shared AI-route request execution with compatibility fallback + token-limit retry flow
+  - timing hook support (`openai_response_received`, `openai_response_retry_received`)
 
 ## Design Rules
 

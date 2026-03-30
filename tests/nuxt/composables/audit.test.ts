@@ -1,7 +1,8 @@
 import type { ItemsCollectionItem } from '@nuxt/content'
 
 import { mockNuxtImport } from '@nuxt/test-utils/runtime'
-import { useAudit, useAuditUtils } from '~/composables/audit'
+import { useAudit } from '~/composables/use-audit'
+import { useAuditUtils } from '~/composables/use-audit-utils'
 import { useStateStore } from '~/stores/state'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
