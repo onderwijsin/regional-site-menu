@@ -78,7 +78,7 @@ OpenAI instrumentation defaults in this project:
 
 Source map support is enabled as follows:
 
-- Nuxt client sourcemaps: `sourcemap.client = "hidden"` in `nuxt.config.ts`
+- Nuxt client sourcemaps are enabled with `sourcemap.client = "hidden"`.
 - Sentry build upload uses:
   - `SENTRY_AUTH_TOKEN`
   - `SENTRY_ORG`
@@ -110,5 +110,4 @@ For this project’s Nitro `cloudflare_module` preset:
 - `SENTRY_PROJECT` (build-time project slug)
 - `SENTRY_ORG` (build-time organization slug)
 - `SENTRY_DSN` (runtime event ingestion DSN)
-- `SENTRY_RELEASE` (recommended for server-side release/artifact matching; in CI this is set to
-  `GITHUB_SHA`)
+- `SENTRY_RELEASE` (optional runtime release identifier)
