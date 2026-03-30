@@ -21,8 +21,20 @@ function resolveMode(value: string | undefined): Mode {
 	return (SUPPORTED_MODES as readonly string[]).includes(value) ? (value as Mode) : 'dev'
 }
 
+function resolveSentryEnvironment(value: Mode): 'development' | 'production' | 'preview' {
+	switch (value) {
+		case 'prod':
+			return 'production'
+		case 'preview':
+			return 'preview'
+		default:
+			return 'development'
+	}
+}
+
 // Runtime modes
 const mode = resolveMode(process.env.MODE)
+const sentryEnvironment = resolveSentryEnvironment(mode)
 const isDebug = process.env.DEBUG === 'true'
 const isProd = mode === 'prod'
 const isPreview = mode === 'preview'
@@ -41,6 +53,7 @@ const appModules = [
 	'@nuxt/image',
 	'@nuxtjs/turnstile',
 	'@nuxtjs/plausible',
+	'@sentry/nuxt/module',
 	'@pinia/nuxt',
 	'pinia-plugin-persistedstate/nuxt',
 	'@vueuse/nuxt',
@@ -56,6 +69,15 @@ const testModules = ['@pinia/nuxt', 'pinia-plugin-persistedstate/nuxt', '@vueuse
 
 export default defineNuxtConfig({
 	modules: isTest ? testModules : appModules,
+
+	sentry: {
+		org: process.env.SENTRY_ORG,
+		project: process.env.SENTRY_PROJECT,
+		authToken: process.env.SENTRY_AUTH_TOKEN,
+		sourcemaps: {
+			disable: isPreview
+		}
+	},
 
 	devtools: {
 		enabled: true
@@ -73,6 +95,10 @@ export default defineNuxtConfig({
 	},
 
 	css: ['~/assets/css/main.css'],
+
+	sourcemap: {
+		client: 'hidden'
+	},
 
 	experimental: {
 		inlineRouteRules: true
@@ -283,6 +309,10 @@ export default defineNuxtConfig({
 			siteUrl: process.env.APP_URL,
 			titleSeparator: NUXT_BEHAVIOR_CONFIG.titleSeparator,
 			language: NUXT_BEHAVIOR_CONFIG.language, // prefer more explicit language codes like `en-AU` over `en`
+			sentry: {
+				dsn: process.env.SENTRY_DSN,
+				environment: sentryEnvironment
+			},
 			mode: {
 				isDev,
 				isProd,

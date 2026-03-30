@@ -87,6 +87,22 @@ Reference:
 
 - [docs/ai-integration/README.md](../../docs/ai-integration/README.md)
 
+## Sentry and Cloudflare Conventions
+
+1. With Nitro `cloudflare_module`, do not manually add `compatibility_flags: ["nodejs_compat"]` in
+   wrangler config files unless a specific override is required.
+2. Do not read Sentry runtime values from `process.env` in server runtime code (`server/*`, plugins,
+   routes, middleware). Configure values in `nuxt.config.ts` `runtimeConfig` and consume via
+   `useRuntimeConfig()`.
+3. Set Sentry `environment` from `MODE` using the mapping:
+   - `dev -> development`
+   - `preview -> preview`
+   - `prod -> production`
+4. Keep the Sentry integration baseline enabled unless intentionally scoped:
+   - `zodErrorsIntegration` in Sentry init (client + server) for enriched Zod validation context.
+   - OpenAI instrumentation via `Sentry.instrumentOpenAiClient(...)` in the shared OpenAI client
+     factory (`server/utils/ai/openai.ts`), not ad-hoc per route.
+
 ## Tooling and Quality Gates
 
 1. Run `pnpm lint`, `pnpm typecheck`, `pnpm test:unit`, and `pnpm test:coverage` for meaningful

@@ -59,6 +59,7 @@ Operational contract for AI coding agents working in this repository.
 - Content domain notes: `docs/content/README.md`
 - PDF/report domain notes: `docs/report-pdf/README.md`
 - AI integration domain notes: `docs/ai-integration/README.md`
+- Sentry/observability notes: `docs/sentry/README.md`
 - Turnstile/security domain notes: `docs/turnstile/README.md`
 - Testing guide: `docs/testing/README.md`
 - CI/CD guide: `docs/ci-cd/README.md`

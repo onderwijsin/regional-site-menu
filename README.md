@@ -38,6 +38,8 @@ If you are working on this codebase with an AI coding agent, read [`AGENTS.md`](
 - Pinia + `pinia-plugin-persistedstate`
 - TipTap (rich text input)
 - jsPDF (client-side report generation)
+- OpenAI API (AI website analysis and briefing generation)
+- Sentry (error monitoring, tracing, replay, source maps)
 - Cloudflare Turnstile via `@nuxtjs/turnstile` (abuse protection for server routes)
 - Cloudflare Workers (via NuxtHub / Nitro preset)
 
@@ -62,6 +64,7 @@ If you are working on this codebase with an AI coding agent, read [`AGENTS.md`](
 - Node.js `24` (see `.nvmrc`)
 - pnpm `>=10`
 - gitleaks
+- OpenAI account + API key (required for AI features)
 
 ### Setup
 
@@ -197,6 +200,13 @@ Use `.example.env` as template.
 - `OPENAI_MODEL` (optional shared fallback)
 - `OPENAI_MODEL_WEBSITE_ANALYSIS` (optional endpoint-specific override)
 - `OPENAI_MODEL_BRIEFING` (optional endpoint-specific override)
+
+### Sentry
+
+- `SENTRY_AUTH_TOKEN` (required for build-time source map upload)
+- `SENTRY_PROJECT` (required Sentry project slug)
+- `SENTRY_ORG` (required Sentry organization slug)
+- `SENTRY_DSN` (required runtime DSN for event ingestion)
 
 ### Nuxt Studio
 
@@ -340,6 +350,7 @@ Additional technical docs:
 - [Testing](./docs/testing/README.md)
 - [CI/CD](./docs/ci-cd/README.md)
 - [Report PDF Pipeline](./docs/report-pdf/README.md)
+- [Sentry Integration](./docs/sentry/README.md)
 - [Report Composables Notes](./app/composables/report/README.md)
 - [Report Markdown Notes](./app/composables/report/markdown/README.md)
 - [AI API Route Notes](./server/api/ai/README.md)

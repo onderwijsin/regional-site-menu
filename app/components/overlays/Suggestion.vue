@@ -4,6 +4,7 @@ import type { Submission } from '@schema/submission'
 
 import { SECURITY_HEADERS, SUGGESTION_FORM_CONFIG } from '@constants'
 import { SubmissionSchema } from '@schema/submission'
+import * as Sentry from '@sentry/nuxt'
 import { GOALS, PILLARS } from '~/composables/content-taxonomy'
 
 const toast = useToast()
@@ -89,6 +90,22 @@ async function onSubmit(event: FormSubmitEvent<Submission>) {
 		emit('close')
 	} catch (error) {
 		console.error('Error submitting form:', error)
+		Sentry.withScope((scope) => {
+			scope.setTag('area', 'suggestion')
+			scope.setTag('kind', 'submission_failure_handled')
+			scope.setContext('suggestion_submission', {
+				category: formData.category,
+				goalCount: formData.goals.length,
+				hasEmail: Boolean(formData.email?.trim())
+			})
+
+			if (error instanceof Error) {
+				Sentry.captureException(error)
+				return
+			}
+
+			Sentry.captureMessage('Suggestion submission failed with non-Error exception')
+		})
 		toast.add({
 			title: 'Fout bij het indienen',
 			description:

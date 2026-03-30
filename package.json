@@ -50,6 +50,7 @@
 		"@semantic-release/github": "catalog:",
 		"@semantic-release/npm": "catalog:",
 		"@semantic-release/release-notes-generator": "catalog:",
+		"@sentry/nuxt": "catalog:",
 		"@tailwindcss/typography": "catalog:",
 		"@tiptap/html": "catalog:",
 		"@tiptap/markdown": "catalog:",
