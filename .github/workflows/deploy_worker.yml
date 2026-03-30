@@ -94,7 +94,7 @@ jobs:
           echo '${{ toJson(secrets) }}' \
           | jq -r 'to_entries[] | "\(.key)=\(.value)"' >> .env
 
-          # Keep build/upload/runtime release alignment for server-side source map matching
+          # Keep build/upload/runtime release alignment for Sentry
           echo "SENTRY_RELEASE=${GITHUB_SHA}" >> .env
 
           echo "Generated .env with $(wc -l < .env) entries"
