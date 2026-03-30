@@ -18,7 +18,7 @@ import { renderReportDocument } from './report/sections'
  */
 export const useReportGenerator = () => {
 	const site = useSiteConfig()
-	const runtimeConfig = useRuntimeConfig()
+	const origin = useRequestOrigin()
 
 	/**
 	 * Builds stable PDF metadata using report context + canonical site identity.
@@ -29,7 +29,7 @@ export const useReportGenerator = () => {
 	 */
 	function createPdfMetadata(config: ReportConfig, data: ReportData): PdfDocumentMetadata {
 		const siteName = site.name || 'Regiosite Menukaart'
-		const siteUrl = runtimeConfig.public.siteUrl || ''
+		const siteUrl = origin
 		const hasAi = config.aiBriefing || config.aiWebsiteAnalysis
 
 		const keywords = [

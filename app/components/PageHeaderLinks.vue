@@ -7,7 +7,7 @@ import type { DropdownMenuItem } from '@nuxt/ui'
 const route = useRoute()
 const toast = useToast()
 const { copy, copied } = useClipboard()
-const site = useSiteConfig()
+const origin = useRequestOrigin()
 const appConfig = useAppConfig()
 const { trackAiAction } = useTracking()
 const { getIcon } = useIcons()
@@ -19,7 +19,7 @@ const { getIcon } = useIcons()
 /**
  * Absolute URL to the raw markdown version of the current page
  */
-const mdPath = computed(() => `${site.url}/raw${route.path}.md`)
+const mdPath = computed(() => `${origin}/raw${route.path}.md`)
 
 /**
  * Prompt used for AI tools (ChatGPT / Claude)
@@ -34,7 +34,7 @@ Deze tool biedt een overzicht van features, inhoud en andere functionailiteiten 
 website van een regionaal onderwijsloket zou moeten /kunnen bevatten om hun doelgroep(en) 
 te bedienen.
 
-Meer informatie en content items kun je ontdekken via ${site.url}/llms-full.txt
+Meer informatie en content items kun je ontdekken via ${origin}/llms-full.txt
 `
 })
 

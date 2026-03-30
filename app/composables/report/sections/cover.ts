@@ -55,12 +55,12 @@ export async function renderCoverPage(ctx: PdfRenderContext, title: string): Pro
 		startY + 28
 	)
 
-	const config = useRuntimeConfig()
-	const host = parseURL(config.public.siteUrl).host ?? config.public.siteUrl
+	const siteUrl = useRequestOrigin()
+	const host = parseURL(siteUrl).host ?? siteUrl
 	const footerY = page.height - layout.marginBottom
 
 	doc.setFont('Rijksoverheid', 'italic')
 	doc.setFontSize(10)
 	setPdfTextColor(doc, ctx.colors.muted)
-	doc.textWithLink(host, layout.marginLeft, footerY, { url: config.public.siteUrl })
+	doc.textWithLink(host, layout.marginLeft, footerY, { url: siteUrl })
 }
