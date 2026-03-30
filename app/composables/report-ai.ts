@@ -2,7 +2,7 @@ import type { AiWebsiteAnalysisResponse, ReportAiInsights } from '~~/schema/repo
 import type { ReportConfig } from '~~/schema/reportConfig'
 import type { ReportData } from './report/types'
 
-import { REPORT_AI_PROGRESS_CONFIG } from '@ai'
+import { NON_DEV_STAGE_DURATION_MULTIPLIER, REPORT_AI_PROGRESS_CONFIG } from '@ai'
 import { SECURITY_HEADERS } from '@constants'
 import {
 	AI_WEBSITE_ANALYSIS_DEFAULT_PAGES,
@@ -47,6 +47,11 @@ type AiProgressScenario = {
 	fastForwardMs: number
 }
 
+function scaleStageDurationMs(baseDurationMs: number): number {
+	const multiplier = import.meta.dev ? 1 : NON_DEV_STAGE_DURATION_MULTIPLIER
+	return Math.round(baseDurationMs * multiplier)
+}
+
 const AI_PROGRESS_CONFIG: Record<'briefing', AiProgressScenario> = {
 	briefing: {
 		fastForwardMs: REPORT_AI_PROGRESS_CONFIG.briefingFastForwardMs,
@@ -56,27 +61,35 @@ const AI_PROGRESS_CONFIG: Record<'briefing', AiProgressScenario> = {
 				text: 'AI-briefing starten...',
 				reasoning:
 					'De briefing-aanvraag wordt opgebouwd met auditresultaten en opgegeven context.',
-				durationMs: REPORT_AI_PROGRESS_CONFIG.briefingStageDurationMs.start
+				durationMs: scaleStageDurationMs(
+					REPORT_AI_PROGRESS_CONFIG.briefingStageDurationMs.start
+				)
 			},
 			{
 				id: 'briefing-synthesis',
 				text: 'Inzichten combineren...',
 				reasoning:
 					'Zelfevaluatie, opmerkingen en eventuele website-analyse worden samengebracht.',
-				durationMs: REPORT_AI_PROGRESS_CONFIG.briefingStageDurationMs.synthesis
+				durationMs: scaleStageDurationMs(
+					REPORT_AI_PROGRESS_CONFIG.briefingStageDurationMs.synthesis
+				)
 			},
 			{
 				id: 'briefing-generate',
 				text: 'Briefing genereren...',
 				reasoning:
 					'De server genereert de briefing op basis van de verzamelde inzichten en context.',
-				durationMs: REPORT_AI_PROGRESS_CONFIG.briefingStageDurationMs.generate
+				durationMs: scaleStageDurationMs(
+					REPORT_AI_PROGRESS_CONFIG.briefingStageDurationMs.generate
+				)
 			},
 			{
 				id: 'briefing-finalize',
 				text: 'Briefing afronden...',
 				reasoning: 'De briefing wordt concreet geformuleerd voor gebruik in de rapportage.',
-				durationMs: REPORT_AI_PROGRESS_CONFIG.briefingStageDurationMs.finalize
+				durationMs: scaleStageDurationMs(
+					REPORT_AI_PROGRESS_CONFIG.briefingStageDurationMs.finalize
+				)
 			}
 		]
 	}
@@ -90,7 +103,10 @@ const AI_PROGRESS_CONFIG: Record<'briefing', AiProgressScenario> = {
  */
 function resolveAnalysisCrawlStageDurationMs(maxPages: number | undefined): number {
 	const safeMaxPages = Math.max(maxPages ?? AI_WEBSITE_ANALYSIS_DEFAULT_PAGES, 1)
-	return REPORT_AI_PROGRESS_CONFIG.crawlStageDurationPerPageMs * safeMaxPages
+	return scaleStageDurationMs(
+		REPORT_AI_PROGRESS_CONFIG.crawlStageBaseDurationMs +
+			REPORT_AI_PROGRESS_CONFIG.crawlStageDurationPerPageMs * safeMaxPages
+	)
 }
 
 /**
@@ -109,7 +125,9 @@ function createAnalysisProgressScenario(maxPages: number | undefined): AiProgres
 				id: 'analysis-start',
 				text: 'AI-analyse starten...',
 				reasoning: 'De aanvraag wordt voorbereid en de websitegegevens worden gevalideerd.',
-				durationMs: REPORT_AI_PROGRESS_CONFIG.analysisStageDurationMs.start
+				durationMs: scaleStageDurationMs(
+					REPORT_AI_PROGRESS_CONFIG.analysisStageDurationMs.start
+				)
 			},
 			{
 				id: 'analysis-crawl',
@@ -123,20 +141,26 @@ function createAnalysisProgressScenario(maxPages: number | undefined): AiProgres
 				text: 'Inhoud interpreteren...',
 				reasoning:
 					'De server interpreteert de verzamelde inhoud om inzichten te genereren.',
-				durationMs: REPORT_AI_PROGRESS_CONFIG.analysisStageDurationMs.interpret
+				durationMs: scaleStageDurationMs(
+					REPORT_AI_PROGRESS_CONFIG.analysisStageDurationMs.interpret
+				)
 			},
 			{
 				id: 'analysis-criteria',
 				text: 'Criteria toepassen op content...',
 				reasoning: 'De verzamelde inhoud wordt getoetst aan de richtlijnen en criteria.',
-				durationMs: REPORT_AI_PROGRESS_CONFIG.analysisStageDurationMs.criteria
+				durationMs: scaleStageDurationMs(
+					REPORT_AI_PROGRESS_CONFIG.analysisStageDurationMs.criteria
+				)
 			},
 			{
 				id: 'analysis-finalize',
 				text: 'Website-analyse afronden...',
 				reasoning:
 					'De uitkomst wordt gestructureerd en klaargezet voor opname in het rapport.',
-				durationMs: REPORT_AI_PROGRESS_CONFIG.analysisStageDurationMs.finalize
+				durationMs: scaleStageDurationMs(
+					REPORT_AI_PROGRESS_CONFIG.analysisStageDurationMs.finalize
+				)
 			}
 		]
 	}
