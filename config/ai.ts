@@ -144,8 +144,8 @@ export const CRAWLER_CONFIG = {
 	cacheNamespace: 'cache',
 	/** Prefix used when building deterministic crawl cache keys. */
 	cacheKeyPrefix: 'ai:crawl:v3',
-	/** Cache retention time for crawl results (31 days). */
-	cacheTtlMs: 31 * 24 * 60 * 60 * 1000,
+	/** Cache retention time for crawl results (2 days). */
+	cacheTtlMs: 2 * 24 * 60 * 60 * 1000,
 	/** Candidate sitemap locations to probe on each domain. */
 	sitemapPaths: [
 		'/sitemap.xml',

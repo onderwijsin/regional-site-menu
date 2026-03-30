@@ -1,5 +1,6 @@
 import { AI_OPENAI_CONFIG } from '@ai'
 import { AiBriefingRequestSchema, AiBriefingResponseSchema } from '@schema/reportAi'
+import * as Sentry from '@sentry/nuxt'
 import { zodTextFormat } from 'openai/helpers/zod'
 import { z } from 'zod'
 
@@ -173,6 +174,17 @@ export default defineEventHandler(async (event) => {
 							model
 						}
 					)
+					Sentry.withScope((scope) => {
+						scope.setLevel('warning')
+						scope.setTag('area', 'ai')
+						scope.setTag('kind', 'response_fallback')
+						scope.setTag('ai_label', 'briefing')
+						scope.setTag('ai_model', model)
+						scope.setTag('response_fallback_type', 'json_text_fallback')
+						Sentry.captureMessage(
+							'[AI] briefing used JSON-text fallback after empty structured parse result'
+						)
+					})
 				} else {
 					briefing = sanitizeAiMarkdown(fallbackText)
 					briefingSource = 'plain_text_fallback'
@@ -182,6 +194,17 @@ export default defineEventHandler(async (event) => {
 							model
 						}
 					)
+					Sentry.withScope((scope) => {
+						scope.setLevel('warning')
+						scope.setTag('area', 'ai')
+						scope.setTag('kind', 'response_fallback')
+						scope.setTag('ai_label', 'briefing')
+						scope.setTag('ai_model', model)
+						scope.setTag('response_fallback_type', 'plain_text_fallback')
+						Sentry.captureMessage(
+							'[AI] briefing used plain-text fallback after empty structured parse result'
+						)
+					})
 				}
 			} else {
 				console.error('[AI] briefing returned no structured output and no output_text', {

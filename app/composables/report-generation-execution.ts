@@ -5,6 +5,8 @@ import type { Audit, PillarAverage } from '~~/shared/types/audit'
 import type { Pillar } from '~~/shared/types/primitives'
 import type { ReportData } from './report/types'
 
+import * as Sentry from '@sentry/nuxt'
+
 import { ReportGenerationError } from './report/errors'
 
 export type ReportGenerationStage = 'config' | 'ai-loading' | 'briefing-review'
@@ -90,6 +92,22 @@ export function useReportGenerationExecution(args: ReportGenerationExecutionArgs
 	 */
 	function showGenerationErrorToast(error: unknown): void {
 		console.error('Report generation failed', error)
+		Sentry.withScope((scope) => {
+			scope.setTag('area', 'report')
+			scope.setTag('kind', 'generation_failure_handled')
+			scope.setContext('report_generation', {
+				stage: args.stage.value,
+				hasAiEnabled: args.hasAiEnabled.value,
+				auditCount: args.data.audits.length
+			})
+
+			if (error instanceof Error) {
+				Sentry.captureException(error)
+				return
+			}
+
+			Sentry.captureMessage('Report generation failed with non-Error exception')
+		})
 
 		toast.add({
 			icon: getIcon('error'),

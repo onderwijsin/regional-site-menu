@@ -4,6 +4,7 @@ import {
 	AiWebsiteAnalysisRequestSchema,
 	AiWebsiteAnalysisResponseSchema
 } from '@schema/reportAi'
+import * as Sentry from '@sentry/nuxt'
 import { zodTextFormat } from 'openai/helpers/zod'
 
 import { createAllowedDomains, formatWebsiteAnalysisInput } from '../../utils/ai/analysis'
@@ -207,6 +208,17 @@ export default defineEventHandler(async (event) => {
 						'[AI] website-analysis used JSON-text fallback after empty structured parse result',
 						{ model }
 					)
+					Sentry.withScope((scope) => {
+						scope.setLevel('warning')
+						scope.setTag('area', 'ai')
+						scope.setTag('kind', 'response_fallback')
+						scope.setTag('ai_label', 'website-analysis')
+						scope.setTag('ai_model', model)
+						scope.setTag('response_fallback_type', 'json_text_fallback')
+						Sentry.captureMessage(
+							'[AI] website-analysis used JSON-text fallback after empty structured parse result'
+						)
+					})
 				} else {
 					analysis = sanitizeAiMarkdown(fallbackText)
 					analysisSource = 'plain_text_fallback'
@@ -216,6 +228,17 @@ export default defineEventHandler(async (event) => {
 							model
 						}
 					)
+					Sentry.withScope((scope) => {
+						scope.setLevel('warning')
+						scope.setTag('area', 'ai')
+						scope.setTag('kind', 'response_fallback')
+						scope.setTag('ai_label', 'website-analysis')
+						scope.setTag('ai_model', model)
+						scope.setTag('response_fallback_type', 'plain_text_fallback')
+						Sentry.captureMessage(
+							'[AI] website-analysis used plain-text fallback after empty structured parse result'
+						)
+					})
 				}
 			} else {
 				console.error(
