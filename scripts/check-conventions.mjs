@@ -162,7 +162,7 @@ const checkDocLinks = (markdownPath, errors) => {
 		if (rawTarget.startsWith('mailto:') || rawTarget.startsWith('#')) {
 			continue
 		}
-		const cleanTarget = rawTarget.split(/[?#]/, 1)[0]
+		const cleanTarget = rawTarget.split(/[?#]/)[0]
 		if (!cleanTarget) {
 			continue
 		}
