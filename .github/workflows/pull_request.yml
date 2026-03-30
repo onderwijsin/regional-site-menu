@@ -2,7 +2,7 @@ name: Pull Request
 
 on:
   pull_request:
-    branches: [main, next]
+    branches: [main]
   repository_dispatch:
     types: [retrigger-workflows]
 
@@ -37,7 +37,6 @@ jobs:
     if: >
       !(
         github.event_name == 'pull_request' &&
-        github.event.pull_request.head.ref == 'next' &&
         github.event.pull_request.base.ref == 'main'
       )
     needs: code-quality

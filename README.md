@@ -158,7 +158,7 @@ Use `.example.env` as template.
 
 ### Core
 
-- `MODE` (`dev | next | preview | live-preview | prod`)
+- `MODE` (`dev | preview | prod`)
 - `APP_URL`
 - `API_TOKEN`
 - `DISABLE_TRACKING`
@@ -236,7 +236,8 @@ To make the content managable outside of the codebase, the application leverages
 [Nuxt Studio](https://nuxt.studio/) module. This module integrates seamlessly with Nuxt Content and
 provides a visual editing experience for the various content collections.
 
-Editor can log in to the studio with their Github Account. Any changes made in the content files are directly committed to the `main` branch.
+Editor can log in to the studio with their Github Account. Any changes made in the content files are
+directly committed to the `main` branch.
 
 The ci/cd pipeline will notice a change to the `content` directory and trigger a rebuild. (This is
 the only case where a production deployment triggers automatically. In all other cases, a manual
@@ -394,7 +395,7 @@ Workflows are defined in `.github/workflows`.
   - lint + typecheck
   - preview deployment (Worker version)
 - **Branches**
-  - `next` → staging environment
+  - `<not-main>` → preview environment
   - `main` → production
 - **Deploy flow**
   1. Build (`pnpm build`)

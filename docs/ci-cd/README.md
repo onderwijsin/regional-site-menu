@@ -27,7 +27,7 @@ File:
 
 Behavior:
 
-1. Triggered on PRs targeting `main` or `next`.
+1. Triggered on PRs targeting `main`.
 2. Runs reusable code quality workflow:
    - lint
    - typecheck
@@ -105,7 +105,6 @@ Behavior:
 From deployment orchestration:
 
 - `main` -> `production`
-- `next` -> `next`
 - PR previews -> `preview` (version uploads)
 
 Manual dispatch in `deploy.yml` can override environment selection.

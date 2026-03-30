@@ -5,7 +5,6 @@ on:
   push:
     branches:
       - main
-      - next
   workflow_dispatch:
     inputs:
       environment:
@@ -15,7 +14,6 @@ on:
         options:
           - preview
           - production
-          - next
       release:
         type: boolean
         description:
@@ -88,7 +86,6 @@ jobs:
     if: >-
       ${{
         github.event_name == 'workflow_dispatch'
-        || github.ref == 'refs/heads/next'
         || (
           github.ref == 'refs/heads/main'
           && needs.changes.outputs.content_changes == 'true'
@@ -102,6 +99,5 @@ jobs:
       environment: >-
         ${{ github.event.inputs.environment
           || (github.ref == 'refs/heads/main' && 'production')
-          || (github.ref == 'refs/heads/next' && 'next')
           || 'preview' }}
     secrets: inherit
