@@ -50,7 +50,13 @@ export default defineConfig({
 			reporter: ['text', 'html', 'json-summary'],
 			reportsDirectory: './coverage',
 			include: ['app/**/*.ts', 'config/**/*.ts', 'schema/**/*.ts', 'server/**/*.ts'],
-			exclude: ['**/*.d.ts', '**/*.vue', '**/README.md', 'tests/**']
+			exclude: ['**/*.d.ts', '**/*.vue', '**/README.md', 'tests/**'],
+			thresholds: {
+				lines: 85,
+				functions: 80,
+				branches: 75,
+				statements: 85
+			}
 		},
 		projects: [
 			{

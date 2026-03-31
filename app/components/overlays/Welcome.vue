@@ -4,7 +4,7 @@ import type { ViewMode } from '~~/shared/types/primitives'
 const state = useStateStore()
 
 const emit = defineEmits<{
-	(e: 'close'): void
+	(_e: 'close'): void
 }>()
 
 function handleSelect(value: ViewMode) {

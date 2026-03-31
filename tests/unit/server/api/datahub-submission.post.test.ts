@@ -90,6 +90,31 @@ describe('POST /api/datahub/submission', () => {
 		})
 	})
 
+	it('throws when runtime config misses DATAHUB_TOKEN', async () => {
+		vi.stubGlobal(
+			'readBody',
+			vi.fn().mockResolvedValue({
+				title: 'Nieuwe suggestie',
+				description: 'Korte beschrijving',
+				body: 'Lange toelichting',
+				category: 'extra',
+				goals: ['Informeren'],
+				exampleUrl: 'https://example.com'
+			})
+		)
+		vi.stubGlobal(
+			'useRuntimeConfig',
+			vi.fn().mockReturnValue({ datahub: { url: 'https://datahub.example', token: '   ' } })
+		)
+		vi.stubGlobal('$fetch', vi.fn())
+
+		const { handler } = await loadHandler()
+		await expect(handler({})).rejects.toMatchObject({
+			statusCode: 500,
+			statusMessage: 'DATAHUB_TOKEN is missing in runtimeConfig'
+		})
+	})
+
 	it('throws on invalid request payload before calling downstream API', async () => {
 		const fetchSpy = vi.fn()
 		vi.stubGlobal('readBody', vi.fn().mockResolvedValue({ title: '' }))
