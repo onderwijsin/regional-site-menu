@@ -12,7 +12,7 @@ Primary entrypoint:
 - Deterministic traversal behavior
 - Strict bounds on memory/time/queue growth
 - Better coverage via sitemap and robots discovery
-- Output shaped for AI prompt safety (short excerpts, bounded pages)
+- Output shaped for AI prompt quality (bounded pages + cleaned semantic content)
 
 ## Module Responsibilities
 
@@ -22,10 +22,12 @@ Primary entrypoint:
   - bounded fetch/read helpers with timeout + byte limits
 - `html.ts`
   - HTML parsing and link/content extraction (`linkedom`)
+  - optional Readability-first content extraction (`@mozilla/readability`) with fallback to
+    `main/article/body`
 - `sitemap.ts`
   - sitemap + robots discovery and recursive sitemap index handling (`fast-xml-parser`)
 - `cache.ts`
-  - 31-day crawl cache read/write via `useStorage`
+  - configured-TTL crawl cache read/write via `useStorage` (currently 2 days)
 - `url.ts`
   - normalization, allowlist checks, concurrency clamp
 - `types.ts`
@@ -41,6 +43,8 @@ Primary entrypoint:
 - Timeout per request enforced
 - Byte limits enforced for HTML/text resources
 - Excerpts are truncated to configured max chars
+- Readability extraction is used only when output is sufficiently strong; fallback remains available
+- Full page evidence keeps cleaned semantic content (attributes/junk stripped) for AI context
 - Cached results are only stored when at least one page has meaningful text
 
 ## Configuration

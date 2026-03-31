@@ -82,6 +82,7 @@ Timing logs now include resolved model metadata on:
 
 - `website-analysis.post.ts`
   - crawl evidence validation
+  - includes compact excerpt + full cleaned semantic page content in prompt evidence
   - criteria-based analysis generation
   - source traceability fields
 - `briefing.post.ts`

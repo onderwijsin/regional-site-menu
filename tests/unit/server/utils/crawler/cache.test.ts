@@ -41,7 +41,9 @@ describe('crawler/cache', () => {
 		const expiredStorage = createStorageMock({
 			getItemValue: {
 				expiresAt: Date.now() - 1000,
-				pages: [{ url: 'https://example.com', excerpt: 'tekst' }]
+				pages: [
+					{ url: 'https://example.com', excerpt: 'tekst', fullContent: '<p>tekst</p>' }
+				]
 			}
 		})
 		vi.stubGlobal(
@@ -86,8 +88,13 @@ describe('crawler/cache', () => {
 			getItemValue: {
 				expiresAt: Date.now() + 60_000,
 				pages: [
-					{ url: 'https://example.com/a', excerpt: 'A', title: 'A' },
-					{ url: 'https://example.com/b', excerpt: 'B' },
+					{
+						url: 'https://example.com/a',
+						excerpt: 'A',
+						fullContent: '<p>A</p>',
+						title: 'A'
+					},
+					{ url: 'https://example.com/b', excerpt: 'B', fullContent: '<p>B</p>' },
 					{ excerpt: 'missing url' }
 				]
 			}
@@ -98,13 +105,13 @@ describe('crawler/cache', () => {
 		)
 
 		await expect(getCachedCrawlPages('cache:valid')).resolves.toEqual([
-			{ url: 'https://example.com/a', excerpt: 'A', title: 'A' },
-			{ url: 'https://example.com/b', excerpt: 'B' }
+			{ url: 'https://example.com/a', excerpt: 'A', fullContent: '<p>A</p>', title: 'A' },
+			{ url: 'https://example.com/b', excerpt: 'B', fullContent: '<p>B</p>' }
 		])
 		expect(storage.removeItem).not.toHaveBeenCalled()
 	})
 
-	it('stores only crawl results with meaningful excerpts', async () => {
+	it('stores only crawl results with meaningful evidence content', async () => {
 		const storage = createStorageMock()
 		vi.stubGlobal(
 			'useStorage',
@@ -113,17 +120,29 @@ describe('crawler/cache', () => {
 		vi.spyOn(Date, 'now').mockReturnValue(1_700_000_000_000)
 
 		await setCachedCrawlPages('cache:no-text', [
-			{ url: 'https://example.com/a', excerpt: '   ' }
+			{ url: 'https://example.com/a', excerpt: '   ', fullContent: '' }
 		])
 		expect(storage.setItem).not.toHaveBeenCalled()
 
+		await setCachedCrawlPages('cache:semantic-text', [
+			{ url: 'https://example.com/a', excerpt: '   ', fullContent: '<main>Inhoud</main>' }
+		])
+		expect(storage.setItem).toHaveBeenCalledWith('cache:semantic-text', {
+			expiresAt: 1_700_000_000_000 + CRAWLER_CONFIG.cacheTtlMs,
+			pages: [
+				{ url: 'https://example.com/a', excerpt: '   ', fullContent: '<main>Inhoud</main>' }
+			]
+		})
+
 		await setCachedCrawlPages('cache:with-text', [
-			{ url: 'https://example.com/a', excerpt: 'Inhoud' }
+			{ url: 'https://example.com/a', excerpt: 'Inhoud', fullContent: '<p>Inhoud</p>' }
 		])
 
 		expect(storage.setItem).toHaveBeenCalledWith('cache:with-text', {
 			expiresAt: 1_700_000_000_000 + CRAWLER_CONFIG.cacheTtlMs,
-			pages: [{ url: 'https://example.com/a', excerpt: 'Inhoud' }]
+			pages: [
+				{ url: 'https://example.com/a', excerpt: 'Inhoud', fullContent: '<p>Inhoud</p>' }
+			]
 		})
 	})
 })

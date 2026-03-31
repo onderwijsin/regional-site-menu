@@ -16,7 +16,7 @@ async function loadHandler(
 	options: {
 		parseImpl?: ReturnType<typeof vi.fn>
 		createImpl?: ReturnType<typeof vi.fn>
-		crawlPages?: Array<{ url: string; title?: string; excerpt: string }>
+		crawlPages?: Array<{ url: string; title?: string; excerpt: string; fullContent: string }>
 		body?: unknown
 	} = {}
 ) {
@@ -31,8 +31,18 @@ async function loadHandler(
 	const createImpl = options.createImpl ?? vi.fn()
 	const assertTurnstileTokenMock = vi.fn().mockResolvedValue(undefined)
 	const crawlPages = options.crawlPages ?? [
-		{ url: 'https://example.com', title: 'Home', excerpt: 'Welkom op de site' },
-		{ url: 'https://example.com/contact', title: 'Contact', excerpt: '' }
+		{
+			url: 'https://example.com',
+			title: 'Home',
+			excerpt: 'Welkom op de site',
+			fullContent: '<main><p>Welkom op de site</p></main>'
+		},
+		{
+			url: 'https://example.com/contact',
+			title: 'Contact',
+			excerpt: '',
+			fullContent: ''
+		}
 	]
 
 	vi.stubGlobal('defineEventHandler', (handler: unknown) => handler)
@@ -109,7 +119,9 @@ describe('POST /api/ai/website-analysis', () => {
 
 	it('throws when crawl returns no pages with evidence text', async () => {
 		const { handler, parseImpl } = await loadHandler({
-			crawlPages: [{ url: 'https://example.com', title: 'Home', excerpt: '   ' }]
+			crawlPages: [
+				{ url: 'https://example.com', title: 'Home', excerpt: '   ', fullContent: '' }
+			]
 		})
 
 		await expect(handler({} as never)).rejects.toMatchObject({
@@ -118,6 +130,25 @@ describe('POST /api/ai/website-analysis', () => {
 				'AI website analysis could not retrieve usable page content from the provided website'
 		})
 		expect(parseImpl).not.toHaveBeenCalled()
+	})
+
+	it('accepts a page as evidence when excerpt is empty but semantic content has text', async () => {
+		const { handler, parseImpl } = await loadHandler({
+			crawlPages: [
+				{
+					url: 'https://example.com/home',
+					title: 'Home',
+					excerpt: '   ',
+					fullContent: '<main><h1>Home</h1><p>Betrouwbare tekst</p></main>'
+				}
+			]
+		})
+
+		const result = await handler({} as never)
+
+		expect(result.analysis).toContain('## Korte samenvatting')
+		expect(result.crawledPages).toEqual([{ url: 'https://example.com/home', title: 'Home' }])
+		expect(parseImpl).toHaveBeenCalledTimes(1)
 	})
 
 	it('falls back to plain response mode when structured parse fails', async () => {

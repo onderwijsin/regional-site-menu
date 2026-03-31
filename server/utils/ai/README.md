@@ -13,6 +13,7 @@ files remain focused on boundary handling and orchestration.
   - fetches llms criteria documents (`/llms-full.txt`, fallback `/llms.txt`)
 - `analysis.ts`
   - builds website-analysis prompt input blocks from crawl evidence and metadata
+  - formats per-page evidence as compact excerpt + full cleaned semantic content
 - `analysis-output.ts`
   - structured schema for website-analysis model output + markdown assembly
 - `briefing.ts`
@@ -38,6 +39,8 @@ files remain focused on boundary handling and orchestration.
 - Avoid embedding runtime secrets here; use `useRuntimeConfig` only in dedicated client/bootstrap
   utility (`openai.ts`).
 - Keep AI behavior tuning centralized in [`config/ai.ts`](../../../config/ai.ts).
+- Keep provider-specific logic isolated in dedicated utilities (`openai.ts`, compatibility helpers)
+  so prompt/crawl orchestration can be reused for future providers.
 
 ## Related Docs
 

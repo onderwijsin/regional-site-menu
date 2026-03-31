@@ -40,9 +40,9 @@ describe('crawler/website', () => {
 
 	it('returns cached pages when present and truncates to requested max pages', async () => {
 		crawlerDeps.getCachedCrawlPagesMock.mockResolvedValue([
-			{ url: 'https://example.com/1', excerpt: 'one' },
-			{ url: 'https://example.com/2', excerpt: 'two' },
-			{ url: 'https://example.com/3', excerpt: 'three' }
+			{ url: 'https://example.com/1', excerpt: 'one', fullContent: '<p>one</p>' },
+			{ url: 'https://example.com/2', excerpt: 'two', fullContent: '<p>two</p>' },
+			{ url: 'https://example.com/3', excerpt: 'three', fullContent: '<p>three</p>' }
 		])
 
 		const result = await crawlWebsiteForAnalysis({
@@ -53,8 +53,8 @@ describe('crawler/website', () => {
 		})
 
 		expect(result).toEqual([
-			{ url: 'https://example.com/1', excerpt: 'one' },
-			{ url: 'https://example.com/2', excerpt: 'two' }
+			{ url: 'https://example.com/1', excerpt: 'one', fullContent: '<p>one</p>' },
+			{ url: 'https://example.com/2', excerpt: 'two', fullContent: '<p>two</p>' }
 		])
 		expect(crawlerDeps.createCrawlCacheKeyMock).toHaveBeenCalledWith({
 			startUrl: 'https://example.com/start',
@@ -104,6 +104,7 @@ describe('crawler/website', () => {
 			if (html === 'ENTRY') {
 				return {
 					excerpt: 'Inhoud van landing',
+					fullContent: '<article><p>Inhoud van landing</p></article>',
 					links: ['https://example.com/linked']
 				}
 			}
@@ -112,12 +113,14 @@ describe('crawler/website', () => {
 				return {
 					title: 'Sitemap pagina',
 					excerpt: 'Sitemap inhoud',
+					fullContent: '<article><p>Sitemap inhoud</p></article>',
 					links: []
 				}
 			}
 
 			return {
 				excerpt: 'Gekoppelde inhoud',
+				fullContent: '<article><p>Gekoppelde inhoud</p></article>',
 				links: []
 			}
 		})
@@ -130,8 +133,13 @@ describe('crawler/website', () => {
 		})
 
 		expect(result).toEqual([
-			{ url: 'https://example.com/start', excerpt: '' },
-			{ url: 'https://example.com/landing', excerpt: 'Inhoud van landing', title: undefined }
+			{ url: 'https://example.com/start', excerpt: '', fullContent: '' },
+			{
+				url: 'https://example.com/landing',
+				excerpt: 'Inhoud van landing',
+				fullContent: '<article><p>Inhoud van landing</p></article>',
+				title: undefined
+			}
 		])
 		expect(crawlerDeps.fetchSitemapUrlsMock).toHaveBeenCalledWith(
 			'https://example.com/start',
@@ -161,12 +169,14 @@ describe('crawler/website', () => {
 			if (html === 'ENTRY') {
 				return {
 					excerpt: 'Start',
+					fullContent: '<article><p>Start</p></article>',
 					links: ['https://example.com/a', 'https://example.com/a']
 				}
 			}
 
 			return {
 				excerpt: 'Pagina A',
+				fullContent: '<article><p>Pagina A</p></article>',
 				links: []
 			}
 		})
@@ -178,8 +188,18 @@ describe('crawler/website', () => {
 		})
 
 		expect(result).toEqual([
-			{ url: 'https://example.com/start', excerpt: 'Start', title: undefined },
-			{ url: 'https://example.com/a', excerpt: 'Pagina A', title: undefined }
+			{
+				url: 'https://example.com/start',
+				excerpt: 'Start',
+				fullContent: '<article><p>Start</p></article>',
+				title: undefined
+			},
+			{
+				url: 'https://example.com/a',
+				excerpt: 'Pagina A',
+				fullContent: '<article><p>Pagina A</p></article>',
+				title: undefined
+			}
 		])
 		expect(crawlerDeps.fetchHtmlPageMock).toHaveBeenCalledTimes(2)
 		expect(crawlerDeps.fetchHtmlPageMock).toHaveBeenNthCalledWith(
@@ -244,12 +264,14 @@ describe('crawler/website', () => {
 			if (html === 'ENTRY') {
 				return {
 					excerpt: 'Start',
+					fullContent: '<article><p>Start</p></article>',
 					links: ['https://example.com/next']
 				}
 			}
 
 			return {
 				excerpt: 'Volgende pagina',
+				fullContent: '<article><p>Volgende pagina</p></article>',
 				links: []
 			}
 		})
@@ -262,7 +284,12 @@ describe('crawler/website', () => {
 		})
 
 		expect(result).toEqual([
-			{ url: 'https://example.com/start', excerpt: 'Start', title: undefined }
+			{
+				url: 'https://example.com/start',
+				excerpt: 'Start',
+				fullContent: '<article><p>Start</p></article>',
+				title: undefined
+			}
 		])
 		expect(crawlerDeps.fetchHtmlPageMock).toHaveBeenCalledTimes(1)
 	})
