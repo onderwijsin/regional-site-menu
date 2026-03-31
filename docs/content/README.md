@@ -70,6 +70,21 @@ Schema fields:
 - `link`: optional external link (`null` when absent)
 - `download`: optional download link (`null` when absent)
 
+### `faqs`
+
+Purpose:
+
+- editable FAQ entries shown on the help page
+
+Source:
+
+- `content/faqs/**.yml`
+
+Schema fields:
+
+- `title`: FAQ question shown in accordion trigger
+- `description`: FAQ answer shown in accordion body
+
 ### `_prompts`
 
 Purpose:
@@ -89,7 +104,7 @@ Schema fields:
 Prompt body:
 
 - the actual prompt is in markdown body (not frontmatter)
-- server normalizes markdown AST to plain text before sending to OpenAI
+- server normalizes markdown AST to plain text before sending to the selected provider
 
 Loader:
 
@@ -101,6 +116,7 @@ Common patterns:
 
 - Client:
   - `queryCollection('items').where('extension', '=', 'md').all()`
+  - `queryCollection('faqs').order('stem', 'ASC').all()`
 - Server:
   - `queryCollection(event, '_prompts').where('key', '=', ...).all()`
 

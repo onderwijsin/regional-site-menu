@@ -63,13 +63,13 @@ Operational contract for AI coding agents working in this repository.
 - Turnstile/security domain notes: `docs/turnstile/README.md`
 - Testing guide: `docs/testing/README.md`
 - CI/CD guide: `docs/ci-cd/README.md`
-- Config guide: `config/README.md`
-- App report composables guide: `app/composables/report/README.md`
-- App report markdown guide: `app/composables/report/markdown/README.md`
-- Server AI API guide: `server/api/ai/README.md`
-- Server Datahub API guide: `server/api/datahub/README.md`
-- Server AI utilities guide: `server/utils/ai/README.md`
-- Server crawler utilities guide: `server/utils/crawler/README.md`
+- Config guide: `docs/config/README.md`
+- App report composables guide: `docs/app/report-composables/README.md`
+- App report markdown guide: `docs/app/report-markdown/README.md`
+- Server AI API guide: `docs/server/api/ai/README.md`
+- Server Datahub API guide: `docs/server/api/datahub/README.md`
+- Server AI utilities guide: `docs/server/utils/ai/README.md`
+- Server crawler utilities guide: `docs/server/utils/crawler/README.md`
 
 ## Quick Commands
 

@@ -1,93 +1,124 @@
 # Report PDF Generation
 
-This document describes the browser-side PDF pipeline used by report exports.
+This document is the source of truth for the browser-side PDF pipeline.
 
-## Purpose
+## Scope
 
-The report generator converts user input (region, notes, audits, optional AI insights) into a
-deterministic multi-page PDF.
+The PDF generator transforms report input into a deterministic multi-page export:
 
-Main goals:
+- user config (`region`, notes, AI toggles)
+- audit data (scores, comments, metadata)
+- optional AI insights (briefing / website analysis)
 
-- keep section ordering explicit
-- keep pagination predictable
-- isolate markdown normalization from PDF rendering
+Goals:
+
+- explicit, stable section ordering
+- predictable pagination and spacing
+- isolated markdown parse/measure/render pipeline
 
 ## Entry Points
 
-- [report-generator.ts](../../app/composables/report-generator.ts) orchestrates generation and
-  saving.
-- [use-report.ts](../../app/composables/use-report.ts) controls report preview overlays.
-- [use-report-config.ts](../../app/composables/use-report-config.ts) controls report generation
-  overlays.
-- [sections/document.ts](../../app/composables/report/sections/document.ts) defines canonical page
-  order.
+- [report-generator.ts](../../app/composables/report-generator.ts)
+  - high-level orchestration (`generateReport`)
+  - document metadata construction
+  - final save/download
+- [use-report.ts](../../app/composables/use-report.ts)
+  - report preview state / open-close behavior
+- [use-report-config.ts](../../app/composables/use-report-config.ts)
+  - report-generation overlay state
+- [sections/document.ts](../../app/composables/report/sections/document.ts)
+  - canonical section execution order
 
-## Pipeline
+## Data Contracts
 
-1. UI collects `ReportConfig` + report data.
-2. `useReportGenerator().generateReport(config, data)` is called.
-3. `createRenderContext()` initializes `jsPDF`, tokens, and layout.
-4. `renderReportDocument(ctx, config, data)` renders section-by-section.
-5. `savePdf()` downloads the file.
+Input contracts:
 
-## Core Modules
+- [ReportConfig](../../schema/reportConfig.ts)
+- [ReportData + PDF section types](../../app/composables/report/types.ts)
 
-- [pdf.ts](../../app/composables/report/pdf.ts) shared PDF primitives (layout, text wrapping,
-  page-space helpers, colors).
-- [fonts.ts](../../app/composables/report/fonts.ts) registers Rijksoverheid fonts.
-- [markdown/](../../app/composables/report/markdown) markdown parsing, measuring, and rendering.
-- [sections/](../../app/composables/report/sections) concrete page renderers.
-- local module docs:
-  - [report/README.md](../../app/composables/report/README.md)
-  - [report/markdown/README.md](../../app/composables/report/markdown/README.md)
+Error contract:
 
-## Section Order
+- [ReportGenerationError](../../app/composables/report/errors.ts)
 
-The current `document.ts` order is:
+## Rendering Pipeline
+
+1. UI collects `ReportConfig` + `ReportData`.
+2. `useReportGenerator().generateReport(config, data)` starts export.
+3. `createRenderContext()` initializes `jsPDF`, page metrics, colors, and fonts.
+4. `setPdfDocumentMetadata()` sets title/subject/author/creator/keywords/language.
+5. `renderReportDocument(ctx, config, data)` renders section-by-section.
+6. `savePdf()` saves the final file.
+
+Core primitives:
+
+- [pdf.ts](../../app/composables/report/pdf.ts)
+  - context creation
+  - metadata helpers
+  - page-space handling (`ensurePageSpace`)
+  - wrapped-text measurement/render helpers
+- [fonts.ts](../../app/composables/report/fonts.ts)
+  - Rijksoverheid font registration
+- [constants.ts](../../app/composables/report/constants.ts)
+  - PDF token values used by sections and markdown pipeline
+
+## Canonical Section Order
+
+Defined in [document.ts](../../app/composables/report/sections/document.ts):
 
 1. cover
 2. introduction
 3. notes
-4. AI insights (optional)
+4. AI insights (conditional; no-op when absent)
 5. averages
 6. audit details
 
-If you need to insert/reorder pages, do it in:
+If you add/reorder pages, change `document.ts` first and validate a real PDF.
 
-- [document.ts](../../app/composables/report/sections/document.ts)
+## Markdown Subsystem
 
-## Markdown Rendering Model
+Markdown rendering is intentionally split into:
 
-TipTap/editor markdown is normalized before rendering:
+1. [parse.ts](../../app/composables/report/markdown/parse.ts)
+2. [measure.ts](../../app/composables/report/markdown/measure.ts)
+3. [render.ts](../../app/composables/report/markdown/render.ts)
 
-1. parse markdown
-2. validate/normalize to local block model
-3. measure blocks
-4. render blocks with pagination checks
+Used by notes/comments/AI blocks to keep section renderers focused on layout composition.
 
-This keeps report sections independent from TipTap-specific node details.
+Critical invariants:
 
-Invariant to preserve:
+- preserve meaningful whitespace across inline mark boundaries
+- keep measure and render spacing tokens synchronized
+- keep line-height assumptions aligned across parse/measure/render usage
 
-- markdown text normalization must keep meaningful whitespace between inline segments
-- markdown measurement spacing tokens must stay aligned with renderer spacing tokens
+See:
 
-## Risk Areas
+- [Report Composables Notes](../app/report-composables/README.md)
+- [Report Markdown Notes](../app/report-markdown/README.md)
 
-- pagination and spacing logic
-- multi-page audit comments (left-rule continuity)
-- section layout regressions after small token/line-height changes
+## High-Risk Areas
+
+- page-break and spacing math (`ensurePageSpace`, wrapped text flow)
+- multi-page audit comment rendering (vertical left-rule continuity)
+- markdown parser/measurement tweaks that desync renderer behavior
+- section token changes (font size, line height, margins) with cascading layout effects
 
 ## Verification Checklist
 
-After changing report/PDF logic:
+After any PDF-related change:
 
 1. Run:
-   `pnpm exec eslint app/composables/report app/composables/use-report.ts app/composables/use-report-config.ts app/composables/report-generator.ts`
-2. Run: `pnpm typecheck`
-3. Generate a real report and verify:
-   - notes rendering
-   - long comments over multiple pages
-   - averages card layout
-   - AI section content and analysed URL appendix
+   - `pnpm lint`
+   - `pnpm typecheck`
+   - `pnpm test:unit`
+2. Generate at least one real report PDF.
+3. Validate manually:
+   - notes rendering (short + long content)
+   - long audit comments over multiple pages
+   - averages layout and spacing
+   - AI section rendering + analysed URL appendix
+   - metadata presence (title/subject/author/creator/keywords/language)
+
+## Non-Goals
+
+- No server-side PDF rendering in current architecture.
+- No implicit auto-layout engine; layout remains explicit and token-driven.

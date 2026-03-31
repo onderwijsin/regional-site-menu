@@ -33,4 +33,4 @@ section renderers focused on composition/layout.
 
 ## Related Docs
 
-- [PDF Pipeline Documentation](../../../../docs/report-pdf/README.md)
+- [PDF Pipeline Documentation](../../report-pdf/README.md)

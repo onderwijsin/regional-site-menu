@@ -90,50 +90,17 @@ const coreFlow: TimelineItem[] = [
 	}
 ]
 
-const faqs = ref<AccordionItem[]>([
-	{
+const { data: faqEntries } = await useAsyncData('help-faqs', () =>
+	queryCollection('faqs').order('stem', 'ASC').all()
+)
+
+const faqs = computed<AccordionItem[]>(() =>
+	(faqEntries.value ?? []).map((entry) => ({
 		icon: getIcon('faq'),
-		label: 'Is deze tool gratis te gebruiken?',
-		content:
-			'Ja, deze tool is volledig gratis te gebruiken, inclusief alle AI-functies. Ook alle tools en middelen die je onder "extra\'s" vindt, zijn gratis in te zetten voor je site.'
-	},
-	{
-		icon: getIcon('faq'),
-		label: 'Wie ziet allemaal welke scores ik onze site geef?',
-		content:
-			'Alleen jij en degenen met wie je de rapportage deelt, kunnen de scores zien. De gegevens worden niet openbaar gedeeld en blijven anoniem zolang je ze niet deelt.'
-	},
-	{
-		icon: getIcon('faq'),
-		label: 'Moet ik alles in één keer invullen?',
-		content:
-			'Nee. Je kunt de audit stapsgewijs doen. Scores en opmerkingen die je invult blijven bewaard, zodat je later verder kunt gaan waar je was gebleven.'
-	},
-	{
-		icon: getIcon('faq'),
-		label: 'Wat is een goede manier om te scoren?',
-		content:
-			'Gebruik de score om eerlijk te beoordelen hoe goed een onderdeel nu op je site is uitgewerkt. Voeg bij twijfel een korte toelichting toe; dat maakt de rapportage veel concreter en bruikbaarder.'
-	},
-	{
-		icon: getIcon('faq'),
-		label: 'Wanneer is AI handig om aan te zetten?',
-		content:
-			'AI is vooral handig als je sneller tot een eerste analyse of briefing wilt komen. Zie AI-output als startpunt en controleer altijd zelf of de conclusies passen bij jullie context.'
-	},
-	{
-		icon: getIcon('faq'),
-		label: 'Voor wie is de PDF-rapportage bedoeld?',
-		content:
-			'De rapportage is bedoeld als gedeeld werkdocument voor regioteams, communicatieadviseurs en webbouwers. Je kunt de PDF gebruiken voor prioritering, besluitvorming en concrete opdrachtvorming.'
-	},
-	{
-		icon: getIcon('faq'),
-		label: 'Kan ik later opnieuw een rapport genereren?',
-		content:
-			'Ja. Je kunt na aanpassingen op de website opnieuw scores bijwerken en een nieuwe rapportage maken. Zo kun je verbeteringen over tijd vergelijken en monitoren.'
-	}
-])
+		label: entry.title,
+		content: entry.description
+	}))
+)
 </script>
 
 <template>

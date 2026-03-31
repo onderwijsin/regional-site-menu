@@ -4,7 +4,7 @@ This module powers the server-side crawl used by AI website analysis.
 
 Primary entrypoint:
 
-- [`website.ts`](./website.ts) → `crawlWebsiteForAnalysis(...)`
+- [`website.ts`](../../../../server/utils/crawler/website.ts) → `crawlWebsiteForAnalysis(...)`
 
 ## Design Goals
 
@@ -51,6 +51,6 @@ Primary entrypoint:
 
 All crawler tuning values are centralized in:
 
-- [`config/ai.ts`](../../../config/ai.ts) → `CRAWLER_CONFIG`
+- [`config/ai.ts`](../../../../config/ai.ts) → `CRAWLER_CONFIG`
 
 Avoid hardcoding crawler behavior in route/controller files.

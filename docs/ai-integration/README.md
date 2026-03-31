@@ -148,7 +148,6 @@ Key behavior:
 - if the backend finishes early, remaining visual stages are fast-forwarded sequentially
 - fast-forwarding happens only on success (failed runs do not show fully completed stage output)
 - config stage shows a rounded minute-based ETA hint (`minder dan 1 minuut`, `1-2 minuten`, ...)
-- logs full analysis payload in browser console for debugging
 
 ## Data Contracts
 
@@ -190,7 +189,6 @@ Implemented safeguards:
 - AI SDK Core (`generateText` + `Output.object`) is the single LLM interface
 - provider/model resolution is centralized in `server/utils/ai/provider.ts`
 - explicit source URL traceability in API response and PDF output
-- browser debug log of raw analysis payload for quality tuning
 - per-endpoint timing logs include the resolved model and request tuning metadata
 
 Remaining risk:
@@ -222,8 +220,8 @@ Static AI defaults:
 
 - [config/ai.ts](../../config/ai.ts)
 - [config/ai-providers.ts](../../config/ai-providers.ts)
-- endpoint-specific behavior docs: [server/api/ai/README.md](../../server/api/ai/README.md)
-- crawler behavior docs: [server/utils/crawler/README.md](../../server/utils/crawler/README.md)
+- endpoint-specific behavior docs: [docs/server/api/ai/README.md](../server/api/ai/README.md)
+- crawler behavior docs: [docs/server/utils/crawler/README.md](../server/utils/crawler/README.md)
 
 Environment:
 

@@ -15,7 +15,7 @@ This module contains the server boundary for suggestion submissions:
 
 Static route payload/query defaults:
 
-- [`DATAHUB_CONFIG` in `config/constants.ts`](../../../config/constants.ts)
+- [`DATAHUB_CONFIG` in `config/constants.ts`](../../../../config/constants.ts)
 
 Runtime secrets/URLs:
 

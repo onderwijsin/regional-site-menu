@@ -31,11 +31,11 @@ files remain focused on boundary handling and orchestration.
 - Keep this module pure/deterministic where possible.
 - Avoid embedding runtime secrets here; use `useRuntimeConfig` only in dedicated client/bootstrap
   utility (`provider.ts`).
-- Keep AI behavior tuning centralized in [`config/ai.ts`](../../../config/ai.ts).
+- Keep AI behavior tuning centralized in [`config/ai.ts`](../../../../config/ai.ts).
 - Keep provider-specific logic isolated in dedicated utilities (`provider.ts`) so prompt/crawl
   orchestration can be reused for future providers.
 
 ## Related Docs
 
-- [AI Integration Overview](../../../docs/ai-integration/README.md)
+- [AI Integration Overview](../../../ai-integration/README.md)
 - [AI API Route Notes](../../api/ai/README.md)
