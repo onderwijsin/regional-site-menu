@@ -33,6 +33,17 @@ describe('security/request-guard', () => {
 		).toEqual({ allowed: false, reason: 'invalid_fetch_site' })
 	})
 
+	it('allows protected paths when sec-fetch-site is whitespace', () => {
+		const decision = evaluateProtectedPostRequest({
+			pathname: '/api/ai/briefing',
+			requestOrigin: 'https://app.example.com',
+			fetchSiteHeader: '   ',
+			originHeader: 'https://app.example.com'
+		})
+
+		expect(decision).toEqual({ allowed: true })
+	})
+
 	it('allows protected paths for same-origin requests', () => {
 		const decision = evaluateProtectedPostRequest({
 			pathname: '/api/ai/website-analysis',
@@ -53,6 +64,29 @@ describe('security/request-guard', () => {
 		})
 
 		expect(decision).toEqual({ allowed: true })
+	})
+
+	it('blocks protected paths when request origin itself is invalid', () => {
+		const decision = evaluateProtectedPostRequest({
+			pathname: '/api/ai/briefing',
+			requestOrigin: 'not-a-url',
+			fetchSiteHeader: 'same-origin',
+			originHeader: 'https://app.example.com'
+		})
+
+		expect(decision).toEqual({ allowed: false, reason: 'invalid_origin' })
+	})
+
+	it('blocks protected paths when no valid origin metadata is available', () => {
+		const decision = evaluateProtectedPostRequest({
+			pathname: '/api/datahub/submission',
+			requestOrigin: 'https://app.example.com',
+			fetchSiteHeader: 'same-site',
+			originHeader: 'null',
+			refererHeader: 'not-a-url'
+		})
+
+		expect(decision).toEqual({ allowed: false, reason: 'invalid_origin' })
 	})
 
 	it('blocks protected paths for cross-origin origin/referer', () => {

@@ -5,7 +5,7 @@ const comment = ref(props.initialValue)
 const isDirty = computed(() => comment.value !== props.initialValue)
 
 const emit = defineEmits<{
-	(event: 'close', payload: { value: string }): void
+	(_event: 'close', _payload: { value: string }): void
 }>()
 
 function handleClose() {
