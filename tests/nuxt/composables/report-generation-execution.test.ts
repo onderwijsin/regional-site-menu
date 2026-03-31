@@ -30,7 +30,9 @@ function createExecution(
 		beforeStartAiGeneration?: () => Promise<boolean>
 		generateAiInsightsResult?: ReportAiInsights
 		generateAiInsightsError?: unknown
+		generateAiInsightsImpl?: () => Promise<ReportAiInsights>
 		generateReportError?: unknown
+		abortAiGeneration?: () => void
 	} = {}
 ) {
 	const state = overrides.state ?? createState()
@@ -50,12 +52,15 @@ function createExecution(
 			: vi.fn().mockResolvedValue(undefined)
 
 	const generateAiInsightsMock =
-		overrides.generateAiInsightsError !== undefined
-			? vi.fn().mockRejectedValue(overrides.generateAiInsightsError)
-			: vi.fn().mockResolvedValue(overrides.generateAiInsightsResult ?? {})
+		overrides.generateAiInsightsImpl !== undefined
+			? vi.fn(overrides.generateAiInsightsImpl)
+			: overrides.generateAiInsightsError !== undefined
+				? vi.fn().mockRejectedValue(overrides.generateAiInsightsError)
+				: vi.fn().mockResolvedValue(overrides.generateAiInsightsResult ?? {})
 
 	const trackReportGeneratedMock = vi.fn()
 	const onCloseMock = vi.fn()
+	const abortAiGenerationMock = overrides.abortAiGeneration ?? vi.fn()
 	const getFinalAiInsightsMock = vi.fn(() => aiInsights.value)
 
 	const flow = useReportGenerationExecution({
@@ -90,6 +95,7 @@ function createExecution(
 		getFinalAiInsights: getFinalAiInsightsMock,
 		generateReport: generateReportMock,
 		generateAiInsights: generateAiInsightsMock,
+		abortAiGeneration: abortAiGenerationMock,
 		trackReportGenerated: trackReportGeneratedMock,
 		beforeStartAiGeneration: overrides.beforeStartAiGeneration,
 		onClose: onCloseMock
@@ -106,6 +112,7 @@ function createExecution(
 		isGeneratingPdf,
 		generateReportMock,
 		generateAiInsightsMock,
+		abortAiGenerationMock,
 		trackReportGeneratedMock,
 		onCloseMock
 	}
@@ -247,6 +254,41 @@ describe('useReportGenerationExecution', () => {
 				description: 'Het lukte niet op de opgegeven website te analyseren'
 			})
 		)
+	})
+
+	it('aborts in-flight AI generation and suppresses toast after cancel', async () => {
+		const abortError = new Error('aborted')
+		abortError.name = 'AbortError'
+		let rejectAiGeneration = () => undefined
+		const rejection = { reason: undefined as unknown }
+		const inFlightGeneration = new Promise<ReportAiInsights>((_resolve, reject) => {
+			rejectAiGeneration = () => {
+				reject(rejection.reason)
+			}
+		})
+		const state = createState({ aiBriefing: true, aiWebsiteAnalysis: true })
+		const { flow, stage, isAiLoading, abortAiGenerationMock } = createExecution({
+			state,
+			hasAiEnabled: true,
+			generateAiInsightsImpl: async () => {
+				return await inFlightGeneration
+			}
+		})
+
+		const runPromise = flow.startAiGenerationFlow()
+		expect(stage.value).toBe('ai-loading')
+		expect(isAiLoading.value).toBe(true)
+
+		flow.cancelOngoingGeneration()
+		expect(abortAiGenerationMock).toHaveBeenCalledTimes(1)
+
+		rejection.reason = new ReportGenerationError('AI_WEBSITE_ANALYSIS_FAILED', abortError)
+		rejectAiGeneration()
+		await runPromise
+
+		expect(toastAddMock).not.toHaveBeenCalled()
+		expect(isAiLoading.value).toBe(false)
+		expect(stage.value).toBe('ai-loading')
 	})
 
 	it('shows error toast when briefing submit PDF generation fails', async () => {

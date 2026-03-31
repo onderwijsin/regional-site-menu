@@ -231,4 +231,48 @@ describe('useReportAi', () => {
 		await pendingPromise
 		expect(reportAi.progress.value.every((item) => item.status === 'completed')).toBe(true)
 	})
+
+	it('passes an abort signal and aborts the active AI request', async () => {
+		const fetchMock = vi.fn(
+			async (_url: string, options?: { signal?: AbortSignal }) =>
+				await new Promise((_resolve, reject) => {
+					if (options?.signal?.aborted) {
+						const abortError = new Error('aborted')
+						abortError.name = 'AbortError'
+						reject(abortError)
+						return
+					}
+
+					options?.signal?.addEventListener('abort', () => {
+						const abortError = new Error('aborted')
+						abortError.name = 'AbortError'
+						reject(abortError)
+					})
+				})
+		)
+		vi.stubGlobal('$fetch', fetchMock)
+
+		const reportAi = useReportAi()
+		const promise = reportAi.generateAiInsights(
+			{
+				...baseConfig,
+				aiBriefing: false,
+				aiWebsiteAnalysis: true
+			},
+			baseData
+		)
+		await Promise.resolve()
+
+		const websiteAnalysisSignal = fetchMock.mock.calls[0]?.[1]?.signal as
+			| AbortSignal
+			| undefined
+		expect(websiteAnalysisSignal).toBeDefined()
+
+		reportAi.abortGeneration()
+		expect(websiteAnalysisSignal?.aborted).toBe(true)
+		await expect(promise).rejects.toMatchObject({
+			name: 'ReportGenerationError',
+			code: 'AI_WEBSITE_ANALYSIS_FAILED'
+		})
+	})
 })

@@ -115,7 +115,7 @@ const {
 } = useTurnstile()
 
 const { generateReport } = useReportGenerator()
-const { generateAiInsights, progress } = useReportAi({
+const { generateAiInsights, progress, abortGeneration } = useReportAi({
 	getTurnstileToken: getAiTurnstileToken,
 	onTurnstileConsumed: () => {
 		resetTurnstile(aiTurnstile.value)
@@ -330,25 +330,27 @@ watch(
 	}
 )
 
-const { handleConfigSubmit, handleBriefingSubmit } = useReportGenerationExecution({
-	state,
-	data: props.data,
-	stage,
-	aiInsights,
-	aiInsightsInputSignature,
-	briefingDraft,
-	isAiLoading,
-	isGeneratingPdf,
-	hasAiEnabled,
-	hasReusableAiInsights,
-	currentAiInputSignature,
-	getFinalAiInsights,
-	generateReport,
-	generateAiInsights,
-	trackReportGenerated,
-	beforeStartAiGeneration: ensureAiTurnstileReadyBeforeAiStage,
-	onClose: () => emit('close')
-})
+const { handleConfigSubmit, handleBriefingSubmit, cancelOngoingGeneration } =
+	useReportGenerationExecution({
+		state,
+		data: props.data,
+		stage,
+		aiInsights,
+		aiInsightsInputSignature,
+		briefingDraft,
+		isAiLoading,
+		isGeneratingPdf,
+		hasAiEnabled,
+		hasReusableAiInsights,
+		currentAiInputSignature,
+		getFinalAiInsights,
+		generateReport,
+		generateAiInsights,
+		abortAiGeneration: abortGeneration,
+		trackReportGenerated,
+		beforeStartAiGeneration: ensureAiTurnstileReadyBeforeAiStage,
+		onClose: () => emit('close')
+	})
 
 /**
  * Navigates to help page from inside the slideover.
@@ -438,6 +440,7 @@ async function handleClose(): Promise<void> {
 			}
 		}
 
+		cancelOngoingGeneration()
 		emit('close')
 	} finally {
 		isClosing.value = false
