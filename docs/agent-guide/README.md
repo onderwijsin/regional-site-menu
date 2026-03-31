@@ -74,7 +74,7 @@ npx wrangler --cwd .output dev
 Top-level:
 
 - `app/` Nuxt app code (pages, components, composables, store, plugins)
-- `content/` Markdown content for `items` and `extras`
+- `content/` Nuxt Content collections (`items`, `extras`, `faqs`, `_prompts`)
 - `schema/` Zod schemas for content-adjacent and API payloads
 - `server/` server routes (`api/ai/*`, `api/datahub/*`, assets route handlers)
 - `config/` static app behavior config (`constants.ts`, `ai.ts`, head/site/robots)
@@ -97,6 +97,8 @@ Nuxt config:
 - Collections:
   - `items` (main menu/audit content)
   - `extras` (resources/tools content)
+  - `faqs` (help page FAQ data in YAML files)
+  - `_prompts` (AI system prompts for server routes)
 - Content is queried with `queryCollection(...)` and related helpers.
 
 ### Store

@@ -92,8 +92,8 @@ Critical invariants:
 
 See:
 
-- [report/README.md](../../app/composables/report/README.md)
-- [report/markdown/README.md](../../app/composables/report/markdown/README.md)
+- [Report Composables Notes](../app/report-composables/README.md)
+- [Report Markdown Notes](../app/report-markdown/README.md)
 
 ## High-Risk Areas
 

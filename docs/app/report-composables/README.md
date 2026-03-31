@@ -35,5 +35,5 @@ Primary orchestration flow:
 
 ## Related Docs
 
-- [PDF Pipeline Documentation](../../../docs/report-pdf/README.md)
-- [Markdown Submodule Notes](./markdown/README.md)
+- [PDF Pipeline Documentation](../../report-pdf/README.md)
+- [Markdown Submodule Notes](../report-markdown/README.md)

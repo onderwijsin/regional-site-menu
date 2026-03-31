@@ -55,7 +55,7 @@ If you are working on this codebase with an AI coding agent, read [`AGENTS.md`](
 
 - Nuxt 4 (edge runtime, Cloudflare-targeted)
 - Nuxt UI + Tailwind CSS
-- Nuxt Content (Markdown collections)
+- Nuxt Content (Markdown + YAML collections)
 - Pinia + `pinia-plugin-persistedstate`
 - TipTap (rich text input)
 - jsPDF (client-side report generation)
@@ -362,8 +362,8 @@ At infrastructure level, expensive AI routes are protected with Cloudflare Secur
 Detailed AI docs:
 
 - [AI Integration README](./docs/ai-integration/README.md)
-- [AI API Route Notes](./server/api/ai/README.md)
-- [AI Utility Module Notes](./server/utils/ai/README.md)
+- [AI API Route Notes](./docs/server/api/ai/README.md)
+- [AI Utility Module Notes](./docs/server/utils/ai/README.md)
 
 ---
 
@@ -378,11 +378,11 @@ Additional technical docs:
 - [CI/CD](./docs/ci-cd/README.md)
 - [Report PDF Pipeline](./docs/report-pdf/README.md)
 - [Sentry Integration](./docs/sentry/README.md)
-- [Report Composables Notes](./app/composables/report/README.md)
-- [Report Markdown Notes](./app/composables/report/markdown/README.md)
-- [Crawler Module Notes](./server/utils/crawler/README.md)
-- [Datahub API Notes](./server/api/datahub/README.md)
-- [Config Module Notes](./config/README.md)
+- [Report Composables Notes](./docs/app/report-composables/README.md)
+- [Report Markdown Notes](./docs/app/report-markdown/README.md)
+- [Crawler Module Notes](./docs/server/utils/crawler/README.md)
+- [Datahub API Notes](./docs/server/api/datahub/README.md)
+- [Config Module Notes](./docs/config/README.md)
 
 ---
 

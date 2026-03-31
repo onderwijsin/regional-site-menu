@@ -29,7 +29,7 @@ Implemented safeguards:
 
 These settings are configured in:
 
-- [`config/ai.ts`](../../../config/ai.ts)
+- [`config/ai.ts`](../../../../config/ai.ts)
 
 ## Request Configuration
 
