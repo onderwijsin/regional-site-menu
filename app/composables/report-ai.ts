@@ -258,6 +258,7 @@ export const useReportAi = (options?: {
 	onTurnstileConsumed?: () => void
 }) => {
 	const progress = ref<AiProgressItem[]>([])
+	const activeRequestController = ref<AbortController>()
 	const { trackAiInsight } = useTracking()
 
 	/**
@@ -269,6 +270,15 @@ export const useReportAi = (options?: {
 		(async (): Promise<string | undefined> => {
 			return undefined
 		})
+
+	/**
+	 * Aborts the currently running AI generation request, if any.
+	 *
+	 * @returns Nothing.
+	 */
+	function abortGeneration(): void {
+		activeRequestController.value?.abort()
+	}
 
 	/**
 	 * Adds one progress item in running state.
@@ -407,44 +417,52 @@ export const useReportAi = (options?: {
 		data: ReportData
 	): Promise<ReportAiInsights> {
 		progress.value = []
+		const requestController = new AbortController()
+		activeRequestController.value = requestController
 		let websiteAnalysis: string | undefined
 		let websiteAnalysisUrls: string[] = []
 		let websiteAnalysisSources: string[] = []
 
-		// Stage 1: run website analysis first so we can reuse it in the briefing.
-		if (config.aiWebsiteAnalysis && config.url) {
-			let analysisResult: AiWebsiteAnalysisResponse
-			try {
-				analysisResult = await runWithProgressScenario(
-					createAnalysisProgressScenario(config.maxPages),
-					() => generateWebsiteAnalysis(config)
-				)
-			} catch (error: unknown) {
-				throw new ReportGenerationError('AI_WEBSITE_ANALYSIS_FAILED', error)
+		try {
+			// Stage 1: run website analysis first so we can reuse it in the briefing.
+			if (config.aiWebsiteAnalysis && config.url) {
+				let analysisResult: AiWebsiteAnalysisResponse
+				try {
+					analysisResult = await runWithProgressScenario(
+						createAnalysisProgressScenario(config.maxPages),
+						() => generateWebsiteAnalysis(config, requestController.signal)
+					)
+				} catch (error: unknown) {
+					throw new ReportGenerationError('AI_WEBSITE_ANALYSIS_FAILED', error)
+				}
+
+				websiteAnalysis = analysisResult.analysis
+				websiteAnalysisUrls = analysisResult.analysedPages.map((page) => page.url)
+				websiteAnalysisSources = analysisResult.usedSources
 			}
 
-			websiteAnalysis = analysisResult.analysis
-			websiteAnalysisUrls = analysisResult.analysedPages.map((page) => page.url)
-			websiteAnalysisSources = analysisResult.usedSources
-		}
-
-		// Stage 2: create briefing, optionally enriched with analysis context.
-		let briefing: string | undefined
-		if (config.aiBriefing) {
-			try {
-				briefing = await runWithProgressScenario(createBriefingProgressScenario(), () =>
-					generateBriefing(config, data, websiteAnalysis)
-				)
-			} catch (error: unknown) {
-				throw new ReportGenerationError('AI_BRIEFING_FAILED', error)
+			// Stage 2: create briefing, optionally enriched with analysis context.
+			let briefing: string | undefined
+			if (config.aiBriefing) {
+				try {
+					briefing = await runWithProgressScenario(createBriefingProgressScenario(), () =>
+						generateBriefing(config, data, websiteAnalysis, requestController.signal)
+					)
+				} catch (error: unknown) {
+					throw new ReportGenerationError('AI_BRIEFING_FAILED', error)
+				}
 			}
-		}
 
-		return {
-			briefing,
-			websiteAnalysis,
-			websiteAnalysisUrls,
-			websiteAnalysisSources
+			return {
+				briefing,
+				websiteAnalysis,
+				websiteAnalysisUrls,
+				websiteAnalysisSources
+			}
+		} finally {
+			if (activeRequestController.value === requestController) {
+				activeRequestController.value = undefined
+			}
 		}
 	}
 
@@ -454,12 +472,14 @@ export const useReportAi = (options?: {
 	 * @param config - Report configuration from the form.
 	 * @param data - Current report data.
 	 * @param websiteAnalysisContext - Optional analysis text to include as context.
+	 * @param signal - Abort signal for early cancellation.
 	 * @returns AI briefing markdown.
 	 */
 	async function generateBriefing(
 		config: ReportConfig,
 		data: ReportData,
-		websiteAnalysisContext?: string
+		websiteAnalysisContext?: string,
+		signal?: AbortSignal
 	): Promise<string> {
 		const payload = createBriefingPayload(config, data, websiteAnalysisContext)
 		const turnstileToken = await getTurnstileToken()
@@ -471,6 +491,7 @@ export const useReportAi = (options?: {
 			const response = await $fetch('/api/ai/briefing', {
 				method: 'POST',
 				body: payload,
+				signal,
 				headers: turnstileToken
 					? { [SECURITY_HEADERS.turnstileToken]: turnstileToken }
 					: undefined
@@ -489,10 +510,12 @@ export const useReportAi = (options?: {
 	 * Calls the backend endpoint that analyses the target website against llms criteria.
 	 *
 	 * @param config - Report configuration from the form.
+	 * @param signal - Abort signal for early cancellation.
 	 * @returns AI analysis markdown.
 	 */
 	async function generateWebsiteAnalysis(
-		config: ReportConfig
+		config: ReportConfig,
+		signal?: AbortSignal
 	): Promise<AiWebsiteAnalysisResponse> {
 		const payload = AiWebsiteAnalysisRequestSchema.parse({
 			url: config.url,
@@ -508,6 +531,7 @@ export const useReportAi = (options?: {
 			const response = await $fetch('/api/ai/website-analysis', {
 				method: 'POST',
 				body: payload,
+				signal,
 				headers: turnstileToken
 					? { [SECURITY_HEADERS.turnstileToken]: turnstileToken }
 					: undefined
@@ -529,6 +553,7 @@ export const useReportAi = (options?: {
 
 	return {
 		generateAiInsights,
-		progress
+		progress,
+		abortGeneration
 	}
 }

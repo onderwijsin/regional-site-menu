@@ -71,6 +71,8 @@ verification commands and confirm behavior/coverage remain correct.
 
 ## Structure
 
+- All automated test files belong under `tests/**` (never in `app/**` or `server/**`).
+- Prefer a path layout that mirrors the source tree under test when practical.
 - `tests/unit/**`:
   - fast node-based tests
   - pure utils, schemas, and handler boundary tests

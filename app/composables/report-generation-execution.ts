@@ -35,6 +35,7 @@ type ReportGenerationExecutionArgs = {
 	getFinalAiInsights: () => ReportAiInsights | undefined
 	generateReport: GenerateReportFn
 	generateAiInsights: GenerateAiInsightsFn
+	abortAiGeneration?: () => void
 	trackReportGenerated: TrackReportGeneratedFn
 	beforeStartAiGeneration?: () => Promise<boolean>
 	onClose: () => void
@@ -52,6 +53,48 @@ type ReportGenerationExecutionArgs = {
 export function useReportGenerationExecution(args: ReportGenerationExecutionArgs) {
 	const toast = useToast()
 	const { getIcon } = useIcons()
+	let cancellationRequested = false
+
+	/**
+	 * Recursively detects whether an unknown error represents an aborted request.
+	 *
+	 * @param error - Unknown thrown value.
+	 * @returns Whether this error (or one of its causes) is an abort.
+	 */
+	function isAbortError(error: unknown): boolean {
+		if (!error || typeof error !== 'object') {
+			return false
+		}
+
+		const candidate = error as { name?: unknown; cause?: unknown }
+		if (candidate.name === 'AbortError') {
+			return true
+		}
+
+		return isAbortError(candidate.cause)
+	}
+
+	/**
+	 * Cancels any running generation work.
+	 *
+	 * Used by the close flow to avoid showing failures after intentional dismiss.
+	 *
+	 * @returns Nothing.
+	 */
+	function cancelOngoingGeneration(): void {
+		cancellationRequested = true
+		args.abortAiGeneration?.()
+	}
+
+	/**
+	 * Decides whether a thrown error should be ignored due to intentional cancel.
+	 *
+	 * @param error - Unknown thrown value.
+	 * @returns Whether UI error handling should be skipped.
+	 */
+	function shouldSilenceError(error: unknown): boolean {
+		return cancellationRequested || isAbortError(error)
+	}
 
 	/**
 	 * Returns normalized report data input for PDF and AI generation helpers.
@@ -132,6 +175,9 @@ export function useReportGenerationExecution(args: ReportGenerationExecutionArgs
 				...getReportData(),
 				aiInsights: args.getFinalAiInsights()
 			})
+			if (cancellationRequested) {
+				return
+			}
 
 			args.trackReportGenerated({
 				scoredElementsCount: args.data.audits.length
@@ -152,6 +198,10 @@ export function useReportGenerationExecution(args: ReportGenerationExecutionArgs
 		try {
 			await startPdfGeneration()
 		} catch (error: unknown) {
+			if (shouldSilenceError(error)) {
+				return
+			}
+
 			showGenerationErrorToast(error)
 		}
 	}
@@ -189,6 +239,10 @@ export function useReportGenerationExecution(args: ReportGenerationExecutionArgs
 			args.isAiLoading.value = false
 			await startPdfGeneration()
 		} catch (error: unknown) {
+			if (shouldSilenceError(error)) {
+				return
+			}
+
 			args.stage.value = 'config'
 			showGenerationErrorToast(error)
 		} finally {
@@ -202,6 +256,8 @@ export function useReportGenerationExecution(args: ReportGenerationExecutionArgs
 	 * @returns Nothing.
 	 */
 	async function handleConfigSubmit(): Promise<void> {
+		cancellationRequested = false
+
 		if (args.hasAiEnabled.value) {
 			// Reuse previously generated insights when all relevant inputs are unchanged.
 			// This avoids unnecessary and costly repeated AI endpoint calls.
@@ -234,10 +290,12 @@ export function useReportGenerationExecution(args: ReportGenerationExecutionArgs
 	 * @returns Nothing.
 	 */
 	async function handleBriefingSubmit(): Promise<void> {
+		cancellationRequested = false
 		await startPdfGenerationWithToast()
 	}
 
 	return {
+		cancelOngoingGeneration,
 		handleConfigSubmit,
 		handleBriefingSubmit,
 		startAiGenerationFlow,

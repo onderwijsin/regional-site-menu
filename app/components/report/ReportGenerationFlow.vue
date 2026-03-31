@@ -7,14 +7,14 @@ import type { Audit, PillarAverage } from '~~/shared/types/audit'
 import type { Pillar } from '~~/shared/types/primitives'
 
 import {
-	getEstimatedAnalysisDurationMs,
-	getEstimatedBriefingDurationMs
-} from '~/composables/report-ai'
-import {
 	buildReportPdfAiInsights,
 	createReportAiInputSignature,
 	hasGeneratedReportAiInsights
 } from '~/composables/report-generation-flow'
+import {
+	getReportAiEstimatedDurationLabel,
+	getReportGenerationStageMeta
+} from '~/composables/report-generation-ui'
 import {
 	applyReportLoadingToolActiveTransition,
 	applyReportLoadingToolOpenChange,
@@ -115,7 +115,7 @@ const {
 } = useTurnstile()
 
 const { generateReport } = useReportGenerator()
-const { generateAiInsights, progress } = useReportAi({
+const { generateAiInsights, progress, abortGeneration } = useReportAi({
 	getTurnstileToken: getAiTurnstileToken,
 	onTurnstileConsumed: () => {
 		resetTurnstile(aiTurnstile.value)
@@ -146,28 +146,7 @@ const loadingToolOpenState = ref<Record<string, boolean>>({})
  * re-generation when nothing relevant changed.
  */
 
-const stageMeta = computed(() => {
-	switch (stage.value) {
-		case 'ai-loading':
-			return {
-				title: 'AI-inzichten genereren',
-				description:
-					'We genereren nu de verschillende AI-inzichten. Dit kan enige tijd duren.'
-			}
-		case 'briefing-review':
-			return {
-				title: 'Controleer AI-briefing',
-				description:
-					'Controleer en bewerk de gegenereerde briefing voordat het PDF-rapport wordt gemaakt.'
-			}
-		default:
-			return {
-				title: 'Genereer rapportage',
-				description:
-					'Met jouw input en beoordelingen maken we een rapportage die je als PDF kunt downloaden.'
-			}
-	}
-})
+const stageMeta = computed(() => getReportGenerationStageMeta(stage.value))
 
 const aiSignatureAudits = computed(() =>
 	props.data.audits.map((audit) => ({
@@ -207,46 +186,81 @@ const configSubmitLabel = computed(() => {
 	return hasReusableAiInsights.value ? 'Ga verder met AI-inzichten' : 'Genereer AI-inzichten'
 })
 
+const aiEstimatedDurationLabel = computed(() => getReportAiEstimatedDurationLabel(state))
+
 /**
- * Converts a raw duration estimate into a user-facing minute range label.
+ * Handles region updates from the config stage UI.
  *
- * @param durationMs - Estimated duration in milliseconds.
- * @returns Dutch minute-based ETA label without second-level precision.
+ * @param value - Next region value.
+ * @returns Nothing.
  */
-function formatDurationRangeLabel(durationMs: number): string {
-	const lowerBoundMinutes = (durationMs * 0.85) / 60_000
-	const upperBoundMinutes = (durationMs * 1.2) / 60_000
-
-	if (upperBoundMinutes < 1) {
-		return 'minder dan 1 minuut'
-	}
-
-	const lowerMinutes = Math.max(1, Math.floor(lowerBoundMinutes))
-	const upperMinutes = Math.max(lowerMinutes, Math.ceil(upperBoundMinutes))
-	if (lowerMinutes === upperMinutes) {
-		return `ongeveer ${upperMinutes} ${upperMinutes === 1 ? 'minuut' : 'minuten'}`
-	}
-
-	return `ongeveer ${lowerMinutes}-${upperMinutes} minuten`
+function handleRegionUpdate(value: string): void {
+	region.value = value
 }
 
-const aiEstimatedDurationLabel = computed(() => {
-	let totalMs = 0
+/**
+ * Handles notes updates from the config stage UI.
+ *
+ * @param value - Next notes value.
+ * @returns Nothing.
+ */
+function handleNotesUpdate(value: string | undefined): void {
+	notes.value = value ?? ''
+}
 
-	if (state.aiWebsiteAnalysis) {
-		totalMs += getEstimatedAnalysisDurationMs(state.maxPages)
+/**
+ * Handles URL updates from the config stage UI.
+ *
+ * @param value - Next URL value from input.
+ * @returns Nothing.
+ */
+function handleUrlUpdate(value: string | undefined): void {
+	url.value = value ?? ''
+}
+
+/**
+ * Handles max-pages updates from the config stage UI.
+ *
+ * @param value - Next max-pages value.
+ * @returns Nothing.
+ */
+function handleAnalysisMaxPagesUpdate(value: number | undefined): void {
+	if (typeof value !== 'number' || Number.isNaN(value)) {
+		return
 	}
 
-	if (state.aiBriefing) {
-		totalMs += getEstimatedBriefingDurationMs()
-	}
+	analysisMaxPages.value = value
+}
 
-	if (totalMs === 0) {
-		return 'onbekend'
-	}
+/**
+ * Handles AI briefing toggle changes from the config stage UI.
+ *
+ * @param value - Whether AI briefing is enabled.
+ * @returns Nothing.
+ */
+function handleAiBriefingUpdate(value: boolean): void {
+	state.aiBriefing = value
+}
 
-	return formatDurationRangeLabel(totalMs)
-})
+/**
+ * Handles AI website-analysis toggle changes from the config stage UI.
+ *
+ * @param value - Whether website analysis is enabled.
+ * @returns Nothing.
+ */
+function handleAiWebsiteAnalysisUpdate(value: boolean): void {
+	state.aiWebsiteAnalysis = value
+}
+
+/**
+ * Handles briefing updates from the review stage UI.
+ *
+ * @param value - Next briefing draft.
+ * @returns Nothing.
+ */
+function handleBriefingDraftUpdate(value: string | undefined): void {
+	briefingDraft.value = value ?? ''
+}
 
 /**
  * Builds final AI insights payload for PDF generation.
@@ -316,25 +330,27 @@ watch(
 	}
 )
 
-const { handleConfigSubmit, handleBriefingSubmit } = useReportGenerationExecution({
-	state,
-	data: props.data,
-	stage,
-	aiInsights,
-	aiInsightsInputSignature,
-	briefingDraft,
-	isAiLoading,
-	isGeneratingPdf,
-	hasAiEnabled,
-	hasReusableAiInsights,
-	currentAiInputSignature,
-	getFinalAiInsights,
-	generateReport,
-	generateAiInsights,
-	trackReportGenerated,
-	beforeStartAiGeneration: ensureAiTurnstileReadyBeforeAiStage,
-	onClose: () => emit('close')
-})
+const { handleConfigSubmit, handleBriefingSubmit, cancelOngoingGeneration } =
+	useReportGenerationExecution({
+		state,
+		data: props.data,
+		stage,
+		aiInsights,
+		aiInsightsInputSignature,
+		briefingDraft,
+		isAiLoading,
+		isGeneratingPdf,
+		hasAiEnabled,
+		hasReusableAiInsights,
+		currentAiInputSignature,
+		getFinalAiInsights,
+		generateReport,
+		generateAiInsights,
+		abortAiGeneration: abortGeneration,
+		trackReportGenerated,
+		beforeStartAiGeneration: ensureAiTurnstileReadyBeforeAiStage,
+		onClose: () => emit('close')
+	})
 
 /**
  * Navigates to help page from inside the slideover.
@@ -424,6 +440,7 @@ async function handleClose(): Promise<void> {
 			}
 		}
 
+		cancelOngoingGeneration()
 		emit('close')
 	} finally {
 		isClosing.value = false
@@ -460,159 +477,37 @@ async function handleClose(): Promise<void> {
 				class="space-y-6"
 				@submit="handleConfigSubmit"
 			>
-				<UFormField
-					name="region"
-					label="Naam van regio"
-					description="Wat is de naam van jouw onderwijsregio? Deze wordt gebruikt op verschillende plekken in de rapportage."
-				>
-					<UInput v-model="region" size="lg" placeholder="Voeg naam toe" />
-				</UFormField>
-
-				<UFormField name="aiBriefing">
-					<USwitch
-						v-model="state.aiBriefing"
-						label="Gebruik AI voor briefing"
-						description="Wil je AI inzetten om een briefing te schrijven voor je websitebouwer?"
-					/>
-				</UFormField>
-				<UFormField name="aiWebsiteAnalysis">
-					<USwitch
-						v-model="state.aiWebsiteAnalysis"
-						label="Gebruik AI voor website-analyse"
-						description="Wil je AI inzetten om je huidige website te analyseren?"
-					/>
-				</UFormField>
-				<UAlert
-					v-if="hasAiEnabled"
-					:icon="getIcon('help')"
-					color="info"
-					variant="subtle"
-					title="Verwachte wachttijd"
-					:description="`Voor je huidige AI-selectie duurt dit meestal ${aiEstimatedDurationLabel}.`"
+				<ReportGenerationConfigStage
+					:state="state"
+					:region="region"
+					:notes="notes"
+					:url="url"
+					:analysis-max-pages="analysisMaxPages"
+					:has-ai-enabled="hasAiEnabled"
+					:ai-estimated-duration-label="aiEstimatedDurationLabel"
+					:has-reusable-ai-insights="hasReusableAiInsights"
+					@update:region="handleRegionUpdate"
+					@update:notes="handleNotesUpdate"
+					@update:url="handleUrlUpdate"
+					@update:analysis-max-pages="handleAnalysisMaxPagesUpdate"
+					@update:ai-briefing="handleAiBriefingUpdate"
+					@update:ai-website-analysis="handleAiWebsiteAnalysisUpdate"
+					@navigate-help="navigateToHelp"
 				/>
-				<UAlert
-					v-if="hasReusableAiInsights"
-					:icon="getIcon('success')"
-					color="success"
-					variant="subtle"
-					title="Eerder gegenereerde AI-inzichten beschikbaar"
-					description="Je kunt direct doorgaan zonder opnieuw AI-calls te doen."
-				/>
-
-				<p class="text-muted text-sm italic">
-					Meer informatie over de inzet van AI-tools kun je lezen op
-					<UButton
-						:icon="getIcon('help')"
-						color="neutral"
-						size="sm"
-						label="onze helppagina"
-						variant="link"
-						class="relative top-1"
-						@click="navigateToHelp"
-					/>
-				</p>
-				<UFormField
-					v-if="state.aiWebsiteAnalysis"
-					name="url"
-					label="Website URL"
-					description="Voer de URL van je website in voor analyse."
-				>
-					<UInput
-						v-model="url"
-						size="lg"
-						placeholder="https://voorbeeld.nl"
-						:icon="getIcon('url')"
-					/>
-				</UFormField>
-				<UFormField
-					v-if="state.aiWebsiteAnalysis"
-					name="maxPages"
-					label="Tot hoeveel pagina's wil je analyseren?"
-					:description="`Kies tussen ${AI_WEBSITE_ANALYSIS_MIN_PAGES} en ${AI_WEBSITE_ANALYSIS_MAX_PAGES} pagina's. Des te meer pagina's je kiest, des te langer de analyse duurt.`"
-				>
-					<UInputNumber
-						v-model="analysisMaxPages"
-						size="lg"
-						:min="AI_WEBSITE_ANALYSIS_MIN_PAGES"
-						:max="AI_WEBSITE_ANALYSIS_MAX_PAGES"
-						:step="1"
-					/>
-				</UFormField>
-				<UFormField
-					name="notes"
-					label="Algemene opmerkingen"
-					description="Voeg opmerkingen toe om op te nemen in de rapportage."
-				>
-					<Editor
-						v-model="notes"
-						class="mt-2"
-						outline
-						placeholder="Plaats jouw opmerkingen hier..."
-					/>
-				</UFormField>
 			</UForm>
 
-			<div v-else-if="stage === 'ai-loading'" class="space-y-4">
-				<UAlert
-					:icon="getIcon('ai')"
-					color="primary"
-					variant="subtle"
-					title="AI-inzichten worden opgebouwd"
-					description="Je ziet hieronder stap voor stap wat er gebeurt en waar de AI momenteel mee bezig is."
-				/>
+			<ReportGenerationAiLoadingStage
+				v-else-if="stage === 'ai-loading'"
+				:progress="progress"
+				:is-loading-tool-open="isLoadingToolOpen"
+				@tool-open-change="handleLoadingToolOpenChange($event.toolId, $event.isOpen)"
+			/>
 
-				<UChatTool
-					v-if="progress.length === 0"
-					:text="'Voorbereiden...'"
-					:streaming="true"
-					:loading="true"
-					:icon="getIcon('ai')"
-					chevron="leading"
-					disabled
-				>
-					De AI-taak wordt klaargezet.
-				</UChatTool>
-
-				<UChatTool
-					v-for="entry in progress"
-					:key="entry.id"
-					:text="entry.text"
-					:streaming="entry.status === 'running'"
-					:loading="entry.status === 'running'"
-					:icon="entry.status === 'running' ? getIcon('refresh') : getIcon('success')"
-					:disabled="entry.status === 'running'"
-					:open="isLoadingToolOpen(entry.id)"
-					chevron="leading"
-					variant="inline"
-					class="transition-opacity duration-300"
-					:class="entry.status === 'completed' ? 'opacity-45' : 'opacity-100'"
-					@update:open="handleLoadingToolOpenChange(entry.id, $event)"
-				>
-					{{ entry.details }}
-				</UChatTool>
-			</div>
-
-			<div v-else-if="stage === 'briefing-review'" class="space-y-4">
-				<UAlert
-					:icon="getIcon('edit')"
-					color="info"
-					variant="subtle"
-					title="Controleer en bewerk de AI-briefing"
-					description="Pas de briefing aan waar nodig. Jouw aangepaste versie wordt opgenomen in het PDF-rapport."
-				/>
-
-				<UFormField
-					name="briefing"
-					label="AI-briefing"
-					description="Controleer de inhoud en maak eventuele aanpassingen."
-				>
-					<Editor
-						v-model="briefingDraft"
-						outline
-						placeholder="De gegenereerde briefing verschijnt hier..."
-					/>
-				</UFormField>
-			</div>
+			<ReportGenerationBriefingReviewStage
+				v-else-if="stage === 'briefing-review'"
+				:briefing-draft="briefingDraft"
+				@update:briefing-draft="handleBriefingDraftUpdate"
+			/>
 		</template>
 
 		<template #footer>
