@@ -22,8 +22,8 @@ Main integration files:
 - [sentry.client.config.ts](../../sentry.client.config.ts)
 - [server/plugins/sentry-cloudflare-plugin.ts](../../server/plugins/sentry-cloudflare-plugin.ts)
 - [server/utils/ai/openai.ts](../../server/utils/ai/openai.ts)
-- [server/api/\_sentry/test.get.ts](../../server/api/_sentry/test.get.ts)
-- [app/pages/\_sentry.vue](../../app/pages/_sentry.vue)
+- [server/api/\_sentry/trigger-error.get.ts](../../server/api/_sentry/trigger-error.get.ts)
+- [app/pages/(misc)/\_sentry.vue](<../../app/pages/(misc)/_sentry.vue>)
 
 ## Runtime and Build Config
 
@@ -98,7 +98,7 @@ For this project’s Nitro `cloudflare_module` preset:
 2. Open `/_sentry`.
 3. Click:
    - `Trigger client error`
-   - `Trigger server error`
+   - `Trigger server error` (calls `GET /api/_sentry/trigger-error`)
 4. Verify data in Sentry:
    - Issues
    - Traces

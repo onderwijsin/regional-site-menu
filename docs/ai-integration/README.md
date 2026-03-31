@@ -34,12 +34,19 @@ UX behavior:
 - Going back to config does **not** trigger new AI calls if relevant input did not change.
 - Closing while generation is ongoing (or when unprocessed AI output exists) shows a confirmation
   guard.
+- Confirmed close while generation is ongoing aborts in-flight AI requests and exits without
+  additional error toasts.
 
 Relevant files:
 
 - [ReportGenerationFlow.vue](../../app/components/report/ReportGenerationFlow.vue)
+- [ReportGenerationConfigStage.vue](../../app/components/report/generation/ReportGenerationConfigStage.vue)
+- [ReportGenerationAiLoadingStage.vue](../../app/components/report/generation/ReportGenerationAiLoadingStage.vue)
+- [ReportGenerationBriefingReviewStage.vue](../../app/components/report/generation/ReportGenerationBriefingReviewStage.vue)
 - [report-ai.ts](../../app/composables/report-ai.ts)
 - [report-generation-flow.ts](../../app/composables/report-generation-flow.ts)
+- [report-generation-execution.ts](../../app/composables/report-generation-execution.ts)
+- [report-generation-ui.ts](../../app/composables/report-generation-ui.ts)
 - [sections/ai.ts](../../app/composables/report/sections/ai.ts)
 
 ## Server Endpoints
@@ -128,6 +135,7 @@ Key behavior:
 
 - sequential stages (analysis, then briefing)
 - briefing can include analysis context (`websiteAnalysisContext`)
+- in-flight AI requests support abort via `AbortController` when the flow is closed intentionally
 - exposes reactive `progress: Ref<AiProgressItem[]>`
   - `text` (stage label)
   - `details` (expanded context)
