@@ -3,11 +3,11 @@ import type { AiProgressItem } from '~/composables/report-ai'
 
 defineProps<{
 	progress: AiProgressItem[]
-	isLoadingToolOpen: (toolId: string) => boolean
+	isLoadingToolOpen: (_toolId: string) => boolean
 }>()
 
 const emit = defineEmits<{
-	(e: 'tool-open-change', payload: { toolId: string; isOpen: boolean }): void
+	(_e: 'tool-open-change', _payload: { toolId: string; isOpen: boolean }): void
 }>()
 
 const { getIcon } = useIcons()

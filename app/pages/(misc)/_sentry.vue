@@ -50,7 +50,7 @@ async function triggerServerError(): Promise<void> {
 				op: 'test'
 			},
 			async () => {
-				await $fetch('/api/_sentry/test')
+				await $fetch('/api/_sentry/trigger-error')
 			}
 		)
 	} catch (error) {
@@ -96,7 +96,7 @@ async function triggerServerError(): Promise<void> {
 
 			<UPageCard
 				title="Server error + trace"
-				description="Start een frontend span en roept de endpoint `/api/_sentry/test` aan die bewust een fout gooit."
+				description="Start een frontend span en roept de endpoint `/api/_sentry/trigger-error` aan die bewust een fout gooit."
 				:icon="getIcon('warn')"
 				:ui="{ description: 'text-base' }"
 			>
