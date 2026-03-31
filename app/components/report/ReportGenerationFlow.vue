@@ -37,7 +37,7 @@ type ReportGenerationFlowProps = {
 const props = defineProps<ReportGenerationFlowProps>()
 
 const emit = defineEmits<{
-	(e: 'close'): void
+	(_e: 'close'): void
 }>()
 
 const form = useTemplateRef('form')

@@ -58,4 +58,16 @@ describe('security/admin', () => {
 
 		expect(isAdmin({} as never)).toBe(false)
 	})
+
+	it('returns false when admin token header is wrong and authorization header is missing', () => {
+		vi.stubGlobal(
+			'useRuntimeConfig',
+			vi.fn(() => ({ apiToken: 'master-token' }))
+		)
+		mockHeaders({
+			[SECURITY_HEADERS.adminToken]: 'wrong-token'
+		})
+
+		expect(isAdmin({} as never)).toBe(false)
+	})
 })

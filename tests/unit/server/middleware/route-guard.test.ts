@@ -92,4 +92,25 @@ describe('server/middleware/route-guard', () => {
 			refererHeader: 'https://evil.example.com/path'
 		})
 	})
+
+	it('allows protected POST request when origin checks pass', async () => {
+		const { handler, evaluateProtectedPostRequestMock } = await loadRouteGuard({
+			isAdmin: false,
+			decision: { allowed: true },
+			url: 'https://app.example.com/api/ai/briefing',
+			headers: {
+				'sec-fetch-site': 'same-origin',
+				origin: 'https://app.example.com'
+			}
+		})
+
+		expect(() => handler({ node: { req: { method: 'POST' } } } as never)).not.toThrow()
+		expect(evaluateProtectedPostRequestMock).toHaveBeenCalledWith({
+			pathname: '/api/ai/briefing',
+			requestOrigin: 'https://app.example.com',
+			fetchSiteHeader: 'same-origin',
+			originHeader: 'https://app.example.com',
+			refererHeader: undefined
+		})
+	})
 })
