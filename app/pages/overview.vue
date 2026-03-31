@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { siteDescription, siteTitle } from '~~/config/indentity'
+import { siteDescription, siteTitle } from '~~/config/identity'
 
 defineRouteRules({
 	robots: false

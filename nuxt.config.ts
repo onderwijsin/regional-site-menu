@@ -8,7 +8,7 @@ import { joinURL, parseURL } from 'ufo'
 import { AI_PROVIDER_CONFIG } from './config/ai-providers'
 import { NUXT_BEHAVIOR_CONFIG } from './config/constants'
 import { app } from './config/head'
-import { siteDescription, siteTitle } from './config/indentity'
+import { siteDescription, siteTitle } from './config/identity'
 import { robots } from './config/robots'
 
 const SUPPORTED_MODES = ['dev', 'prod', 'preview'] as const

@@ -17,8 +17,8 @@ This directory holds static configuration and behavior constants.
   - app head/meta configuration
 - `robots.ts`
   - robots/sitemap directives
-- `indentity.ts`
-  - site identity values (filename intentionally kept as-is for compatibility)
+- `identity.ts`
+  - site identity values
 
 ## Rules
 
