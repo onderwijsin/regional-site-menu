@@ -63,9 +63,10 @@ What the route does:
 2. Crawls the requested domain server-side (capped, same-domain).
 3. Loads system prompt from content collection (`content/_prompts`).
 4. Fetches reference criteria from `/llms-full.txt` (fallback `/llms.txt`).
-5. Requires at least one crawled page with non-empty text excerpt.
-6. Sends validated crawl context + reference to OpenAI.
-7. Returns typed response payload with `analysis`, `analysedPages`, and `usedSources`.
+5. Requires at least one crawled page with meaningful textual evidence.
+6. Formats per-page evidence blocks with compact excerpt + full cleaned semantic content.
+7. Sends validated crawl context + reference to OpenAI.
+8. Returns typed response payload with `analysis`, `analysedPages`, and `usedSources`.
 
 Controller + helpers:
 
@@ -167,7 +168,7 @@ Key response fields:
 
 - `analysis`, `briefing`
 - `analysedPages` and `usedSources` for analysis traceability
-- `usedSources` includes the requested URL plus evidence-page URLs with non-empty crawl excerpts
+- `usedSources` includes the requested URL plus evidence-page URLs with meaningful crawl evidence
 - `crawledPages` kept for backward compatibility
 
 ## PDF Integration
@@ -191,6 +192,8 @@ Implemented safeguards:
 - Sentry Zod integration enriches captured `ZodError` events with issue details
 - server-side same-domain crawl with page caps
 - llms-full reference criteria included in analysis prompt
+- crawler extraction uses Readability-first with fallback to the existing simple extraction path
+- per-page evidence blocks include compact excerpt plus full cleaned semantic HTML
 - structured model output parsing before analysis markdown assembly
 - OpenAI SDK calls are instrumented through the shared client factory (`server/utils/ai/openai.ts`)
 - compatibility fallback for model-specific unsupported reasoning/verbosity params
@@ -204,10 +207,19 @@ Implemented safeguards:
 Remaining risk:
 
 - model output may still over-generalize relative to crawled excerpts
-- larger crawls increase token pressure and can still require tuning of `max_output_tokens`
+- larger crawls (especially with full semantic page evidence) increase token pressure and may
+  require tuning of `max_output_tokens`
 - users should review AI output before finalizing PDF
 
 ## Runtime and Config
+
+Current provider implementation:
+
+- OpenAI (`server/utils/ai/openai.ts`)
+- provider-compatibility fallback handling in `server/utils/ai/response.ts` and
+  `server/utils/ai/route-request.ts`
+- prompt/crawl shaping (`analysis.ts`, `briefing.ts`, `crawler/*`) remains provider-agnostic and
+  reusable
 
 Runtime config:
 

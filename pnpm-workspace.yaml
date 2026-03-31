@@ -9,6 +9,7 @@ catalog:
   '@iconify-json/hugeicons': 1.2.24
   '@iconify-json/lucide': 1.2.99
   '@iconify-json/simple-icons': 1.2.75
+  '@mozilla/readability': 0.6.0
   '@nuxt/content': 3.12.0
   '@nuxt/eslint': 1.15.2
   '@nuxt/image': 2.0.0

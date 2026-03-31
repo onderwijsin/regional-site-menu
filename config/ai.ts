@@ -17,7 +17,9 @@ export const AI_WEBSITE_ANALYSIS_CONFIG = {
 	/** Maximum allowed page count for website analysis. */
 	maxPages: 50,
 	/** Default page count when user does not provide a value. */
-	defaultPages: 15
+	defaultPages: 15,
+	/** Max excerpt chars per page when formatting compact prompt evidence blocks. */
+	promptEvidenceExcerptMaxChars: 900
 } as const
 
 /**
@@ -124,6 +126,10 @@ export const CRAWLER_CONFIG = {
 	defaultTimeoutMs: 5_000,
 	/** Maximum excerpt length captured per crawled page. */
 	defaultMaxCharsPerPage: 2_500,
+	/** Minimum character count for using Readability extraction output. */
+	readabilityMinExcerptChars: 180,
+	/** Minimum word count for using Readability extraction output. */
+	readabilityMinExcerptWords: 28,
 	/** Upper bound for queued URLs waiting to be crawled. */
 	defaultMaxQueuedUrls: 500,
 	/** Default worker fetch concurrency for crawl/page requests. */
@@ -143,7 +149,7 @@ export const CRAWLER_CONFIG = {
 	/** Unstorage namespace used for crawl result caching. */
 	cacheNamespace: 'cache',
 	/** Prefix used when building deterministic crawl cache keys. */
-	cacheKeyPrefix: 'ai:crawl:v3',
+	cacheKeyPrefix: 'ai:crawl:v5',
 	/** Cache retention time for crawl results (2 days). */
 	cacheTtlMs: 2 * 24 * 60 * 60 * 1000,
 	/** Candidate sitemap locations to probe on each domain. */

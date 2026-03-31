@@ -63,7 +63,7 @@ export default defineEventHandler(async (event) => {
 			crawledPages: crawledPages.length
 		})
 
-		const evidencePages = crawledPages.filter((page) => page.excerpt.trim().length > 0)
+		const evidencePages = crawledPages.filter(hasPageEvidence)
 		timer.mark('evidence_filtered', {
 			evidencePages: evidencePages.length
 		})
@@ -294,6 +294,24 @@ export default defineEventHandler(async (event) => {
 		throw error
 	}
 })
+
+/**
+ * Returns true when a crawled page has meaningful textual evidence.
+ *
+ * @param page - Crawled page snapshot.
+ * @returns Whether the page can be used as analysis evidence.
+ */
+function hasPageEvidence(page: { excerpt: string; fullContent: string }): boolean {
+	if (page.excerpt.trim().length > 0) {
+		return true
+	}
+
+	const textFromSemanticHtml = page.fullContent
+		.replace(/<[^>]+>/g, ' ')
+		.replace(/\s+/g, ' ')
+		.trim()
+	return textFromSemanticHtml.length > 0
+}
 
 /**
  * Tries to parse structured analysis payload from a text response.

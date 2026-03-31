@@ -1,5 +1,7 @@
 import type { CrawledWebsitePage } from '../crawler/types'
 
+import { AI_WEBSITE_ANALYSIS_CONFIG } from '@ai'
+
 /**
  * Builds an allowlist for domain-constrained web search.
  *
@@ -68,7 +70,12 @@ export function formatCrawledPagesForPrompt(pages: CrawledWebsitePage[]): string
 		lines.push(`## Pagina ${index + 1}`)
 		lines.push(`URL: ${page.url}`)
 		lines.push(`Titel: ${page.title || 'Onbekend'}`)
-		lines.push(`Inhoud (uittreksel): ${page.excerpt || 'Geen tekst gevonden.'}`)
+		lines.push(`Hoofdkop (H1): ${page.mainHeading || 'Onbekend'}`)
+		lines.push(`Inhoud (compact bewijs): ${toCompactPromptExcerpt(page.excerpt)}`)
+		lines.push('Kerninhoud (volledig opgeschoond, semantische HTML):')
+		lines.push('```html')
+		lines.push(toCodeFenceSafeHtml(page.fullContent || '<p>Geen inhoud gevonden.</p>'))
+		lines.push('```')
 		lines.push('')
 	}
 
@@ -87,19 +94,19 @@ function formatCrawlCoverageSummary(pages: CrawledWebsitePage[], maxPages: numbe
 		return "- Geen pagina's gecrawld."
 	}
 
-	const withExcerpt = pages.filter((page) => page.excerpt.trim().length > 0)
+	const pagesWithEvidence = pages.filter(hasPageEvidence)
 	const withTitle = pages.filter((page) => Boolean(page.title?.trim())).length
 	const averageExcerptLength = Math.round(
-		withExcerpt.reduce((sum, page) => sum + page.excerpt.length, 0) /
-			Math.max(withExcerpt.length, 1)
+		pagesWithEvidence.reduce((sum, page) => sum + resolvePageEvidenceTextLength(page), 0) /
+			Math.max(pagesWithEvidence.length, 1)
 	)
 	const pathSegments = countTopPathSegments(pages)
 
 	return [
 		`- Geanalyseerde pagina's: ${pages.length} van max ${maxPages}`,
-		`- Pagina's met bruikbare tekst: ${withExcerpt.length}`,
+		`- Pagina's met bruikbare tekst: ${pagesWithEvidence.length}`,
 		`- Pagina's met titel: ${withTitle}`,
-		`- Gemiddelde excerpt-lengte: ${averageExcerptLength} tekens`,
+		`- Gemiddelde evidencetekst-lengte: ${averageExcerptLength} tekens`,
 		`- Meest voorkomende pad-segmenten: ${pathSegments}`
 	].join('\n')
 }
@@ -128,4 +135,87 @@ function countTopPathSegments(pages: CrawledWebsitePage[]): string {
 		.map(([segment, count]) => `${segment} (${count})`)
 
 	return top.length > 0 ? top.join(', ') : 'Geen'
+}
+
+/**
+ * Compacts crawl excerpts for prompt evidence blocks.
+ *
+ * @param excerpt - Raw excerpt.
+ * @returns Prompt-safe compact excerpt.
+ */
+function toCompactPromptExcerpt(excerpt: string): string {
+	const normalized = excerpt.replace(/\s+/g, ' ').trim()
+	if (!normalized) {
+		return 'Geen tekst gevonden.'
+	}
+
+	const maxChars = AI_WEBSITE_ANALYSIS_CONFIG.promptEvidenceExcerptMaxChars
+	if (normalized.length <= maxChars) {
+		return normalized
+	}
+
+	const truncated = normalized.slice(0, maxChars)
+	const sentenceBreak = Math.max(
+		truncated.lastIndexOf('. '),
+		truncated.lastIndexOf('! '),
+		truncated.lastIndexOf('? ')
+	)
+	if (sentenceBreak >= Math.floor(maxChars * 0.6)) {
+		return `${truncated.slice(0, sentenceBreak + 1).trim()} …`
+	}
+
+	const lastSpace = truncated.lastIndexOf(' ')
+	if (lastSpace > 0) {
+		return `${truncated.slice(0, lastSpace).trim()} …`
+	}
+
+	return `${truncated.trim()} …`
+}
+
+/**
+ * Makes semantic HTML safe for fenced markdown embedding.
+ *
+ * @param html - Semantic HTML evidence.
+ * @returns Markdown fence-safe HTML.
+ */
+function toCodeFenceSafeHtml(html: string): string {
+	return html.replaceAll('```', '&#96;&#96;&#96;')
+}
+
+/**
+ * Returns whether a crawled page has meaningful evidence text.
+ *
+ * @param page - Crawled page.
+ * @returns Whether page evidence is non-empty.
+ */
+function hasPageEvidence(page: CrawledWebsitePage): boolean {
+	return resolvePageEvidenceText(page).length > 0
+}
+
+/**
+ * Returns evidence text length for one crawled page.
+ *
+ * @param page - Crawled page.
+ * @returns Evidence text length.
+ */
+function resolvePageEvidenceTextLength(page: CrawledWebsitePage): number {
+	return resolvePageEvidenceText(page).length
+}
+
+/**
+ * Resolves best-effort plain evidence text from page snapshot.
+ *
+ * @param page - Crawled page.
+ * @returns Plain evidence text.
+ */
+function resolvePageEvidenceText(page: CrawledWebsitePage): string {
+	const excerpt = page.excerpt.trim()
+	if (excerpt) {
+		return excerpt
+	}
+
+	return page.fullContent
+		.replace(/<[^>]+>/g, ' ')
+		.replace(/\s+/g, ' ')
+		.trim()
 }

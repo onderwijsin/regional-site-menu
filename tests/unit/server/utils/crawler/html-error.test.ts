@@ -17,6 +17,7 @@ describe('crawler/html parse failures', () => {
 			parseHtmlForCrawl('<html></html>', 'https://example.com', ['example.com'], 120)
 		).toEqual({
 			excerpt: '',
+			fullContent: '',
 			links: []
 		})
 	})
