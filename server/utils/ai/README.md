@@ -20,27 +20,20 @@ files remain focused on boundary handling and orchestration.
   - builds briefing prompt input blocks from selected audits/context and derived strategic signals
 - `text.ts`
   - markdown sanitization and word counting utilities
-- `openai.ts`
-  - OpenAI client construction + route-specific model resolution
-  - Sentry OpenAI instrumentation (`instrumentOpenAiClient`) at a single shared boundary
-  - compatibility error parsing helpers for model fallback handling
-- `response.ts`
-  - shared compatibility fallback orchestration for structured/plain responses
-  - token-limit incomplete retry guard helpers
-  - response parsing helpers (`refusal`, safe field reads)
-- `route-request.ts`
-  - shared AI-route request execution with compatibility fallback + token-limit retry flow
-  - timing hook support (`openai_response_received`, `openai_response_retry_received`)
+- `provider.ts`
+  - AI SDK provider resolution (`openai` / `mistral`) from runtime config
+  - provider-wide model selection + fail-fast API-key checks
+  - reads provider registry from `config/ai-providers.ts`
 
 ## Design Rules
 
 - Keep Zod validation at route boundaries (`server/api/ai/*`).
 - Keep this module pure/deterministic where possible.
 - Avoid embedding runtime secrets here; use `useRuntimeConfig` only in dedicated client/bootstrap
-  utility (`openai.ts`).
+  utility (`provider.ts`).
 - Keep AI behavior tuning centralized in [`config/ai.ts`](../../../config/ai.ts).
-- Keep provider-specific logic isolated in dedicated utilities (`openai.ts`, compatibility helpers)
-  so prompt/crawl orchestration can be reused for future providers.
+- Keep provider-specific logic isolated in dedicated utilities (`provider.ts`) so prompt/crawl
+  orchestration can be reused for future providers.
 
 ## Related Docs
 

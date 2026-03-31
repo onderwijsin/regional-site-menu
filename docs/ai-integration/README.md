@@ -65,7 +65,7 @@ What the route does:
 4. Fetches reference criteria from `/llms-full.txt` (fallback `/llms.txt`).
 5. Requires at least one crawled page with meaningful textual evidence.
 6. Formats per-page evidence blocks with compact excerpt + full cleaned semantic content.
-7. Sends validated crawl context + reference to OpenAI.
+7. Sends validated crawl context + reference to configured AI provider.
 8. Returns typed response payload with `analysis`, `analysedPages`, and `usedSources`.
 
 Controller + helpers:
@@ -88,7 +88,7 @@ What the route does:
 2. Loads system prompt from content collection.
 3. Formats domain input context (region, goals, selected components, notes, optional analysis
    context).
-4. Calls OpenAI with structured output parsing.
+4. Calls AI SDK Core with structured output parsing.
    - falls back to plain-text response mode if structured SDK parsing fails.
 5. Normalizes markdown and returns typed response.
 
@@ -119,7 +119,7 @@ Prompt loader:
 - [prompts.ts](../../server/utils/ai/prompts.ts)
 
 Note: Nuxt Content returns markdown as an AST body. The loader normalizes it into plain text before
-sending it to OpenAI.
+sending it to the configured provider.
 
 Database note:
 
@@ -142,21 +142,13 @@ Key behavior:
   - `details` (expanded context)
   - `status` (`running`/`completed`)
 - progress timing is configurable via `REPORT_AI_PROGRESS_CONFIG` in `config/ai.ts`
-- stage duration is based on fixed medium-profile durations
+- stage duration is based on fixed baseline durations
+- global timing can be scaled with `AI_TIMING_MULTIPLIER` (default `1`)
 - analysis timing uses a capped crawl scale + capped per-page model-overhead boost
 - if the backend finishes early, remaining visual stages are fast-forwarded sequentially
 - fast-forwarding happens only on success (failed runs do not show fully completed stage output)
 - config stage shows a rounded minute-based ETA hint (`minder dan 1 minuut`, `1-2 minuten`, ...)
 - logs full analysis payload in browser console for debugging
-
-## Reasoning Configuration
-
-The report flow now uses a fixed medium reasoning profile for reliability and predictable runtime.
-
-The user-facing timing hint still adapts to:
-
-- whether analysis, briefing, or both are enabled
-- selected `maxPages` for analysis
 
 ## Data Contracts
 
@@ -195,11 +187,8 @@ Implemented safeguards:
 - crawler extraction uses Readability-first with fallback to the existing simple extraction path
 - per-page evidence blocks include compact excerpt plus full cleaned semantic HTML
 - structured model output parsing before analysis markdown assembly
-- OpenAI SDK calls are instrumented through the shared client factory (`server/utils/ai/openai.ts`)
-- compatibility fallback for model-specific unsupported reasoning/verbosity params
-- retry with higher output token budget when response ends `incomplete` due `max_output_tokens`
-- fallback from structured parse mode to plain-text mode when SDK JSON parsing fails
-- output fallback path (`output_text` + JSON-in-text parsing + plain markdown fallback)
+- AI SDK Core (`generateText` + `Output.object`) is the single LLM interface
+- provider/model resolution is centralized in `server/utils/ai/provider.ts`
 - explicit source URL traceability in API response and PDF output
 - browser debug log of raw analysis payload for quality tuning
 - per-endpoint timing logs include the resolved model and request tuning metadata
@@ -208,42 +197,68 @@ Remaining risk:
 
 - model output may still over-generalize relative to crawled excerpts
 - larger crawls (especially with full semantic page evidence) increase token pressure and may
-  require tuning of `max_output_tokens`
+  require tuning of `maxOutputTokens`
 - users should review AI output before finalizing PDF
 
 ## Runtime and Config
 
 Current provider implementation:
 
-- OpenAI (`server/utils/ai/openai.ts`)
-- provider-compatibility fallback handling in `server/utils/ai/response.ts` and
-  `server/utils/ai/route-request.ts`
+- provider resolver (`server/utils/ai/provider.ts`) for OpenAI and Mistral
+- typed provider registry (`config/ai-providers.ts`) for provider-specific setup
+- AI SDK Core route execution (`generateText` + `Output.object`)
 - prompt/crawl shaping (`analysis.ts`, `briefing.ts`, `crawler/*`) remains provider-agnostic and
   reusable
 
 Runtime config:
 
+- `runtimeConfig.ai.provider` (`openai` default)
 - `runtimeConfig.openai.token`
-- `runtimeConfig.openai.model` (shared fallback)
-- `runtimeConfig.openai.models.websiteAnalysis`
-- `runtimeConfig.openai.models.briefing`
+- `runtimeConfig.openai.model` (provider-wide model)
+- `runtimeConfig.mistral.token`
+- `runtimeConfig.mistral.model` (provider-wide model)
 
 Static AI defaults:
 
 - [config/ai.ts](../../config/ai.ts)
+- [config/ai-providers.ts](../../config/ai-providers.ts)
 - endpoint-specific behavior docs: [server/api/ai/README.md](../../server/api/ai/README.md)
 - crawler behavior docs: [server/utils/crawler/README.md](../../server/utils/crawler/README.md)
 
 Environment:
 
+- optional `AI_PROVIDER` (`openai` | `mistral`, defaults to `openai`)
+- optional `AI_TIMING_MULTIPLIER` (global UI timing multiplier for staged progress + ETA)
 - `OPENAI_API_KEY`
-- optional `OPENAI_MODEL` (shared fallback)
-- optional `OPENAI_MODEL_WEBSITE_ANALYSIS`
-- optional `OPENAI_MODEL_BRIEFING`
+- optional `OPENAI_MODEL` (provider-wide model)
+- `MISTRAL_API_KEY`
+- optional `MISTRAL_MODEL` (provider-wide model)
+
+## Extending Providers
+
+To add a new provider, keep resolver logic unchanged and extend the registry/config:
+
+1. Install the provider package (`@ai-sdk/<provider>`).
+2. Add runtime config/env keys in [nuxt.config.ts](../../nuxt.config.ts) and
+   [.example.env](../../.example.env) for token + optional provider-wide model override.
+3. Add provider defaults and runtime readers in
+   [config/ai-providers.ts](../../config/ai-providers.ts):
+   - append provider id in `AI_PROVIDER_IDS`
+   - add a typed `AI_PROVIDER_CONFIG.<provider>` entry with:
+     - `missingTokenMessage`
+     - `defaultModel`
+     - `readRuntimeConfig(...)`
+     - `createLanguageModel(...)`
+4. Add unit tests in
+   [tests/unit/server/utils/ai/provider.test.ts](../../tests/unit/server/utils/ai/provider.test.ts)
+   for:
+   - provider resolution
+   - missing token failure
+   - unsupported `AI_PROVIDER` behavior (if applicable)
 
 ## Suggested Next Steps
 
 1. Add explicit per-stage retry actions in UI (retry analysis only / briefing only).
 2. Add integration tests for endpoint shape + failure cases.
 3. Add quality telemetry (e.g. user edits ratio on AI briefing).
-4. Add fallback observability metrics (how often structured parse fallback/retry paths are used).
+4. Add provider-level quality telemetry (output acceptance/edit ratio per provider+model).

@@ -11,6 +11,7 @@
 		"paths": {
 			"~~/*": ["./*"],
 			"~/*": ["./app/*"],
+			"@server/*": ["./server/*"],
 			"@ai": ["./config/ai"],
 			"@schema": ["./schema"],
 			"@constants": ["./config/constants"]

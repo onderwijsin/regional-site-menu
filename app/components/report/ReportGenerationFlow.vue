@@ -6,6 +6,7 @@ import type { ReportConfig } from '~~/schema/reportConfig'
 import type { Audit, PillarAverage } from '~~/shared/types/audit'
 import type { Pillar } from '~~/shared/types/primitives'
 
+import { resolveReportAiTimingMultiplier } from '~/composables/report-ai'
 import {
 	buildReportPdfAiInsights,
 	createReportAiInputSignature,
@@ -147,6 +148,10 @@ const loadingToolOpenState = ref<Record<string, boolean>>({})
  */
 
 const stageMeta = computed(() => getReportGenerationStageMeta(stage.value))
+const runtimeConfig = useRuntimeConfig()
+const aiTimingMultiplier = computed(() =>
+	resolveReportAiTimingMultiplier(runtimeConfig.public?.ai?.timingMultiplier)
+)
 
 const aiSignatureAudits = computed(() =>
 	props.data.audits.map((audit) => ({
@@ -186,7 +191,9 @@ const configSubmitLabel = computed(() => {
 	return hasReusableAiInsights.value ? 'Ga verder met AI-inzichten' : 'Genereer AI-inzichten'
 })
 
-const aiEstimatedDurationLabel = computed(() => getReportAiEstimatedDurationLabel(state))
+const aiEstimatedDurationLabel = computed(() =>
+	getReportAiEstimatedDurationLabel(state, aiTimingMultiplier.value)
+)
 
 /**
  * Handles region updates from the config stage UI.

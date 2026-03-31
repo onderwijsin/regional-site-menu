@@ -23,36 +23,26 @@ export const AI_WEBSITE_ANALYSIS_CONFIG = {
 } as const
 
 /**
- * OpenAI request defaults and safeguards used by server AI routes.
+ * Provider-agnostic generation settings used by server AI routes.
  */
-export const AI_OPENAI_CONFIG = {
-	/** Fallback model when runtime config model is not set. */
-	defaultModel: 'gpt-5',
-	/** Preferred model for website-analysis generation. */
-	defaultWebsiteAnalysisModel: 'gpt-5-mini',
-	/** Preferred model for briefing generation. */
-	defaultBriefingModel: 'gpt-5-mini',
-	/** Generation settings for website-analysis route (fixed medium profile). */
+export const AI_ROUTE_REQUEST_CONFIG = {
+	/** Generation settings for website-analysis route. */
 	analysisRequest: {
+		/** Maximum number of output tokens requested from the model. */
 		maxOutputTokens: 6_500,
-		maxOutputTokensOnIncompleteRetry: 9_000,
-		maxRetries: 2,
-		reasoningEffort: 'medium',
-		retryWithReasoningOnIncomplete: false,
-		incompleteRetryReasoningEffort: 'low',
-		verbosity: 'low',
-		incompleteRetryVerbosity: 'low'
+		/** Sampling temperature used during generation. */
+		temperature: 0.1,
+		/** Maximum number of SDK retries for transient provider failures. */
+		maxRetries: 2
 	},
-	/** Generation settings for briefing route (fixed medium profile). */
+	/** Generation settings for briefing route. */
 	briefingRequest: {
+		/** Maximum number of output tokens requested from the model. */
 		maxOutputTokens: 5_000,
-		maxOutputTokensOnIncompleteRetry: 8_500,
-		maxRetries: 2,
-		reasoningEffort: 'medium',
-		retryWithReasoningOnIncomplete: false,
-		incompleteRetryReasoningEffort: 'low',
-		verbosity: 'low',
-		incompleteRetryVerbosity: 'low'
+		/** Sampling temperature used during generation. */
+		temperature: 0.1,
+		/** Maximum number of SDK retries for transient provider failures. */
+		maxRetries: 2
 	}
 } as const
 

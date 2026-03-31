@@ -1,7 +1,10 @@
 #!/bin/bash
 
-# Get list of staged files (Added, Copied, Modified)
-STAGED_FILES=$(git diff --cached --name-only --diff-filter=ACM)
+# Get list of staged files (Added, Copied, Modified) as NUL-delimited data
+# so filenames with spaces are handled correctly.
+STAGED_FILES_FILE="$(mktemp)"
+trap 'rm -f "$STAGED_FILES_FILE"' EXIT
+git diff --cached --name-only --diff-filter=ACM -z > "$STAGED_FILES_FILE"
 
 # Run gitleaks to scan for secrets in staged files
 # Disables user git config to prevent color codes from breaking gitleaks parsing
@@ -18,7 +21,7 @@ if [ "${DISABLE_PRE_COMMIT_FORMAT:-false}" != "true" ]; then
   pnpm format:fix
 
   # Re-add only previously staged files (if they still exist)
-  echo "$STAGED_FILES" | xargs -r git add --
+  xargs -0 -r git add -- < "$STAGED_FILES_FILE"
 fi
 
 # Lint
@@ -26,5 +29,5 @@ if [ "${DISABLE_PRE_COMMIT_LINT:-false}" != "true" ]; then
   pnpm lint:fix
 
   # Re-add only previously staged files (if they still exist)
-  echo "$STAGED_FILES" | xargs -r git add --
+  xargs -0 -r git add -- < "$STAGED_FILES_FILE"
 fi

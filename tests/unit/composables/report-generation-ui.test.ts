@@ -41,4 +41,22 @@ describe('report-generation-ui helpers', () => {
 			})
 		).not.toBe('onbekend')
 	})
+
+	it('applies timing multiplier to estimated duration labels', () => {
+		const config = {
+			region: 'Regio',
+			aiBriefing: true,
+			aiWebsiteAnalysis: true,
+			notes: '',
+			maxPages: 5
+		}
+
+		const baseLabel = getReportAiEstimatedDurationLabel(config, 1)
+		const fasterLabel = getReportAiEstimatedDurationLabel(config, 0.5)
+		const slowerLabel = getReportAiEstimatedDurationLabel(config, 1.5)
+
+		expect(baseLabel).toBe('ongeveer 1-2 minuten')
+		expect(fasterLabel).toBe('minder dan 1 minuut')
+		expect(slowerLabel).toBe('ongeveer 1-3 minuten')
+	})
 })

@@ -47,36 +47,77 @@ type AiProgressScenario = {
 	fastForwardMs: number
 }
 
-function createBriefingProgressScenario(): AiProgressScenario {
+/**
+ * Normalizes timing multiplier values used for staged progress and ETA hints.
+ *
+ * @param value - Raw multiplier value from runtime config.
+ * @returns Safe multiplier (defaults to 1).
+ */
+export function resolveReportAiTimingMultiplier(value: unknown): number {
+	const parsed = typeof value === 'number' ? value : Number(value)
+	if (!Number.isFinite(parsed) || parsed <= 0) {
+		return 1
+	}
+
+	return parsed
+}
+
+/**
+ * Scales one stage duration using the configured timing multiplier.
+ *
+ * @param durationMs - Baseline duration in milliseconds.
+ * @param timingMultiplier - Global timing multiplier.
+ * @returns Scaled duration in milliseconds.
+ */
+function scaleStageDurationMs(durationMs: number, timingMultiplier: number): number {
+	return Math.max(1, Math.round(durationMs * timingMultiplier))
+}
+
+function createBriefingProgressScenario(timingMultiplier: number = 1): AiProgressScenario {
 	return {
-		fastForwardMs: REPORT_AI_PROGRESS_CONFIG.briefingFastForwardMs,
+		fastForwardMs: scaleStageDurationMs(
+			REPORT_AI_PROGRESS_CONFIG.briefingFastForwardMs,
+			timingMultiplier
+		),
 		stages: [
 			{
 				id: 'briefing-start',
 				text: 'AI-briefing starten...',
 				details:
 					'De briefing-aanvraag wordt opgebouwd met auditresultaten en opgegeven context.',
-				durationMs: REPORT_AI_PROGRESS_CONFIG.briefingStageDurationMs.start
+				durationMs: scaleStageDurationMs(
+					REPORT_AI_PROGRESS_CONFIG.briefingStageDurationMs.start,
+					timingMultiplier
+				)
 			},
 			{
 				id: 'briefing-synthesis',
 				text: 'Inzichten combineren...',
 				details:
 					'Zelfevaluatie, opmerkingen en eventuele website-analyse worden samengebracht.',
-				durationMs: REPORT_AI_PROGRESS_CONFIG.briefingStageDurationMs.synthesis
+				durationMs: scaleStageDurationMs(
+					REPORT_AI_PROGRESS_CONFIG.briefingStageDurationMs.synthesis,
+					timingMultiplier
+				)
 			},
 			{
 				id: 'briefing-generate',
 				text: 'Briefing genereren...',
 				details:
 					'De server genereert de briefing op basis van de verzamelde inzichten en context.',
-				durationMs: REPORT_AI_PROGRESS_CONFIG.briefingStageDurationMs.generate
+				durationMs: scaleStageDurationMs(
+					REPORT_AI_PROGRESS_CONFIG.briefingStageDurationMs.generate,
+					timingMultiplier
+				)
 			},
 			{
 				id: 'briefing-finalize',
 				text: 'Briefing afronden...',
 				details: 'De briefing wordt concreet geformuleerd voor gebruik in de rapportage.',
-				durationMs: REPORT_AI_PROGRESS_CONFIG.briefingStageDurationMs.finalize
+				durationMs: scaleStageDurationMs(
+					REPORT_AI_PROGRESS_CONFIG.briefingStageDurationMs.finalize,
+					timingMultiplier
+				)
 			}
 		]
 	}
@@ -128,48 +169,66 @@ function resolveAnalysisModelDurationBoostMs(maxPages: number | undefined): numb
  * Creates analysis progress configuration with dynamic crawl-stage timing.
  *
  * @param maxPages - Requested max pages for website analysis.
+ * @param timingMultiplier - Global timing multiplier applied to stage durations.
  * @returns Scenario with crawl stage duration adjusted to max pages.
  */
-function createAnalysisProgressScenario(maxPages: number | undefined): AiProgressScenario {
+function createAnalysisProgressScenario(
+	maxPages: number | undefined,
+	timingMultiplier: number = 1
+): AiProgressScenario {
 	const crawlDurationMs = resolveAnalysisCrawlStageDurationMs(maxPages)
 	const modelDurationBoostMs = resolveAnalysisModelDurationBoostMs(maxPages)
 
 	return {
-		fastForwardMs: REPORT_AI_PROGRESS_CONFIG.analysisFastForwardMs,
+		fastForwardMs: scaleStageDurationMs(
+			REPORT_AI_PROGRESS_CONFIG.analysisFastForwardMs,
+			timingMultiplier
+		),
 		stages: [
 			{
 				id: 'analysis-start',
 				text: 'AI-analyse starten...',
 				details: 'De aanvraag wordt voorbereid en de websitegegevens worden gevalideerd.',
-				durationMs: REPORT_AI_PROGRESS_CONFIG.analysisStageDurationMs.start
+				durationMs: scaleStageDurationMs(
+					REPORT_AI_PROGRESS_CONFIG.analysisStageDurationMs.start,
+					timingMultiplier
+				)
 			},
 			{
 				id: 'analysis-crawl',
 				text: "Websitepagina's verzamelen...",
 				details:
 					'De server verzamelt relevante pagina’s van je website als context voor de analyse.',
-				durationMs: crawlDurationMs
+				durationMs: scaleStageDurationMs(crawlDurationMs, timingMultiplier)
 			},
 			{
 				id: 'analysis-interpret',
 				text: 'Inhoud interpreteren...',
 				details: 'De server interpreteert de verzamelde inhoud om inzichten te genereren.',
-				durationMs:
+				durationMs: scaleStageDurationMs(
 					REPORT_AI_PROGRESS_CONFIG.analysisStageDurationMs.interpret +
-					modelDurationBoostMs
+						modelDurationBoostMs,
+					timingMultiplier
+				)
 			},
 			{
 				id: 'analysis-criteria',
 				text: 'Criteria toepassen op content...',
 				details: 'De verzamelde inhoud wordt getoetst aan de richtlijnen en criteria.',
-				durationMs: REPORT_AI_PROGRESS_CONFIG.analysisStageDurationMs.criteria
+				durationMs: scaleStageDurationMs(
+					REPORT_AI_PROGRESS_CONFIG.analysisStageDurationMs.criteria,
+					timingMultiplier
+				)
 			},
 			{
 				id: 'analysis-finalize',
 				text: 'Website-analyse afronden...',
 				details:
 					'De uitkomst wordt gestructureerd en klaargezet voor opname in het rapport.',
-				durationMs: REPORT_AI_PROGRESS_CONFIG.analysisStageDurationMs.finalize
+				durationMs: scaleStageDurationMs(
+					REPORT_AI_PROGRESS_CONFIG.analysisStageDurationMs.finalize,
+					timingMultiplier
+				)
 			}
 		]
 	}
@@ -189,19 +248,28 @@ function sumScenarioDurationMs(scenario: AiProgressScenario): number {
  * Returns estimated analysis duration from the same scenario used for staged UI progress.
  *
  * @param maxPages - Requested max pages for website analysis.
+ * @param timingMultiplier - Global timing multiplier applied to stage durations.
  * @returns Estimated duration in milliseconds.
  */
-export function getEstimatedAnalysisDurationMs(maxPages: number | undefined): number {
-	return sumScenarioDurationMs(createAnalysisProgressScenario(maxPages))
+export function getEstimatedAnalysisDurationMs(
+	maxPages: number | undefined,
+	timingMultiplier: number = 1
+): number {
+	return sumScenarioDurationMs(
+		createAnalysisProgressScenario(maxPages, resolveReportAiTimingMultiplier(timingMultiplier))
+	)
 }
 
 /**
  * Returns estimated briefing duration from the same scenario used for staged UI progress.
  *
+ * @param timingMultiplier - Global timing multiplier applied to stage durations.
  * @returns Estimated duration in milliseconds.
  */
-export function getEstimatedBriefingDurationMs(): number {
-	return sumScenarioDurationMs(createBriefingProgressScenario())
+export function getEstimatedBriefingDurationMs(timingMultiplier: number = 1): number {
+	return sumScenarioDurationMs(
+		createBriefingProgressScenario(resolveReportAiTimingMultiplier(timingMultiplier))
+	)
 }
 
 /**
@@ -260,6 +328,10 @@ export const useReportAi = (options?: {
 	const progress = ref<AiProgressItem[]>([])
 	const activeRequestController = ref<AbortController>()
 	const { trackAiInsight } = useTracking()
+	const runtimeConfig = useRuntimeConfig()
+	const timingMultiplier = resolveReportAiTimingMultiplier(
+		runtimeConfig.public?.ai?.timingMultiplier
+	)
 
 	/**
 	 * Retrieves the Turnstile token for the current request.
@@ -429,7 +501,7 @@ export const useReportAi = (options?: {
 				let analysisResult: AiWebsiteAnalysisResponse
 				try {
 					analysisResult = await runWithProgressScenario(
-						createAnalysisProgressScenario(config.maxPages),
+						createAnalysisProgressScenario(config.maxPages, timingMultiplier),
 						() => generateWebsiteAnalysis(config, requestController.signal)
 					)
 				} catch (error: unknown) {
@@ -445,8 +517,15 @@ export const useReportAi = (options?: {
 			let briefing: string | undefined
 			if (config.aiBriefing) {
 				try {
-					briefing = await runWithProgressScenario(createBriefingProgressScenario(), () =>
-						generateBriefing(config, data, websiteAnalysis, requestController.signal)
+					briefing = await runWithProgressScenario(
+						createBriefingProgressScenario(timingMultiplier),
+						() =>
+							generateBriefing(
+								config,
+								data,
+								websiteAnalysis,
+								requestController.signal
+							)
 					)
 				} catch (error: unknown) {
 					throw new ReportGenerationError('AI_BRIEFING_FAILED', error)
