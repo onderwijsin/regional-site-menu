@@ -62,7 +62,7 @@ export async function getCachedCrawlPages(cacheKey: string): Promise<CrawledWebs
 }
 
 /**
- * Stores crawl results for 31 days.
+ * Stores crawl results for configured cache TTL (currently 2 days).
  *
  * @param cacheKey - Crawl cache key.
  * @param pages - Crawl result pages.
@@ -72,8 +72,20 @@ export async function setCachedCrawlPages(
 	cacheKey: string,
 	pages: CrawledWebsitePage[]
 ): Promise<void> {
-	// Only cache results that contain at least one meaningful excerpt.
-	if (!pages.some((page) => page.excerpt.trim().length > 0)) {
+	// Only cache results that contain at least one meaningful evidence payload.
+	if (
+		!pages.some((page) => {
+			if (page.excerpt.trim().length > 0) {
+				return true
+			}
+
+			const textFromSemanticHtml = page.fullContent
+				.replace(/<[^>]+>/g, ' ')
+				.replace(/\s+/g, ' ')
+				.trim()
+			return textFromSemanticHtml.length > 0
+		})
+	) {
 		return
 	}
 
@@ -98,6 +110,8 @@ function isCrawledWebsitePage(value: unknown): value is CrawledWebsitePage {
 		page &&
 		typeof page.url === 'string' &&
 		typeof page.excerpt === 'string' &&
-		(page.title === undefined || typeof page.title === 'string')
+		typeof page.fullContent === 'string' &&
+		(page.title === undefined || typeof page.title === 'string') &&
+		(page.mainHeading === undefined || typeof page.mainHeading === 'string')
 	)
 }

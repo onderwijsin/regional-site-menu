@@ -18,7 +18,7 @@ import { clampConcurrency, isAllowedUrl, normalizeUrl } from './url'
  * - short per-request timeout
  * - short text excerpts for prompt safety
  * - bounded concurrency
- * - cached crawl results (31 days)
+ * - cached crawl results (configured TTL, currently 2 days)
  *
  * @param args - Crawl configuration.
  * @returns Deterministic list of crawled pages and excerpts.
@@ -158,7 +158,8 @@ export async function crawlWebsiteForAnalysis(
 	if (pages.length > 0 && !pages.some((page) => page.url === entryUrl)) {
 		pages.unshift({
 			url: entryUrl,
-			excerpt: ''
+			excerpt: '',
+			fullContent: ''
 		})
 	}
 
@@ -196,13 +197,18 @@ async function crawlSinglePage(
 	}
 
 	const parsed = parseHtmlForCrawl(fetched.html, resolvedUrl, allowedDomains, maxCharsPerPage)
+	const page: CrawledWebsitePage = {
+		url: resolvedUrl,
+		title: parsed.title,
+		excerpt: parsed.excerpt,
+		fullContent: parsed.fullContent
+	}
+	if (parsed.mainHeading) {
+		page.mainHeading = parsed.mainHeading
+	}
 
 	return {
-		page: {
-			url: resolvedUrl,
-			title: parsed.title,
-			excerpt: parsed.excerpt
-		},
+		page,
 		links: parsed.links
 	}
 }
