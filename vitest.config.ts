@@ -8,6 +8,7 @@ const aliases = {
 	'@ai': fileURLToPath(new URL('./config/ai.ts', import.meta.url)),
 	'@constants': fileURLToPath(new URL('./config/constants.ts', import.meta.url)),
 	'@schema': fileURLToPath(new URL('./schema', import.meta.url)),
+	'@server': fileURLToPath(new URL('./server', import.meta.url)),
 	'~': fileURLToPath(new URL('./app', import.meta.url)),
 	'~~': rootDir
 }

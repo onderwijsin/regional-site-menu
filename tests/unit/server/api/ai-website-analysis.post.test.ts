@@ -1,4 +1,4 @@
-import { AI_OPENAI_CONFIG } from '~~/config/ai'
+import { AI_ROUTE_REQUEST_CONFIG } from '~~/config/ai'
 import { describe, expect, it, vi } from 'vitest'
 
 function createWebsiteAnalysisOutput() {
@@ -14,22 +14,25 @@ function createWebsiteAnalysisOutput() {
 
 async function loadHandler(
 	options: {
-		parseImpl?: ReturnType<typeof vi.fn>
-		createImpl?: ReturnType<typeof vi.fn>
+		generateTextImpl?: ReturnType<typeof vi.fn>
 		crawlPages?: Array<{ url: string; title?: string; excerpt: string; fullContent: string }>
 		body?: unknown
 	} = {}
 ) {
 	vi.resetModules()
 
-	const parseImpl =
-		options.parseImpl ??
+	const generateTextImpl =
+		options.generateTextImpl ??
 		vi.fn().mockResolvedValue({
-			status: 'completed',
-			output_parsed: createWebsiteAnalysisOutput()
+			output: createWebsiteAnalysisOutput()
 		})
-	const createImpl = options.createImpl ?? vi.fn()
+	const outputObjectMock = vi.fn((value: unknown) => value)
 	const assertTurnstileTokenMock = vi.fn().mockResolvedValue(undefined)
+	const resolveAiProviderMock = vi.fn().mockReturnValue({
+		provider: 'openai',
+		model: 'gpt-test',
+		languageModel: { mocked: true }
+	})
 	const crawlPages = options.crawlPages ?? [
 		{
 			url: 'https://example.com',
@@ -66,16 +69,14 @@ async function loadHandler(
 		return error
 	})
 
-	vi.doMock('~~/server/utils/ai/openai', () => ({
-		getOpenAiClient: () => ({
-			model: 'gpt-test',
-			client: {
-				responses: {
-					parse: parseImpl,
-					create: createImpl
-				}
-			}
-		})
+	vi.doMock('ai', () => ({
+		generateText: generateTextImpl,
+		Output: {
+			object: outputObjectMock
+		}
+	}))
+	vi.doMock('~~/server/utils/ai/provider', () => ({
+		resolveAiProvider: resolveAiProviderMock
 	}))
 	vi.doMock('~~/server/utils/ai/prompts', () => ({
 		getAiSystemPrompt: vi.fn(async () => 'System prompt')
@@ -97,15 +98,16 @@ async function loadHandler(
 	const module = await import('~~/server/api/ai/website-analysis.post')
 	return {
 		handler: module.default,
-		parseImpl,
-		createImpl,
-		assertTurnstileTokenMock
+		generateTextImpl,
+		assertTurnstileTokenMock,
+		resolveAiProviderMock
 	}
 }
 
 describe('POST /api/ai/website-analysis', () => {
 	it('returns structured analysis plus deterministic evidence URLs', async () => {
-		const { handler, parseImpl, assertTurnstileTokenMock } = await loadHandler()
+		const { handler, generateTextImpl, assertTurnstileTokenMock, resolveAiProviderMock } =
+			await loadHandler()
 
 		const result = await handler({} as never)
 
@@ -113,12 +115,13 @@ describe('POST /api/ai/website-analysis', () => {
 		expect(result.crawledPages).toEqual([{ url: 'https://example.com', title: 'Home' }])
 		expect(result.analysedPages).toEqual([{ url: 'https://example.com', title: 'Home' }])
 		expect(result.usedSources).toEqual(['https://example.com'])
-		expect(parseImpl).toHaveBeenCalledTimes(1)
+		expect(resolveAiProviderMock).toHaveBeenCalledWith({})
+		expect(generateTextImpl).toHaveBeenCalledTimes(1)
 		expect(assertTurnstileTokenMock).toHaveBeenCalledWith({}, 'ai_website_analysis')
 	})
 
 	it('throws when crawl returns no pages with evidence text', async () => {
-		const { handler, parseImpl } = await loadHandler({
+		const { handler, generateTextImpl } = await loadHandler({
 			crawlPages: [
 				{ url: 'https://example.com', title: 'Home', excerpt: '   ', fullContent: '' }
 			]
@@ -129,11 +132,11 @@ describe('POST /api/ai/website-analysis', () => {
 			statusMessage:
 				'AI website analysis could not retrieve usable page content from the provided website'
 		})
-		expect(parseImpl).not.toHaveBeenCalled()
+		expect(generateTextImpl).not.toHaveBeenCalled()
 	})
 
 	it('accepts a page as evidence when excerpt is empty but semantic content has text', async () => {
-		const { handler, parseImpl } = await loadHandler({
+		const { handler, generateTextImpl } = await loadHandler({
 			crawlPages: [
 				{
 					url: 'https://example.com/home',
@@ -148,33 +151,12 @@ describe('POST /api/ai/website-analysis', () => {
 
 		expect(result.analysis).toContain('## Korte samenvatting')
 		expect(result.crawledPages).toEqual([{ url: 'https://example.com/home', title: 'Home' }])
-		expect(parseImpl).toHaveBeenCalledTimes(1)
+		expect(generateTextImpl).toHaveBeenCalledTimes(1)
 	})
 
-	it('falls back to plain response mode when structured parse fails', async () => {
-		const parseImpl = vi.fn().mockRejectedValue(new SyntaxError('Unexpected token in JSON'))
-		const createImpl = vi.fn().mockResolvedValue({
-			status: 'completed',
-			output_parsed: null,
-			output_text: 'Vrije analyse tekst'
-		})
-
-		const { handler } = await loadHandler({ parseImpl, createImpl })
-		const result = await handler({} as never)
-
-		expect(result.analysis).toBe('Vrije analyse tekst')
-		expect(parseImpl).toHaveBeenCalledTimes(1)
-		expect(createImpl).toHaveBeenCalledTimes(1)
-	})
-
-	it('throws a 502 when neither structured output nor output_text is available', async () => {
-		const parseImpl = vi.fn().mockResolvedValue({
-			status: 'completed',
-			output_parsed: null,
-			output_text: ''
-		})
-
-		const { handler } = await loadHandler({ parseImpl })
+	it('throws a 502 when model generation fails', async () => {
+		const generateTextImpl = vi.fn().mockRejectedValue(new Error('provider failure'))
+		const { handler } = await loadHandler({ generateTextImpl })
 
 		await expect(handler({} as never)).rejects.toMatchObject({
 			statusCode: 502,
@@ -182,55 +164,18 @@ describe('POST /api/ai/website-analysis', () => {
 		})
 	})
 
-	it('retries with second parse call after incomplete max-output response', async () => {
-		const parseImpl = vi
-			.fn()
-			.mockResolvedValueOnce({
-				status: 'incomplete',
-				output_parsed: null,
-				output_text: '',
-				incomplete_details: { reason: 'max_output_tokens' }
-			})
-			.mockResolvedValueOnce({
-				status: 'completed',
-				output_parsed: createWebsiteAnalysisOutput()
-			})
-
-		const { handler } = await loadHandler({ parseImpl })
-		const result = await handler({} as never)
-
-		expect(result.analysis).toContain('## Korte samenvatting')
-		expect(parseImpl).toHaveBeenCalledTimes(2)
-	})
-
-	it('uses the configured medium request budget', async () => {
-		const parseImpl = vi.fn().mockResolvedValue({
-			status: 'completed',
-			output_parsed: createWebsiteAnalysisOutput()
-		})
-
-		const { handler } = await loadHandler({ parseImpl })
+	it('uses the configured request budget', async () => {
+		const { handler, generateTextImpl } = await loadHandler()
 		await handler({} as never)
 
-		expect(parseImpl.mock.calls[0]?.[0]?.max_output_tokens).toBe(
-			AI_OPENAI_CONFIG.analysisRequest.maxOutputTokens
+		expect(generateTextImpl.mock.calls[0]?.[0]?.maxOutputTokens).toBe(
+			AI_ROUTE_REQUEST_CONFIG.analysisRequest.maxOutputTokens
 		)
-		expect(parseImpl.mock.calls[0]?.[0]?.reasoning?.effort).toBe(
-			AI_OPENAI_CONFIG.analysisRequest.reasoningEffort
+		expect(generateTextImpl.mock.calls[0]?.[0]?.temperature).toBe(
+			AI_ROUTE_REQUEST_CONFIG.analysisRequest.temperature
 		)
-	})
-
-	it('uses JSON-text fallback when output_text contains serialized structured analysis', async () => {
-		const parseImpl = vi.fn().mockResolvedValue({
-			status: 'completed',
-			output_parsed: null,
-			output_text: JSON.stringify(createWebsiteAnalysisOutput())
-		})
-
-		const { handler } = await loadHandler({ parseImpl })
-		const result = await handler({} as never)
-
-		expect(result.analysis).toContain('## Korte samenvatting')
-		expect(result.analysis).toContain('## Wat gaat goed')
+		expect(generateTextImpl.mock.calls[0]?.[0]?.maxRetries).toBe(
+			AI_ROUTE_REQUEST_CONFIG.analysisRequest.maxRetries
+		)
 	})
 })

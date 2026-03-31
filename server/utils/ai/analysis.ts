@@ -1,4 +1,4 @@
-import type { CrawledWebsitePage } from '../crawler/types'
+import type { CrawledWebsitePage } from '@server/utils/crawler/types'
 
 import { AI_WEBSITE_ANALYSIS_CONFIG } from '@ai'
 

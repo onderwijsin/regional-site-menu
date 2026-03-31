@@ -10,62 +10,49 @@ Both routes follow the same boundary pattern:
 1. Validate request payload with Zod (`schema/reportAi.ts`).
 2. Load prompt content from Nuxt Content (`content/_prompts`).
 3. Build deterministic input context from validated data.
-4. Resolve route-specific model + fixed reasoning config.
-5. Call OpenAI using `responses.parse` with structured output where possible.
-6. Apply fallback logic for model/runtime edge cases.
-7. Return the public response contract (validated again with Zod).
+4. Resolve provider + provider-wide model from runtime config.
+5. Call AI SDK Core (`generateText`) with structured output (`Output.object`).
+6. Return the public response contract (validated again with Zod).
 
-## Reliability and Fallback Strategy
+## Reliability Strategy
 
-The routes intentionally include defensive fallback behavior because model compatibility and output
-shape can vary by model/version.
+The routes keep AI integration intentionally simple and rely on AI SDK behavior as the standard
+execution path.
 
 Implemented safeguards:
 
-- Unsupported parameter/value fallback for:
-  - `reasoning.effort`
-  - `text.verbosity`
-- Retry with increased `max_output_tokens` when response is:
-  - `status = incomplete`
-  - `incomplete_details.reason = max_output_tokens`
-  - no usable `output_parsed` and no `output_text`
-- Structured parse fallback:
-  - if SDK structured parsing throws JSON parse errors, retry in plain-text mode
-    (`responses.create`)
-- Output fallback chain:
-  - use `output_parsed` when available
-  - else try parsing JSON from `output_text`
-  - else fallback to sanitized plain markdown text
-  - else fail with explicit 502
+- strict request and response schema validation (Zod)
+- structured output generation with AI SDK Core
+- briefing route plain-text retry when provider structured output fails schema matching
+- explicit 502 failures for provider generation errors
+- deterministic crawl evidence filtering before analysis generation
 
 These settings are configured in:
 
 - [`config/ai.ts`](../../../config/ai.ts)
 
-## Reasoning Configuration
+## Request Configuration
 
-Both routes use a fixed medium reasoning profile from `AI_OPENAI_CONFIG`:
+Both routes use fixed request budgets from `AI_ROUTE_REQUEST_CONFIG`:
 
 - `analysisRequest`
 - `briefingRequest`
 
-Current speed-oriented tuning:
+Each request config includes:
 
-- website-analysis: lower verbosity + tighter output token budget
-- briefing: lower verbosity with a moderate output budget
+- `maxOutputTokens`
+- `temperature`
+- `maxRetries`
 
-## Model Selection
+Provider/model resolution is provider-wide:
 
-Model resolution is route-specific:
-
-- `/api/ai/website-analysis` -> `runtimeConfig.openai.models.websiteAnalysis`
-- `/api/ai/briefing` -> `runtimeConfig.openai.models.briefing`
+- `/api/ai/website-analysis` -> `runtimeConfig.<provider>.model`
+- `/api/ai/briefing` -> `runtimeConfig.<provider>.model`
 
 Fallback order:
 
-1. route-specific runtime model
-2. shared runtime model (`runtimeConfig.openai.model`)
-3. static default from `config/ai.ts`
+1. provider runtime model (`runtimeConfig.<provider>.model`)
+2. static default from `config/ai-providers.ts` for the selected provider
 
 ## Observability
 
@@ -74,8 +61,7 @@ Both routes emit step timings via `createServerExecutionTimer`.
 Timing logs now include resolved model metadata on:
 
 - `request_composed`
-- `openai_response_received`
-- `openai_response_retry_received` (when applicable)
+- `ai_response_received`
 - final `done` summary
 
 ## File Ownership

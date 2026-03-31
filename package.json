@@ -22,6 +22,8 @@
 	},
 	"packageManager": "pnpm@10.32.1",
 	"devDependencies": {
+		"@ai-sdk/mistral": "catalog:",
+		"@ai-sdk/openai": "catalog:",
 		"@commitlint/cli": "catalog:",
 		"@commitlint/config-conventional": "catalog:",
 		"@eslint/js": "catalog:",
@@ -53,15 +55,18 @@
 		"@semantic-release/release-notes-generator": "catalog:",
 		"@sentry/nuxt": "catalog:",
 		"@tailwindcss/typography": "catalog:",
+		"@tiptap/core": "catalog:",
 		"@tiptap/html": "catalog:",
-		"@tiptap/markdown": "catalog:",
+		"@tiptap/pm": "catalog:",
 		"@tiptap/starter-kit": "catalog:",
+		"@tiptap/markdown": "catalog:",
 		"@types/cloudflare-turnstile": "catalog:",
 		"@types/node": "catalog:",
 		"@vitest/coverage-v8": "catalog:",
 		"@vue/test-utils": "catalog:",
 		"@vueuse/core": "catalog:",
 		"@vueuse/nuxt": "catalog:",
+		"ai": "catalog:",
 		"aws4fetch": "catalog:",
 		"better-sqlite3": "catalog:",
 		"defu": "catalog:",
@@ -79,7 +84,6 @@
 		"nuxt-site-config": "catalog:",
 		"nuxt-studio": "catalog:",
 		"ofetch": "catalog:",
-		"openai": "catalog:",
 		"p-limit": "catalog:",
 		"pinia": "catalog:",
 		"pinia-plugin-persistedstate": "catalog:",
@@ -97,11 +101,9 @@
 	},
 	"pnpm": {
 		"overrides": {
-			"@tiptap/core": "3.20.5",
-			"@tiptap/pm": "3.20.5",
-			"@tiptap/html": "3.20.5",
-			"@tiptap/starter-kit": "3.20.5",
-			"@tiptap/*": "3.20.5"
+			"@tiptap/core": "catalog:",
+			"@tiptap/pm": "catalog:",
+			"@tiptap/starter-kit": "catalog:"
 		},
 		"patchedDependencies": {
 			"nuxt-studio@1.5.1": "patches/nuxt-studio@1.5.1.patch",

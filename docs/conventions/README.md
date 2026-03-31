@@ -44,6 +44,13 @@ This document captures practical development rules and conventions for this repo
 3. Add `@example` for complex functions.
 4. Add additional tags when useful (`@remarks`, `@see`, `@deprecated`, etc.).
 
+## Config Documentation Conventions
+
+1. In `config/*` files, every config object property should have a concise one-line JSDoc comment.
+2. In config-related type definitions, each type property should include a one-line TSDoc/JSDoc
+   comment.
+3. Keep comments concrete and behavioral (what the setting controls), not implementation trivia.
+
 ## Composable Naming and Import Conventions
 
 1. Standard composables are named `useSomeComposable`.
@@ -100,8 +107,8 @@ Reference:
    - `prod -> production`
 4. Keep the Sentry integration baseline enabled unless intentionally scoped:
    - `zodErrorsIntegration` in Sentry init (client + server) for enriched Zod validation context.
-   - OpenAI instrumentation via `Sentry.instrumentOpenAiClient(...)` in the shared OpenAI client
-     factory (`server/utils/ai/openai.ts`), not ad-hoc per route.
+   - Keep AI provider selection centralized in `server/utils/ai/provider.ts`; avoid ad-hoc provider
+     initialization in route files.
 
 ## Tooling and Quality Gates
 

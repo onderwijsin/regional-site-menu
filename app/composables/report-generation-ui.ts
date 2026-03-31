@@ -79,28 +79,21 @@ export function formatReportGenerationDurationRangeLabel(durationMs: number): st
  * Calculates the AI duration label for current report configuration.
  *
  * @param config - Current report config.
+ * @param timingMultiplier - Optional global timing multiplier applied to stage durations.
  * @returns Dutch duration label or `onbekend` when no AI tool is enabled.
- * @example
- * ```ts
- * getReportAiEstimatedDurationLabel({
- *   region: 'Regio',
- *   aiBriefing: false,
- *   aiWebsiteAnalysis: false,
- *   notes: '',
- *   maxPages: 5
- * })
- * // => 'onbekend'
- * ```
  */
-export function getReportAiEstimatedDurationLabel(config: ReportConfig): string {
+export function getReportAiEstimatedDurationLabel(
+	config: ReportConfig,
+	timingMultiplier: number = 1
+): string {
 	let totalMs = 0
 
 	if (config.aiWebsiteAnalysis) {
-		totalMs += getEstimatedAnalysisDurationMs(config.maxPages)
+		totalMs += getEstimatedAnalysisDurationMs(config.maxPages, timingMultiplier)
 	}
 
 	if (config.aiBriefing) {
-		totalMs += getEstimatedBriefingDurationMs()
+		totalMs += getEstimatedBriefingDurationMs(timingMultiplier)
 	}
 
 	if (totalMs === 0) {

@@ -1,4 +1,4 @@
-import { AI_OPENAI_CONFIG } from '~~/config/ai'
+import { AI_ROUTE_REQUEST_CONFIG } from '~~/config/ai'
 import { describe, expect, it, vi } from 'vitest'
 
 function createBriefingRequestBody() {
@@ -23,23 +23,26 @@ function createBriefingRequestBody() {
 
 async function loadHandler(
 	options: {
-		parseImpl?: ReturnType<typeof vi.fn>
-		createImpl?: ReturnType<typeof vi.fn>
+		generateTextImpl?: ReturnType<typeof vi.fn>
 		body?: unknown
 	} = {}
 ) {
 	vi.resetModules()
 
-	const parseImpl =
-		options.parseImpl ??
+	const generateTextImpl =
+		options.generateTextImpl ??
 		vi.fn().mockResolvedValue({
-			status: 'completed',
-			output_parsed: {
+			output: {
 				briefing: '  AI briefing  '
 			}
 		})
-	const createImpl = options.createImpl ?? vi.fn()
+	const outputObjectMock = vi.fn((value: unknown) => value)
 	const assertTurnstileTokenMock = vi.fn().mockResolvedValue(undefined)
+	const resolveAiProviderMock = vi.fn().mockReturnValue({
+		provider: 'openai',
+		model: 'gpt-test',
+		languageModel: { mocked: true }
+	})
 
 	vi.stubGlobal('defineEventHandler', (handler: unknown) => handler)
 	vi.stubGlobal(
@@ -56,16 +59,14 @@ async function loadHandler(
 		return error
 	})
 
-	vi.doMock('~~/server/utils/ai/openai', () => ({
-		getOpenAiClient: () => ({
-			model: 'gpt-test',
-			client: {
-				responses: {
-					parse: parseImpl,
-					create: createImpl
-				}
-			}
-		})
+	vi.doMock('ai', () => ({
+		generateText: generateTextImpl,
+		Output: {
+			object: outputObjectMock
+		}
+	}))
+	vi.doMock('~~/server/utils/ai/provider', () => ({
+		resolveAiProvider: resolveAiProviderMock
 	}))
 	vi.doMock('~~/server/utils/ai/briefing', () => ({
 		formatBriefingInput: () => 'Genereer briefing'
@@ -84,15 +85,22 @@ async function loadHandler(
 	const module = await import('~~/server/api/ai/briefing.post')
 	return {
 		handler: module.default,
-		parseImpl,
-		createImpl,
-		assertTurnstileTokenMock
+		generateTextImpl,
+		assertTurnstileTokenMock,
+		resolveAiProviderMock,
+		outputObjectMock
 	}
 }
 
 describe('POST /api/ai/briefing', () => {
 	it('returns structured briefing output', async () => {
-		const { handler, parseImpl, createImpl, assertTurnstileTokenMock } = await loadHandler()
+		const {
+			handler,
+			generateTextImpl,
+			assertTurnstileTokenMock,
+			resolveAiProviderMock,
+			outputObjectMock
+		} = await loadHandler()
 
 		const result = await handler({} as never)
 
@@ -100,86 +108,49 @@ describe('POST /api/ai/briefing', () => {
 			briefing: 'AI briefing',
 			wordCount: 2
 		})
-		expect(parseImpl).toHaveBeenCalledTimes(1)
-		expect(createImpl).not.toHaveBeenCalled()
+		expect(resolveAiProviderMock).toHaveBeenCalledWith({})
+		expect(generateTextImpl).toHaveBeenCalledTimes(1)
+		expect(outputObjectMock).toHaveBeenCalledTimes(1)
 		expect(assertTurnstileTokenMock).toHaveBeenCalledWith({}, 'ai_briefing')
 	})
 
-	it('retries with increased token budget after incomplete max-output response', async () => {
-		const parseImpl = vi
-			.fn()
-			.mockResolvedValueOnce({
-				status: 'incomplete',
-				output_parsed: null,
-				output_text: '',
-				incomplete_details: { reason: 'max_output_tokens' }
-			})
-			.mockResolvedValueOnce({
-				status: 'completed',
-				output_parsed: {
-					briefing: 'Tweede poging briefing'
+	it('accepts nested structured briefing output returned by provider', async () => {
+		const generateTextImpl = vi.fn().mockResolvedValue({
+			output: {
+				briefing: {
+					briefing: '  Geneste briefing  '
 				}
-			})
-
-		const { handler } = await loadHandler({ parseImpl })
-		const result = await handler({} as never)
-
-		expect(result.briefing).toBe('Tweede poging briefing')
-		expect(parseImpl).toHaveBeenCalledTimes(2)
-		expect(parseImpl.mock.calls[0]?.[0]?.max_output_tokens).toBe(
-			AI_OPENAI_CONFIG.briefingRequest.maxOutputTokens
-		)
-		expect(parseImpl.mock.calls[1]?.[0]?.max_output_tokens).toBe(
-			AI_OPENAI_CONFIG.briefingRequest.maxOutputTokensOnIncompleteRetry
-		)
-	})
-
-	it('uses the configured medium request budget', async () => {
-		const parseImpl = vi.fn().mockResolvedValue({
-			status: 'completed',
-			output_parsed: {
-				briefing: 'Lage inspanning briefing'
 			}
 		})
+		const { handler } = await loadHandler({ generateTextImpl })
 
-		const { handler } = await loadHandler({ parseImpl })
-		await handler({} as never)
-
-		expect(parseImpl.mock.calls[0]?.[0]?.max_output_tokens).toBe(
-			AI_OPENAI_CONFIG.briefingRequest.maxOutputTokens
-		)
-		expect(parseImpl.mock.calls[0]?.[0]?.reasoning?.effort).toBe(
-			AI_OPENAI_CONFIG.briefingRequest.reasoningEffort
-		)
-	})
-
-	it('falls back to plain response mode when structured parse throws JSON syntax error', async () => {
-		const parseImpl = vi.fn().mockRejectedValue(new SyntaxError('Unexpected token in JSON'))
-		const createImpl = vi.fn().mockResolvedValue({
-			status: 'completed',
-			output_parsed: null,
-			output_text: '{"briefing":"Fallback briefing"}'
-		})
-
-		const { handler } = await loadHandler({ parseImpl, createImpl })
 		const result = await handler({} as never)
 
 		expect(result).toEqual({
-			briefing: 'Fallback briefing',
+			briefing: 'Geneste briefing',
 			wordCount: 2
 		})
-		expect(parseImpl).toHaveBeenCalledTimes(1)
-		expect(createImpl).toHaveBeenCalledTimes(1)
+		expect(generateTextImpl).toHaveBeenCalledTimes(1)
 	})
 
-	it('throws a 502 when no structured output and no fallback text are returned', async () => {
-		const parseImpl = vi.fn().mockResolvedValue({
-			status: 'completed',
-			output_parsed: null,
-			output_text: ''
-		})
+	it('uses the configured request budget', async () => {
+		const { handler, generateTextImpl } = await loadHandler()
+		await handler({} as never)
 
-		const { handler } = await loadHandler({ parseImpl })
+		expect(generateTextImpl.mock.calls[0]?.[0]?.maxOutputTokens).toBe(
+			AI_ROUTE_REQUEST_CONFIG.briefingRequest.maxOutputTokens
+		)
+		expect(generateTextImpl.mock.calls[0]?.[0]?.temperature).toBe(
+			AI_ROUTE_REQUEST_CONFIG.briefingRequest.temperature
+		)
+		expect(generateTextImpl.mock.calls[0]?.[0]?.maxRetries).toBe(
+			AI_ROUTE_REQUEST_CONFIG.briefingRequest.maxRetries
+		)
+	})
+
+	it('throws a 502 when generation fails', async () => {
+		const generateTextImpl = vi.fn().mockRejectedValue(new Error('provider failure'))
+		const { handler } = await loadHandler({ generateTextImpl })
 
 		await expect(handler({} as never)).rejects.toMatchObject({
 			statusCode: 502,
@@ -187,19 +158,47 @@ describe('POST /api/ai/briefing', () => {
 		})
 	})
 
-	it('uses plain-text fallback when output_text is not valid JSON payload', async () => {
-		const parseImpl = vi.fn().mockResolvedValue({
-			status: 'completed',
-			output_parsed: null,
-			output_text: '{"briefing":'
-		})
+	it('falls back to plain-text mode when structured output does not match schema', async () => {
+		const generateTextImpl = vi
+			.fn()
+			.mockRejectedValueOnce(new Error('No object generated: response did not match schema.'))
+			.mockResolvedValueOnce({ text: 'Fallback briefing tekst' })
+		const { handler } = await loadHandler({ generateTextImpl })
 
-		const { handler } = await loadHandler({ parseImpl })
 		const result = await handler({} as never)
 
 		expect(result).toEqual({
-			briefing: '{"briefing":',
-			wordCount: 1
+			briefing: 'Fallback briefing tekst',
+			wordCount: 3
 		})
+		expect(generateTextImpl).toHaveBeenCalledTimes(2)
+	})
+
+	it('throws a 502 when plain-text fallback generation fails', async () => {
+		const generateTextImpl = vi
+			.fn()
+			.mockRejectedValueOnce(new Error('No object generated: response did not match schema.'))
+			.mockRejectedValueOnce(new Error('fallback provider failure'))
+		const { handler } = await loadHandler({ generateTextImpl })
+
+		await expect(handler({} as never)).rejects.toMatchObject({
+			statusCode: 502,
+			statusMessage: 'AI briefing could not be generated'
+		})
+		expect(generateTextImpl).toHaveBeenCalledTimes(2)
+	})
+
+	it('throws a 502 when plain-text fallback returns empty text', async () => {
+		const generateTextImpl = vi
+			.fn()
+			.mockRejectedValueOnce(new Error('No object generated: response did not match schema.'))
+			.mockResolvedValueOnce({ text: '   ' })
+		const { handler } = await loadHandler({ generateTextImpl })
+
+		await expect(handler({} as never)).rejects.toMatchObject({
+			statusCode: 502,
+			statusMessage: 'AI briefing could not be generated'
+		})
+		expect(generateTextImpl).toHaveBeenCalledTimes(2)
 	})
 })
