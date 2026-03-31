@@ -10,7 +10,6 @@ Implemented:
 - Client-side Sentry initialization for issues, tracing, and session replay.
 - Cloudflare Nitro server plugin for server-side error and trace capture.
 - Source map upload configuration at Nuxt build time.
-- OpenAI SDK instrumentation at the shared AI client boundary.
 - Zod validation error enrichment for captured exceptions.
 - Test route + test page for manual verification.
 
@@ -21,7 +20,7 @@ Main integration files:
 - [nuxt.config.ts](../../nuxt.config.ts)
 - [sentry.client.config.ts](../../sentry.client.config.ts)
 - [server/plugins/sentry-cloudflare-plugin.ts](../../server/plugins/sentry-cloudflare-plugin.ts)
-- [server/utils/ai/openai.ts](../../server/utils/ai/openai.ts)
+- [server/utils/ai/provider.ts](../../server/utils/ai/provider.ts)
 - [server/api/\_sentry/trigger-error.get.ts](../../server/api/_sentry/trigger-error.get.ts)
 - [app/pages/(misc)/\_sentry.vue](<../../app/pages/(misc)/_sentry.vue>)
 
@@ -30,10 +29,12 @@ Main integration files:
 Sentry configuration is split intentionally:
 
 - Build-time Sentry plugin config in `nuxt.config.ts`:
+  - `sentry.enabled` (from `SENTRY_ENABLED`, default `true`)
   - `sentry.org`
   - `sentry.project`
   - `sentry.authToken`
 - Runtime Sentry config in `runtimeConfig.public.sentry`:
+  - `enabled`
   - `dsn`
   - `release`
   - `environment`
@@ -67,12 +68,6 @@ Configured:
 - `replayIntegration` (client)
 - `zodErrorsIntegration` (client + server)
 - `httpClientIntegration` (client)
-- OpenAI manual instrumentation via `Sentry.instrumentOpenAiClient(...)` in shared AI client factory
-
-OpenAI instrumentation defaults in this project:
-
-- `recordInputs: false`
-- `recordOutputs: false`
 
 ## Source Maps
 
@@ -106,6 +101,7 @@ For this project’s Nitro `cloudflare_module` preset:
 
 ## Required Environment Variables
 
+- `SENTRY_ENABLED` (optional; `true` | `false`, defaults to `true`)
 - `SENTRY_AUTH_TOKEN` (build-time source map upload auth)
 - `SENTRY_PROJECT` (build-time project slug)
 - `SENTRY_ORG` (build-time organization slug)

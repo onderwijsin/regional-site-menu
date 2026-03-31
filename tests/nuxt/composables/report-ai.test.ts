@@ -58,6 +58,8 @@ describe('useReportAi', () => {
 		expect(getEstimatedAnalysisDurationMs(10)).toBe(64_200)
 		expect(getEstimatedAnalysisDurationMs(50)).toBe(64_200)
 		expect(getEstimatedBriefingDurationMs()).toBe(25_000)
+		expect(getEstimatedAnalysisDurationMs(1, 0.5)).toBe(16_350)
+		expect(getEstimatedBriefingDurationMs(1.5)).toBe(37_500)
 	})
 
 	it('runs analysis + briefing flow and marks progress stages as completed', async () => {

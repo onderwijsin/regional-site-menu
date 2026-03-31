@@ -1,26 +1,22 @@
-import { AI_OPENAI_CONFIG } from '@ai'
+import { AI_ROUTE_REQUEST_CONFIG } from '@ai'
 import {
 	AI_WEBSITE_ANALYSIS_DEFAULT_PAGES,
 	AiWebsiteAnalysisRequestSchema,
 	AiWebsiteAnalysisResponseSchema
 } from '@schema/reportAi'
-import * as Sentry from '@sentry/nuxt'
-import { zodTextFormat } from 'openai/helpers/zod'
-
-import { createAllowedDomains, formatWebsiteAnalysisInput } from '../../utils/ai/analysis'
+import { createAllowedDomains, formatWebsiteAnalysisInput } from '@server/utils/ai/analysis'
 import {
 	renderWebsiteAnalysisMarkdown,
 	WebsiteAnalysisOutputSchema
-} from '../../utils/ai/analysis-output'
-import { getOpenAiClient } from '../../utils/ai/openai'
-import { getAiSystemPrompt } from '../../utils/ai/prompts'
-import { fetchLlmsFullReferenceDocument } from '../../utils/ai/reference'
-import { extractResponseRefusalText, readRecordField } from '../../utils/ai/response'
-import { requestAiRouteResponseWithRetry } from '../../utils/ai/route-request'
-import { countWords, sanitizeAiMarkdown } from '../../utils/ai/text'
-import { crawlWebsiteForAnalysis } from '../../utils/crawler/website'
-import { createServerExecutionTimer } from '../../utils/observability/timing'
-import { assertTurnstileToken } from '../../utils/security/turnstile'
+} from '@server/utils/ai/analysis-output'
+import { getAiSystemPrompt } from '@server/utils/ai/prompts'
+import { resolveAiProvider } from '@server/utils/ai/provider'
+import { fetchLlmsFullReferenceDocument } from '@server/utils/ai/reference'
+import { countWords, sanitizeAiMarkdown } from '@server/utils/ai/text'
+import { crawlWebsiteForAnalysis } from '@server/utils/crawler/website'
+import { createServerExecutionTimer } from '@server/utils/observability/timing'
+import { assertTurnstileToken } from '@server/utils/security/turnstile'
+import { generateText, Output } from 'ai'
 
 /**
  * Controller for `POST /api/ai/website-analysis`.
@@ -29,7 +25,7 @@ import { assertTurnstileToken } from '../../utils/security/turnstile'
  * 1. Validate request payload.
  * 2. Crawl the requested domain server-side (same-domain, capped, deterministic).
  * 3. Resolve system prompt + llms reference document.
- * 4. Ask OpenAI to analyze only the crawled context.
+ * 4. Ask the configured AI SDK provider to analyze only the crawled context.
  * 5. Return typed response contract with explicit evidence URLs.
  *
  * Route responsibilities are intentionally domain/controller-level only. Helper
@@ -48,7 +44,7 @@ export default defineEventHandler(async (event) => {
 		// 1) Boundary validation.
 		const body = await readBody(event)
 		const input = AiWebsiteAnalysisRequestSchema.parse(body)
-		const requestConfig = AI_OPENAI_CONFIG.analysisRequest
+		const requestConfig = AI_ROUTE_REQUEST_CONFIG.analysisRequest
 		timer.mark('request_validated')
 
 		const maxPages = input.maxPages ?? AI_WEBSITE_ANALYSIS_DEFAULT_PAGES
@@ -83,8 +79,7 @@ export default defineEventHandler(async (event) => {
 		const referenceDocument = await fetchLlmsFullReferenceDocument(event)
 		timer.mark('reference_document_loaded')
 
-		// 4) Create OpenAI client bound to runtime secrets/model configuration.
-		const { client, model } = getOpenAiClient(event, { useCase: 'website-analysis' })
+		const { provider, model, languageModel } = resolveAiProvider(event)
 		const userPrompt = formatWebsiteAnalysisInput({
 			url: input.url,
 			region: input.region,
@@ -92,174 +87,48 @@ export default defineEventHandler(async (event) => {
 			maxPages,
 			crawledPages: evidencePages
 		})
-		timer.mark('request_composed', { model })
-
-		const { response, didRetryAfterIncomplete } = await requestAiRouteResponseWithRetry({
-			label: 'website-analysis',
-			model,
-			requestConfig,
-			requestStructured: async ({
-				maxOutputTokens,
-				includeReasoning,
-				reasoningEffort,
-				includeVerbosity,
-				verbosity
-			}) =>
-				await client.responses.parse(
-					{
-						model,
-						max_output_tokens: maxOutputTokens,
-						...(includeReasoning
-							? {
-									reasoning: {
-										effort: reasoningEffort
-									}
-								}
-							: {}),
-						text: {
-							...(includeVerbosity ? { verbosity } : {}),
-							format: zodTextFormat(
-								WebsiteAnalysisOutputSchema,
-								'website_analysis_output'
-							)
-						},
-						input: [
-							{
-								role: 'system',
-								content: systemPrompt
-							},
-							{
-								role: 'user',
-								content: userPrompt
-							}
-						]
-					},
-					{
-						maxRetries: requestConfig.maxRetries
-					}
-				),
-			requestPlain: async ({
-				maxOutputTokens,
-				includeReasoning,
-				reasoningEffort,
-				includeVerbosity,
-				verbosity
-			}) => {
-				const plainResponse = await client.responses.create(
-					{
-						model,
-						max_output_tokens: maxOutputTokens,
-						...(includeReasoning
-							? {
-									reasoning: {
-										effort: reasoningEffort
-									}
-								}
-							: {}),
-						text: includeVerbosity ? { verbosity } : undefined,
-						input: [
-							{
-								role: 'system',
-								content: systemPrompt
-							},
-							{
-								role: 'user',
-								content: userPrompt
-							}
-						]
-					},
-					{
-						maxRetries: requestConfig.maxRetries
-					}
-				)
-
-				return {
-					...plainResponse,
-					output_parsed: null
-				} as Awaited<ReturnType<typeof client.responses.parse>>
-			},
-			onResponseReceived: ({ isRetry, maxOutputTokens, reasoningEffort, verbosity }) => {
-				timer.mark(
-					isRetry ? 'openai_response_retry_received' : 'openai_response_received',
-					{
-						model,
-						maxOutputTokens,
-						reasoningEffort,
-						verbosity
-					}
-				)
-			}
-		})
+		timer.mark('request_composed', { model, provider })
 
 		let analysis: string
-		let analysisSource: 'structured' | 'json_text_fallback' | 'plain_text_fallback'
-		if (response.output_parsed) {
-			const parsedOutput = WebsiteAnalysisOutputSchema.parse(response.output_parsed)
-			analysis = sanitizeAiMarkdown(renderWebsiteAnalysisMarkdown(parsedOutput))
-			analysisSource = 'structured'
-		} else {
-			const fallbackText = response.output_text?.trim()
-			if (fallbackText) {
-				const parsedFromJsonText = tryParseWebsiteAnalysisOutputFromText(fallbackText)
-				if (parsedFromJsonText) {
-					analysis = sanitizeAiMarkdown(renderWebsiteAnalysisMarkdown(parsedFromJsonText))
-					analysisSource = 'json_text_fallback'
-					console.warn(
-						'[AI] website-analysis used JSON-text fallback after empty structured parse result',
-						{ model }
-					)
-					Sentry.withScope((scope) => {
-						scope.setLevel('warning')
-						scope.setTag('area', 'ai')
-						scope.setTag('kind', 'response_fallback')
-						scope.setTag('ai_label', 'website-analysis')
-						scope.setTag('ai_model', model)
-						scope.setTag('response_fallback_type', 'json_text_fallback')
-						Sentry.captureMessage(
-							'[AI] website-analysis used JSON-text fallback after empty structured parse result'
-						)
-					})
-				} else {
-					analysis = sanitizeAiMarkdown(fallbackText)
-					analysisSource = 'plain_text_fallback'
-					console.warn(
-						'[AI] website-analysis used plain-text fallback after empty structured parse result',
-						{
-							model
-						}
-					)
-					Sentry.withScope((scope) => {
-						scope.setLevel('warning')
-						scope.setTag('area', 'ai')
-						scope.setTag('kind', 'response_fallback')
-						scope.setTag('ai_label', 'website-analysis')
-						scope.setTag('ai_model', model)
-						scope.setTag('response_fallback_type', 'plain_text_fallback')
-						Sentry.captureMessage(
-							'[AI] website-analysis used plain-text fallback after empty structured parse result'
-						)
-					})
-				}
-			} else {
-				console.error(
-					'[AI] website-analysis returned no structured output and no output_text',
-					{
-						model,
-						status: response.status,
-						incompleteDetails: readRecordField(response, 'incomplete_details'),
-						refusal: extractResponseRefusalText(response)
-					}
-				)
-				throw createError({
-					statusCode: 502,
-					statusMessage: 'AI website analysis could not be generated'
+		try {
+			const { output } = await generateText({
+				model: languageModel,
+				system: systemPrompt,
+				prompt: userPrompt,
+				maxOutputTokens: requestConfig.maxOutputTokens,
+				temperature: requestConfig.temperature,
+				maxRetries: requestConfig.maxRetries,
+				output: Output.object({
+					schema: WebsiteAnalysisOutputSchema,
+					name: 'website_analysis_output',
+					description:
+						'Generate structured Dutch website analysis sections with concise, evidence-based markdown content.'
 				})
-			}
+			})
+
+			const parsedOutput = WebsiteAnalysisOutputSchema.parse(output)
+			analysis = sanitizeAiMarkdown(renderWebsiteAnalysisMarkdown(parsedOutput))
+		} catch (error: unknown) {
+			console.error('[AI] website-analysis generation failed', {
+				provider,
+				model,
+				errorMessage: error instanceof Error ? error.message : undefined
+			})
+			throw createError({
+				statusCode: 502,
+				statusMessage: 'AI website analysis could not be generated'
+			})
 		}
+
+		timer.mark('ai_response_received', {
+			model,
+			provider,
+			maxOutputTokens: requestConfig.maxOutputTokens
+		})
 
 		const wordCount = countWords(analysis)
 		timer.mark('response_normalized', {
-			analysisSource,
+			analysisSource: 'structured',
 			wordCount
 		})
 
@@ -285,8 +154,8 @@ export default defineEventHandler(async (event) => {
 			analysedPages: result.analysedPages.length
 		})
 		timer.done({
-			didRetryAfterIncomplete,
-			model
+			model,
+			provider
 		})
 		return result
 	} catch (error: unknown) {
@@ -311,24 +180,4 @@ function hasPageEvidence(page: { excerpt: string; fullContent: string }): boolea
 		.replace(/\s+/g, ' ')
 		.trim()
 	return textFromSemanticHtml.length > 0
-}
-
-/**
- * Tries to parse structured analysis payload from a text response.
- *
- * @param text - Raw output text.
- * @returns Structured output when valid, otherwise null.
- */
-function tryParseWebsiteAnalysisOutputFromText(
-	text: string
-): (typeof WebsiteAnalysisOutputSchema)['_output'] | null {
-	const normalized = sanitizeAiMarkdown(text)
-
-	try {
-		const parsedJson = JSON.parse(normalized)
-		const parsed = WebsiteAnalysisOutputSchema.safeParse(parsedJson)
-		return parsed.success ? parsed.data : null
-	} catch {
-		return null
-	}
 }

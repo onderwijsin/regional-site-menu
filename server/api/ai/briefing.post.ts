@@ -1,17 +1,13 @@
-import { AI_OPENAI_CONFIG } from '@ai'
+import { AI_ROUTE_REQUEST_CONFIG } from '@ai'
 import { AiBriefingRequestSchema, AiBriefingResponseSchema } from '@schema/reportAi'
-import * as Sentry from '@sentry/nuxt'
-import { zodTextFormat } from 'openai/helpers/zod'
+import { formatBriefingInput } from '@server/utils/ai/briefing'
+import { getAiSystemPrompt } from '@server/utils/ai/prompts'
+import { resolveAiProvider } from '@server/utils/ai/provider'
+import { countWords, sanitizeAiMarkdown } from '@server/utils/ai/text'
+import { createServerExecutionTimer } from '@server/utils/observability/timing'
+import { assertTurnstileToken } from '@server/utils/security/turnstile'
+import { generateText, Output } from 'ai'
 import { z } from 'zod'
-
-import { formatBriefingInput } from '../../utils/ai/briefing'
-import { getOpenAiClient } from '../../utils/ai/openai'
-import { getAiSystemPrompt } from '../../utils/ai/prompts'
-import { extractResponseRefusalText, readRecordField } from '../../utils/ai/response'
-import { requestAiRouteResponseWithRetry } from '../../utils/ai/route-request'
-import { countWords, sanitizeAiMarkdown } from '../../utils/ai/text'
-import { createServerExecutionTimer } from '../../utils/observability/timing'
-import { assertTurnstileToken } from '../../utils/security/turnstile'
 
 /**
  * Structured response shape expected from the LLM.
@@ -20,7 +16,12 @@ import { assertTurnstileToken } from '../../utils/security/turnstile'
  * deterministically before it enters the UI / PDF pipeline.
  */
 const BriefingOutputSchema = z.object({
-	briefing: z.string().min(1)
+	briefing: z.union([
+		z.string().min(1),
+		z.object({
+			briefing: z.string().min(1)
+		})
+	])
 })
 
 /**
@@ -29,7 +30,7 @@ const BriefingOutputSchema = z.object({
  * Flow:
  * 1. Parse and validate the inbound payload with Zod.
  * 2. Resolve the editable system prompt from the server prompt registry.
- * 3. Build model input and request structured output from OpenAI.
+ * 3. Build model input and request structured output from the AI SDK.
  * 4. Normalize markdown text and compute word count.
  * 5. Validate and return the public API response shape.
  *
@@ -48,7 +49,7 @@ export default defineEventHandler(async (event) => {
 		// 1) Boundary validation: fail fast on malformed payloads.
 		const body = await readBody(event)
 		const input = AiBriefingRequestSchema.parse(body)
-		const requestConfig = AI_OPENAI_CONFIG.briefingRequest
+		const requestConfig = AI_ROUTE_REQUEST_CONFIG.briefingRequest
 		timer.mark('request_validated')
 
 		// 2) Load system prompt from server-side prompt content.
@@ -56,169 +57,99 @@ export default defineEventHandler(async (event) => {
 		timer.mark('system_prompt_loaded')
 
 		// 3) Compose model input from validated request data.
-		const { client, model } = getOpenAiClient(event, { useCase: 'briefing' })
+		const { provider, model, languageModel } = resolveAiProvider(event)
 		const userPrompt = formatBriefingInput(input)
-		timer.mark('request_composed', { model })
+		timer.mark('request_composed', { model, provider })
 
-		// 4) Request a structured response so parsing is deterministic.
-		const { response, didRetryAfterIncomplete } = await requestAiRouteResponseWithRetry({
-			label: 'briefing',
-			model,
-			requestConfig,
-			requestStructured: async ({
-				maxOutputTokens,
-				includeReasoning,
-				reasoningEffort,
-				includeVerbosity,
-				verbosity
-			}) =>
-				await client.responses.parse(
-					{
-						model,
-						max_output_tokens: maxOutputTokens,
-						...(includeReasoning
-							? {
-									reasoning: {
-										effort: reasoningEffort
-									}
-								}
-							: {}),
-						input: [
-							{
-								role: 'system',
-								content: systemPrompt
-							},
-							{
-								role: 'user',
-								content: userPrompt
-							}
-						],
-						text: {
-							...(includeVerbosity ? { verbosity } : {}),
-							format: zodTextFormat(BriefingOutputSchema, 'briefing_output')
-						}
-					},
-					{
-						maxRetries: requestConfig.maxRetries
-					}
-				),
-			requestPlain: async ({
-				maxOutputTokens,
-				includeReasoning,
-				reasoningEffort,
-				includeVerbosity,
-				verbosity
-			}) => {
-				const plainResponse = await client.responses.create(
-					{
-						model,
-						max_output_tokens: maxOutputTokens,
-						...(includeReasoning
-							? {
-									reasoning: {
-										effort: reasoningEffort
-									}
-								}
-							: {}),
-						input: [
-							{
-								role: 'system',
-								content: systemPrompt
-							},
-							{
-								role: 'user',
-								content: userPrompt
-							}
-						],
-						text: includeVerbosity ? { verbosity } : undefined
-					},
-					{
-						maxRetries: requestConfig.maxRetries
-					}
-				)
-
-				return {
-					...plainResponse,
-					output_parsed: null
-				} as Awaited<ReturnType<typeof client.responses.parse>>
-			},
-			onResponseReceived: ({ isRetry, maxOutputTokens, reasoningEffort, verbosity }) => {
-				timer.mark(
-					isRetry ? 'openai_response_retry_received' : 'openai_response_received',
-					{
-						model,
-						maxOutputTokens,
-						reasoningEffort,
-						verbosity
-					}
-				)
-			}
-		})
-
+		// 4) Request structured output via AI SDK Core.
 		let briefing: string
-		let briefingSource: 'structured' | 'json_text_fallback' | 'plain_text_fallback'
-		if (response.output_parsed) {
-			const parsedOutput = BriefingOutputSchema.parse(response.output_parsed)
-			briefing = sanitizeAiMarkdown(parsedOutput.briefing)
-			briefingSource = 'structured'
-		} else {
-			const fallbackText = response.output_text?.trim()
-			if (fallbackText) {
-				const parsedFromJsonText = tryParseBriefingOutputFromText(fallbackText)
-				if (parsedFromJsonText) {
-					briefing = sanitizeAiMarkdown(parsedFromJsonText.briefing)
-					briefingSource = 'json_text_fallback'
-					console.warn(
-						'[AI] briefing used JSON-text fallback after empty structured parse result',
-						{
-							model
-						}
-					)
-					Sentry.withScope((scope) => {
-						scope.setLevel('warning')
-						scope.setTag('area', 'ai')
-						scope.setTag('kind', 'response_fallback')
-						scope.setTag('ai_label', 'briefing')
-						scope.setTag('ai_model', model)
-						scope.setTag('response_fallback_type', 'json_text_fallback')
-						Sentry.captureMessage(
-							'[AI] briefing used JSON-text fallback after empty structured parse result'
-						)
-					})
-				} else {
-					briefing = sanitizeAiMarkdown(fallbackText)
-					briefingSource = 'plain_text_fallback'
-					console.warn(
-						'[AI] briefing used plain-text fallback after empty structured parse result',
-						{
-							model
-						}
-					)
-					Sentry.withScope((scope) => {
-						scope.setLevel('warning')
-						scope.setTag('area', 'ai')
-						scope.setTag('kind', 'response_fallback')
-						scope.setTag('ai_label', 'briefing')
-						scope.setTag('ai_model', model)
-						scope.setTag('response_fallback_type', 'plain_text_fallback')
-						Sentry.captureMessage(
-							'[AI] briefing used plain-text fallback after empty structured parse result'
-						)
-					})
-				}
-			} else {
-				console.error('[AI] briefing returned no structured output and no output_text', {
+		let briefingSource: 'structured' | 'plain_text_fallback' = 'structured'
+		try {
+			const { output } = await generateText({
+				model: languageModel,
+				system: systemPrompt,
+				prompt: userPrompt,
+				maxOutputTokens: requestConfig.maxOutputTokens,
+				temperature: requestConfig.temperature,
+				maxRetries: requestConfig.maxRetries,
+				output: Output.object({
+					schema: BriefingOutputSchema,
+					name: 'briefing_output',
+					description:
+						'Generate a structured Dutch implementation briefing with one markdown field: briefing.'
+				})
+			})
+
+			const parsedOutput = BriefingOutputSchema.parse(output)
+			const briefingValue =
+				typeof parsedOutput.briefing === 'string'
+					? parsedOutput.briefing
+					: parsedOutput.briefing.briefing
+			briefing = sanitizeAiMarkdown(briefingValue)
+		} catch (error: unknown) {
+			const isStructuredOutputMismatch =
+				error instanceof Error &&
+				error.message.toLowerCase().includes('no object generated')
+			if (!isStructuredOutputMismatch) {
+				console.error('[AI] briefing generation failed', {
+					provider,
 					model,
-					status: response.status,
-					incompleteDetails: readRecordField(response, 'incomplete_details'),
-					refusal: extractResponseRefusalText(response)
+					errorMessage: error instanceof Error ? error.message : undefined
 				})
 				throw createError({
 					statusCode: 502,
 					statusMessage: 'AI briefing could not be generated'
 				})
 			}
+
+			console.warn(
+				'[AI] briefing structured output failed, retrying with plain-text fallback mode',
+				{
+					provider,
+					model,
+					errorName: error instanceof Error ? error.name : undefined,
+					errorMessage: error instanceof Error ? error.message : undefined
+				}
+			)
+			let plainTextFallback = ''
+			try {
+				const { text } = await generateText({
+					model: languageModel,
+					system: systemPrompt,
+					prompt: userPrompt,
+					maxOutputTokens: requestConfig.maxOutputTokens,
+					temperature: requestConfig.temperature,
+					maxRetries: requestConfig.maxRetries
+				})
+				plainTextFallback = text.trim()
+			} catch (fallbackError: unknown) {
+				console.error('[AI] briefing plain-text fallback generation failed', {
+					provider,
+					model,
+					errorMessage: fallbackError instanceof Error ? fallbackError.message : undefined
+				})
+				throw createError({
+					statusCode: 502,
+					statusMessage: 'AI briefing could not be generated'
+				})
+			}
+
+			if (!plainTextFallback) {
+				throw createError({
+					statusCode: 502,
+					statusMessage: 'AI briefing could not be generated'
+				})
+			}
+
+			briefing = sanitizeAiMarkdown(plainTextFallback)
+			briefingSource = 'plain_text_fallback'
 		}
+
+		timer.mark('ai_response_received', {
+			model,
+			provider,
+			maxOutputTokens: requestConfig.maxOutputTokens
+		})
 
 		const wordCount = countWords(briefing)
 		timer.mark('response_normalized', {
@@ -232,8 +163,8 @@ export default defineEventHandler(async (event) => {
 		})
 		timer.mark('response_validated')
 		timer.done({
-			didRetryAfterIncomplete,
-			model
+			model,
+			provider
 		})
 		return result
 	} catch (error: unknown) {
@@ -241,23 +172,3 @@ export default defineEventHandler(async (event) => {
 		throw error
 	}
 })
-
-/**
- * Tries to parse structured briefing payload from a text response.
- *
- * @param text - Raw output text.
- * @returns Structured output when valid, otherwise null.
- */
-function tryParseBriefingOutputFromText(
-	text: string
-): (typeof BriefingOutputSchema)['_output'] | null {
-	const normalized = sanitizeAiMarkdown(text)
-
-	try {
-		const parsedJson = JSON.parse(normalized)
-		const parsed = BriefingOutputSchema.safeParse(parsedJson)
-		return parsed.success ? parsed.data : null
-	} catch {
-		return null
-	}
-}

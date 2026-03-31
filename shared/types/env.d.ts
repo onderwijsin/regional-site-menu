@@ -57,12 +57,14 @@ declare global {
 			DISABLE_TRACKING?: 'true' | 'false'
 
 			/**
-			 * OpenAI integration
+			 * AI provider integration
 			 */
-			OPENAI_API_KEY: string
+			AI_PROVIDER?: 'openai' | 'mistral'
+			AI_TIMING_MULTIPLIER?: string
+			OPENAI_API_KEY?: string
 			OPENAI_MODEL?: string
-			OPENAI_MODEL_WEBSITE_ANALYSIS?: string
-			OPENAI_MODEL_BRIEFING?: string
+			MISTRAL_API_KEY?: string
+			MISTRAL_MODEL?: string
 
 			/**
 			 * Datahub
@@ -85,6 +87,7 @@ declare global {
 			SENTRY_ORG?: string
 			SENTRY_DSN?: string
 			SENTRY_RELEASE?: string
+			SENTRY_ENABLED?: 'true' | 'false'
 			SENTRY_UPLOAD_SOURCE_MAPS?: 'true' | 'false'
 		}
 	}

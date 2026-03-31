@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest'
 
-async function loadSentryCloudflarePlugin() {
+async function loadSentryCloudflarePlugin(options: { sentryEnabled?: boolean } = {}) {
 	vi.resetModules()
 
 	const zodErrorsIntegrationMock = vi.fn(() => ({ name: 'zod-errors-integration' }))
@@ -11,6 +11,7 @@ async function loadSentryCloudflarePlugin() {
 	const useRuntimeConfigMock = vi.fn(() => ({
 		public: {
 			sentry: {
+				enabled: options.sentryEnabled ?? true,
 				dsn: 'https://dsn.example/123',
 				release: '1.2.3',
 				environment: 'production'
@@ -65,5 +66,21 @@ describe('server/plugins/sentry-cloudflare-plugin', () => {
 			tracesSampleRate: 1,
 			integrations: [{ name: 'zod-errors-integration' }]
 		})
+	})
+
+	it('skips sentry plugin setup when sentry is disabled', async () => {
+		const {
+			pluginFactory,
+			zodErrorsIntegrationMock,
+			sentryCloudflareNitroPluginMock,
+			useRuntimeConfigMock
+		} = await loadSentryCloudflarePlugin({ sentryEnabled: false })
+
+		const config = pluginFactory()
+
+		expect(useRuntimeConfigMock).toHaveBeenCalledTimes(1)
+		expect(sentryCloudflareNitroPluginMock).not.toHaveBeenCalled()
+		expect(zodErrorsIntegrationMock).not.toHaveBeenCalled()
+		expect(config).toBeUndefined()
 	})
 })

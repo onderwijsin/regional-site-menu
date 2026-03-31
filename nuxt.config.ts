@@ -5,7 +5,7 @@ import { fileURLToPath } from 'node:url'
 
 import { joinURL, parseURL } from 'ufo'
 
-import { AI_OPENAI_CONFIG } from './config/ai'
+import { AI_PROVIDER_CONFIG } from './config/ai-providers'
 import { NUXT_BEHAVIOR_CONFIG } from './config/constants'
 import { app } from './config/head'
 import { siteDescription, siteTitle } from './config/indentity'
@@ -32,6 +32,15 @@ function resolveSentryEnvironment(value: Mode): 'development' | 'production' | '
 	}
 }
 
+function resolveAiTimingMultiplier(value: string | undefined): number {
+	const parsed = Number(value)
+	if (!Number.isFinite(parsed) || parsed <= 0) {
+		return 1
+	}
+
+	return parsed
+}
+
 // Runtime modes
 const mode = resolveMode(process.env.MODE)
 const sentryEnvironment = resolveSentryEnvironment(mode)
@@ -40,6 +49,8 @@ const isProd = mode === 'prod'
 const isPreview = mode === 'preview'
 const isDev = mode === 'dev'
 const isTest = process.env.NODE_ENV === 'test' || process.env.VITEST === 'true'
+const sentryEnabled = process.env.SENTRY_ENABLED !== 'false'
+const aiTimingMultiplier = resolveAiTimingMultiplier(process.env.AI_TIMING_MULTIPLIER)
 
 // Resolve Turnstile keys
 const turnstileSiteKey =
@@ -80,6 +91,7 @@ export default defineNuxtConfig({
 	},
 
 	alias: {
+		'@server': fileURLToPath(new URL('./server', import.meta.url)),
 		'@ai': fileURLToPath(new URL('./config/ai', import.meta.url)),
 		'@schema': fileURLToPath(new URL('./schema', import.meta.url)),
 		'@constants': fileURLToPath(new URL('./config/constants', import.meta.url))
@@ -277,12 +289,15 @@ export default defineNuxtConfig({
 		project: process.env.SENTRY_PROJECT,
 		authToken: process.env.SENTRY_AUTH_TOKEN,
 		sourcemaps: {
-			disable: process.env.SENTRY_UPLOAD_SOURCE_MAPS !== 'true'
+			disable: !sentryEnabled || process.env.SENTRY_UPLOAD_SOURCE_MAPS !== 'true'
 		}
 	},
 
 	runtimeConfig: {
 		apiToken: process.env.API_TOKEN,
+		ai: {
+			provider: process.env.AI_PROVIDER || 'openai'
+		},
 		turnstile: {
 			secretKey: turnstileSecretKey
 		},
@@ -297,19 +312,21 @@ export default defineNuxtConfig({
 		},
 		openai: {
 			token: process.env.OPENAI_API_KEY,
-			model: process.env.OPENAI_MODEL || AI_OPENAI_CONFIG.defaultModel,
-			models: {
-				websiteAnalysis:
-					process.env.OPENAI_MODEL_WEBSITE_ANALYSIS ||
-					AI_OPENAI_CONFIG.defaultWebsiteAnalysisModel,
-				briefing: process.env.OPENAI_MODEL_BRIEFING || AI_OPENAI_CONFIG.defaultBriefingModel
-			}
+			model: process.env.OPENAI_MODEL || AI_PROVIDER_CONFIG.openai.defaultModel
+		},
+		mistral: {
+			token: process.env.MISTRAL_API_KEY,
+			model: process.env.MISTRAL_MODEL || AI_PROVIDER_CONFIG.mistral.defaultModel
 		},
 		public: {
 			siteUrl: process.env.APP_URL,
 			titleSeparator: NUXT_BEHAVIOR_CONFIG.titleSeparator,
 			language: NUXT_BEHAVIOR_CONFIG.language, // prefer more explicit language codes like `en-AU` over `en`
+			ai: {
+				timingMultiplier: aiTimingMultiplier
+			},
 			sentry: {
+				enabled: sentryEnabled,
 				dsn: process.env.SENTRY_DSN,
 				release: process.env.SENTRY_RELEASE,
 				environment: sentryEnvironment

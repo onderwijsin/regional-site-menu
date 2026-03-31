@@ -1,8 +1,10 @@
-![github_banner](https://github.com/user-attachments/assets/641fecad-0b75-4fbb-9d53-22ffb0d819a8)
+![github_banner](./public/Regional%20Site%20Menu%20Interactive%20App.png)
 
 <p>
   <a href="https://nuxt.com/"><img src="https://img.shields.io/badge/Nuxt-28CF8D?style=flat&logo=nuxt.js" alt="Nuxt"></a>
   <a href="https://www.typescriptlang.org/"><img src="https://img.shields.io/badge/TypeScript-3178C6?logo=typescript&logoColor=fff" alt="TypeScript"></a>
+  <a href="https://platform.openai.com/"><img src="https://img.shields.io/badge/OpenAI-412991?logo=openai&logoColor=white" alt="OpenAI"></a>
+  <a href="https://mistral.ai/"><img src="https://img.shields.io/badge/Mistral-AI-FF7000" alt="Mistral"></a>
   <a href="https://www.cloudflare.com/">
     <img src="https://img.shields.io/badge/Cloudflare-Deployed-F38020?logo=cloudflare&logoColor=white" alt="Cloudflare Deployed">
   </a>
@@ -38,7 +40,7 @@ If you are working on this codebase with an AI coding agent, read [`AGENTS.md`](
 - Pinia + `pinia-plugin-persistedstate`
 - TipTap (rich text input)
 - jsPDF (client-side report generation)
-- OpenAI API (AI website analysis and briefing generation)
+- AI SDK Core (OpenAI + Mistral providers for AI website analysis and briefing generation)
 - Sentry (error monitoring, tracing, replay, source maps)
 - Cloudflare Turnstile via `@nuxtjs/turnstile` (abuse protection for server routes)
 - Cloudflare Workers (via NuxtHub / Nitro preset)
@@ -64,7 +66,7 @@ If you are working on this codebase with an AI coding agent, read [`AGENTS.md`](
 - Node.js `24` (see `.nvmrc`)
 - pnpm `>=10`
 - gitleaks
-- OpenAI account + API key (required for AI features)
+- OpenAI and/or Mistral API key (required for AI features)
 
 ### Setup
 
@@ -194,15 +196,24 @@ Use `.example.env` as template.
 - `DATAHUB_URL`
 - `DATAHUB_TOKEN`
 
+### AI Providers
+
+- `AI_PROVIDER` (optional; `openai` or `mistral`, defaults to `openai`)
+- `AI_TIMING_MULTIPLIER` (optional; scales staged AI loading timing hints, defaults to `1`)
+
 ### OpenAI
 
 - `OPENAI_API_KEY`
-- `OPENAI_MODEL` (optional shared fallback)
-- `OPENAI_MODEL_WEBSITE_ANALYSIS` (optional endpoint-specific override)
-- `OPENAI_MODEL_BRIEFING` (optional endpoint-specific override)
+- `OPENAI_MODEL` (optional provider-wide override)
+
+### Mistral
+
+- `MISTRAL_API_KEY`
+- `MISTRAL_MODEL` (optional provider-wide override)
 
 ### Sentry
 
+- `SENTRY_ENABLED` (optional; `true` | `false`, defaults to `true`)
 - `SENTRY_AUTH_TOKEN` (required for build-time source map upload)
 - `SENTRY_PROJECT` (required Sentry project slug)
 - `SENTRY_ORG` (required Sentry organization slug)
