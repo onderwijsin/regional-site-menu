@@ -10,7 +10,23 @@ import withNuxt from './.nuxt/eslint.config.mjs'
 export default withNuxt(
 	{
 		rules: {
-			'vue/multi-word-component-names': 'off'
+			'vue/multi-word-component-names': 'off',
+			'no-unused-vars': [
+				'error',
+				{
+					argsIgnorePattern: '^_',
+					varsIgnorePattern: '^_',
+					caughtErrorsIgnorePattern: '^_'
+				}
+			],
+			'@typescript-eslint/no-unused-vars': [
+				'error',
+				{
+					argsIgnorePattern: '^_',
+					varsIgnorePattern: '^_',
+					caughtErrorsIgnorePattern: '^_'
+				}
+			]
 		}
 	},
 

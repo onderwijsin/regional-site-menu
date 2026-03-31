@@ -22,7 +22,7 @@ const {
 } = useTurnstile()
 
 const emit = defineEmits<{
-	(e: 'close'): void
+	(_e: 'close'): void
 }>()
 
 const state = reactive<Submission>({
