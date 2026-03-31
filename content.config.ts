@@ -44,6 +44,14 @@ export default defineContentConfig({
 				download: z.url().nullable()
 			})
 		}),
+		faqs: defineCollection({
+			type: 'page',
+			source: 'faqs/**.yml',
+			schema: z.object({
+				title: z.string(),
+				description: z.string()
+			})
+		}),
 		_prompts: defineCollection({
 			type: 'page',
 			source: {
