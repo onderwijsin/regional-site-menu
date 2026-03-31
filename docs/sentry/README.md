@@ -98,7 +98,7 @@ For this project’s Nitro `cloudflare_module` preset:
 2. Open `/_sentry`.
 3. Click:
    - `Trigger client error`
-   - `Trigger server error`
+   - `Trigger server error` (calls `GET /api/_sentry/trigger-error`)
 4. Verify data in Sentry:
    - Issues
    - Traces
