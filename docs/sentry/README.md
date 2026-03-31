@@ -83,6 +83,8 @@ Source map support is enabled as follows:
   - `SENTRY_AUTH_TOKEN`
   - `SENTRY_ORG`
   - `SENTRY_PROJECT`
+- CI also uploads server sourcemaps from Wrangler's final bundle output (`index.js` /
+  `index.js.map`) after debug ID injection, gated by `SENTRY_UPLOAD_SOURCE_MAPS=true`.
 
 ## Cloudflare Notes
 
@@ -91,6 +93,8 @@ For this project’s Nitro `cloudflare_module` preset:
 - Do not manually add `compatibility_flags: ["nodejs_compat"]` in wrangler config unless explicitly
   needed.
 - Keep Cloudflare Sentry plugin setup in `server/plugins/sentry-cloudflare-plugin.ts`.
+- For server symbolication, treat final Wrangler output as source-of-truth (not pre-bundle Nitro
+  chunks).
 
 ## Manual Verification
 
