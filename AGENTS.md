@@ -10,8 +10,7 @@ Operational contract for AI coding agents working in this repository.
   verified.
 - You MUST not add dependencies unless explicitly asked.
 - You MUST preserve persisted store keys and semantics in `app/stores/state.ts`.
-- You MUST preserve existing naming quirks unless explicitly requested, including
-  `config/indentity.ts`.
+- You MUST preserve existing naming and file contracts unless explicitly requested.
 - You MUST reuse shared taxonomy (`app/composables/content-taxonomy.ts`) instead of re-hardcoding
   literals.
 - You MUST follow coding conventions documented in `docs/conventions/README.md`.

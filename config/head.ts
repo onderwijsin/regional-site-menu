@@ -1,6 +1,6 @@
 import type { NuxtConfig } from '@nuxt/schema'
 
-import { siteTitle } from './indentity'
+import { siteTitle } from './identity'
 
 export const app = {
 	head: {

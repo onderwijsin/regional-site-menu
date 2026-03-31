@@ -203,8 +203,7 @@ Validation rules:
 
 ## Naming and Existing Quirks (Do Not “Fix” Casually)
 
-- `config/indentity.ts` filename contains a typo and is imported across the app; renaming it has
-  broad impact.
+- Preserve existing naming/file contracts unless explicitly requested.
 - Much UI copy is Dutch; preserve tone/language consistency when editing copy.
 
 ## Recommended Change Workflow
