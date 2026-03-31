@@ -26,6 +26,25 @@ The app is fully prerendered in production, with most logic running client-side.
 
 ---
 
+## Table of Contents
+
+- [AI Agent Guide](#ai-agent-guide)
+- [Tech Stack](#tech-stack)
+- [Project Structure](#project-structure)
+- [Local Development](#local-development)
+- [Common Commands](#common-commands)
+- [Testing](#testing)
+- [Environment Variables](#environment-variables)
+- [Content Management](#content-management)
+- [Nuxt Studio](#nuxt-studio)
+- [AI Integration](#ai-integration)
+- [Documentation](#documentation)
+- [Deployment](#deployment)
+- [CI/CD](#cicd)
+- [License](#license)
+
+---
+
 ## AI Agent Guide
 
 If you are working on this codebase with an AI coding agent, read [`AGENTS.md`](./AGENTS.md) first.
@@ -50,7 +69,7 @@ If you are working on this codebase with an AI coding agent, read [`AGENTS.md`](
 ## Project Structure
 
 - `app/` — pages, layouts, components, composables, store, plugins
-- `content/` — markdown collections (`items`, `extras`, `_prompts`)
+- `content/` — content collections (`items`, `extras`, `faqs`, `_prompts`)
 - `schema/` — Zod schemas (forms, report config, enums)
 - `server/` — API routes (e.g. Datahub submission proxy)
 - `config/` — app constants and static config (`constants.ts`, `ai.ts`, head/site/robots)
@@ -152,11 +171,7 @@ Important note:
   - verify whether test assumptions are still valid
   - avoid blindly changing app logic only to satisfy a potentially stale test
 
-Detailed testing documentation:
-
-- [Testing Guide](./docs/testing/README.md)
-- [Turnstile Integration](./docs/turnstile/README.md)
-- [Route Guard](./docs/route-guard/README.md)
+Detailed testing documentation: [Testing Guide](./docs/testing/README.md)
 
 ---
 
@@ -245,6 +260,7 @@ Defined in `content.config.ts`:
 
 - `items` — main menu content
 - `extras` — additional tools/resources
+- `faqs` — help-page FAQ entries
 - `_prompts` - system prompts used in AI integrations
 
 ### Database architecture
@@ -312,33 +328,29 @@ Without the `BLOB` binding/bucket config, Studio asset uploads (and related medi
 
 ---
 
-## Suggestion Submission (Datahub)
-
-Suggestions are submitted via:
-
-```txt
-server/api/datahub/submission.post.ts
-```
-
-Validation is handled with:
-
-```txt
-schema/submission.ts
-```
-
-To replace Datahub, update this endpoint.
-
----
-
 ## AI Integration
 
-The app includes a partial AI integration for report generation:
+The app uses **AI SDK Core** (`ai`) as the single interface for LLM calls in report generation. This
+keeps route code provider-agnostic and avoids maintaining custom provider wrappers.
+
+What AI SDK does for this project:
+
+- unified model invocation API across providers
+- structured output support in routes (`Output.object`)
+- consistent request options (`maxOutputTokens`, `temperature`, `maxRetries`)
+
+Current AI features:
 
 - AI website analysis (`POST /api/ai/website-analysis`)
 - AI briefing generation (`POST /api/ai/briefing`)
-- staged client orchestration before PDF generation
+- staged client orchestration before report export
 - prompt management through Nuxt Content (`content/_prompts/*`)
-- PDF sections for AI output
+
+Providers are config-driven and easy to extend:
+
+- provider registry: `config/ai-providers.ts`
+- resolver: `server/utils/ai/provider.ts`
+- active provider via `AI_PROVIDER` env
 
 ### AI route rate limiting (Cloudflare)
 
@@ -347,9 +359,11 @@ At infrastructure level, expensive AI routes are protected with Cloudflare Secur
 - limit: a single IP can send at most `4` requests per `10` seconds to the AI endpoints
 - enforcement: if exceeded, requests from that IP are blocked for `10` seconds
 
-Detailed integration documentation:
+Detailed AI docs:
 
 - [AI Integration README](./docs/ai-integration/README.md)
+- [AI API Route Notes](./server/api/ai/README.md)
+- [AI Utility Module Notes](./server/utils/ai/README.md)
 
 ---
 
@@ -366,51 +380,9 @@ Additional technical docs:
 - [Sentry Integration](./docs/sentry/README.md)
 - [Report Composables Notes](./app/composables/report/README.md)
 - [Report Markdown Notes](./app/composables/report/markdown/README.md)
-- [AI API Route Notes](./server/api/ai/README.md)
-- [AI Utility Module Notes](./server/utils/ai/README.md)
 - [Crawler Module Notes](./server/utils/crawler/README.md)
 - [Datahub API Notes](./server/api/datahub/README.md)
 - [Config Module Notes](./config/README.md)
-
----
-
-## PDF Generation
-
-PDF generation is fully client-side using `jsPDF`.
-
-### Pipeline
-
-1. Collect input (config + audit data)
-2. Create render context (`jsPDF`, layout, tokens)
-3. Parse markdown (TipTap → internal block model)
-4. Measure content + handle pagination
-5. Render sections in order:
-   - cover
-   - introduction
-   - notes
-   - pillar averages
-   - detailed audit items
-6. Export via `jsPDF.save()`
-
-### ⚠️ Important
-
-This system is fragile and layout-sensitive.
-
-- Small changes can break pagination
-- Layout depends on manual measurements
-- Markdown rendering is simplified
-
-If you touch this:
-
-- Expect regressions
-- Test with real PDFs
-- Re-tune spacing
-
-For internals, see:
-
-```txt
-docs/report-pdf/README.md
-```
 
 ---
 
@@ -443,6 +415,14 @@ Migration would involve:
 1. Removing NuxtHub-specific features (e.g. KV cache)
 2. Updating `nuxt.config.ts` for a new target
 
+### What Deploys Automatically vs Manually
+
+- **Content-only changes** (`content/**`) on `main` are deployed automatically.
+- **Code changes** (anything outside `content/**`) are **not** auto-deployed.
+- For code changes, trigger **GitHub Actions -> `Release and Deploy`** manually:
+  - `environment`: choose `preview` or `production`
+  - `release`: optional (`true` creates a semantic release first, `false` deploys current commit)
+
 ---
 
 ## CI/CD
@@ -457,6 +437,11 @@ Workflows are defined in `.github/workflows`.
 - **Branches**
   - `content` → editor branch, auto-promoted to `main` via direct merge automation
   - `main` → production
+- **Automatic production deploy**
+  - only for content-only pushes on `main`
+- **Manual deploy for code changes**
+  - use GitHub Actions workflow **`Release and Deploy`**
+  - release step is optional via workflow input `release`
 - **Deploy flow**
   1. Build (`pnpm build`)
   2. Inject environment variables
