@@ -129,11 +129,17 @@ jobs:
           WORKER_NAME: ${{ vars.WORKER_NAME }}
           CLOUDFLARE_ACCOUNT_SLUG: ${{ vars.CLOUDFLARE_ACCOUNT_SLUG }}
           APP_URL: ${{ vars.APP_URL }}
+          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
+          SENTRY_ORG: ${{ vars.SENTRY_ORG }}
+          SENTRY_PROJECT: ${{ vars.SENTRY_PROJECT }}
+          SENTRY_UPLOAD_SOURCE_MAPS: ${{ vars.SENTRY_UPLOAD_SOURCE_MAPS }}
+          SENTRY_RELEASE: ${{ github.sha }}
         run: |
           set -euo pipefail
 
           echo "Environment: ${{ inputs.environment }}"
           echo "Upload as new version: ${{ inputs.upload_version }}"
+          WRANGLER_OUTDIR=".wrangler-bundle"
 
           # Validate required variables
           if [ "${{ inputs.upload_version }}" != "true" ] && [ -z "${APP_URL:-}" ]; then
@@ -152,7 +158,7 @@ jobs:
           if [ "${{ inputs.upload_version }}" = "true" ]; then
 
             # Capture the Worker Version ID from the output
-            OUTPUT=$(wrangler versions upload --env preview | tee /dev/stderr)
+            OUTPUT=$(wrangler versions upload --env preview --upload-source-maps --outdir "$WRANGLER_OUTDIR" | tee /dev/stderr)
 
             VERSION_ID=$(echo "$OUTPUT" \
               | grep -Eo 'Worker Version ID: [a-f0-9-]+' \
@@ -184,12 +190,36 @@ jobs:
             fi
           else
             if [ "${{ inputs.environment }}" = "production" ]; then
-              wrangler deploy
+              wrangler deploy --upload-source-maps --outdir "$WRANGLER_OUTDIR"
             else
-              wrangler deploy --env "${{ inputs.environment }}"
+              wrangler deploy --env "${{ inputs.environment }}" --upload-source-maps --outdir "$WRANGLER_OUTDIR"
             fi
 
             DEPLOYMENT_URL="$APP_URL"
+          fi
+
+          if [ "${SENTRY_UPLOAD_SOURCE_MAPS:-false}" = "true" ]; then
+            if [ -n "${SENTRY_AUTH_TOKEN:-}" ] && [ -n "${SENTRY_ORG:-}" ] && [ -n "${SENTRY_PROJECT:-}" ]; then
+              if [ -f "${WRANGLER_OUTDIR}/index.js" ] && [ -f "${WRANGLER_OUTDIR}/index.js.map" ]; then
+                echo "Injecting debug IDs into final Wrangler bundle..."
+                npx sentry-cli sourcemaps inject "${WRANGLER_OUTDIR}"
+                echo "Uploading final Wrangler-bundled server sourcemaps to Sentry (release: ${SENTRY_RELEASE})"
+                npx sentry-cli sourcemaps upload \
+                  --auth-token "${SENTRY_AUTH_TOKEN}" \
+                  --org "${SENTRY_ORG}" \
+                  --project "${SENTRY_PROJECT}" \
+                  --release "${SENTRY_RELEASE}" \
+                  --url-prefix "~/" \
+                  --validate \
+                  "${WRANGLER_OUTDIR}"
+              else
+                echo "Skipping final Wrangler sourcemap upload (missing ${WRANGLER_OUTDIR}/index.js or index.js.map)."
+              fi
+            else
+              echo "Skipping final Wrangler sourcemap upload (missing SENTRY_* values)."
+            fi
+          else
+            echo "Skipping final Wrangler sourcemap upload (SENTRY_UPLOAD_SOURCE_MAPS != true)."
           fi
 
           echo "Deployed to: $DEPLOYMENT_URL"
