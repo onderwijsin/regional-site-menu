@@ -32,11 +32,11 @@ catalog:
   '@semantic-release/release-notes-generator': 14.1.0
   '@sentry/nuxt': 10.47.0
   '@tailwindcss/typography': 0.5.19
-  '@tiptap/core': 3.21.0
-  '@tiptap/html': 3.21.0
-  '@tiptap/markdown': 3.21.0
-  '@tiptap/pm': 3.21.0
-  '@tiptap/starter-kit': 3.21.0
+  '@tiptap/core': 3.22.3
+  '@tiptap/html': 3.22.3
+  '@tiptap/markdown': 3.22.3
+  '@tiptap/pm': 3.22.3
+  '@tiptap/starter-kit': 3.22.3
   '@types/cloudflare-turnstile': 0.2.2
   '@types/node': 25.5.2
   '@vitest/coverage-v8': 4.1.4
