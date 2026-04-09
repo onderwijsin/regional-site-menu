@@ -301,10 +301,6 @@ Production auto-deploy remains content-focused: `.github/workflows/deploy.yml` d
 only when a push to `main` contains content-only changes. Other `main` updates still require a
 manual deploy trigger.
 
-For the current temporary Cloudflare Workers build workaround (Nuxt Studio + `sharp`), see:
-
-- `docs/ci-cd/nuxt-studio-cloudflare-patch.md`
-
 ### Requirements
 
 - Users that wish to edit content through Nuxt Studio must have a Github Account with access to the
