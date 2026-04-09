@@ -148,8 +148,3 @@ Manual dispatch in `deploy.yml` can override environment selection.
 5. Worker deployment status is reflected via GitHub deployment status updates.
 6. Cloudflare environments must expose the D1 binding `DB` (including `CLOUDFLARE_D1_DATABASE_ID`).
 7. Cloudflare environments must expose the R2 binding `BLOB` (including `CLOUDFLARE_R2_BUCKET`).
-
-## Known Build Workaround
-
-- Nuxt Studio has a temporary Cloudflare edge build patch in this repo:
-  - `docs/ci-cd/nuxt-studio-cloudflare-patch.md`

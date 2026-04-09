@@ -1,6 +1,6 @@
 catalog:
-  '@ai-sdk/mistral': 3.0.27
-  '@ai-sdk/openai': 3.0.49
+  '@ai-sdk/mistral': 3.0.30
+  '@ai-sdk/openai': 3.0.52
   '@commitlint/cli': 20.5.0
   '@commitlint/config-conventional': 20.5.0
   '@eslint/js': 10.0.1
@@ -8,16 +8,16 @@ catalog:
   '@eslint/markdown': 7.5.1
   '@ianvs/prettier-plugin-sort-imports': 4.7.1
   '@iconify-json/heroicons': 1.2.3
-  '@iconify-json/hugeicons': 1.2.24
-  '@iconify-json/lucide': 1.2.99
-  '@iconify-json/simple-icons': 1.2.75
+  '@iconify-json/hugeicons': 1.2.25
+  '@iconify-json/lucide': 1.2.101
+  '@iconify-json/simple-icons': 1.2.77
   '@mozilla/readability': 0.6.0
   '@nuxt/content': 3.12.0
   '@nuxt/eslint': 1.15.2
   '@nuxt/image': 2.0.0
   '@nuxt/scripts': 0.13.2
   '@nuxt/test-utils': 4.0.0
-  '@nuxt/ui': 4.6.0
+  '@nuxt/ui': 4.6.1
   '@nuxthub/core': 0.10.7
   '@nuxtjs/eslint-module': 4.1.0
   '@nuxtjs/plausible': 3.0.2
@@ -32,34 +32,34 @@ catalog:
   '@semantic-release/release-notes-generator': 14.1.0
   '@sentry/nuxt': 10.47.0
   '@tailwindcss/typography': 0.5.19
-  '@tiptap/core': 3.21.0
-  '@tiptap/html': 3.21.0
-  '@tiptap/markdown': 3.21.0
-  '@tiptap/pm': 3.21.0
-  '@tiptap/starter-kit': 3.21.0
+  '@tiptap/core': 3.22.3
+  '@tiptap/html': 3.22.3
+  '@tiptap/markdown': 3.22.3
+  '@tiptap/pm': 3.22.3
+  '@tiptap/starter-kit': 3.22.3
   '@types/cloudflare-turnstile': 0.2.2
-  '@types/node': 25.5.0
-  '@vitest/coverage-v8': 4.1.2
+  '@types/node': 25.5.2
+  '@vitest/coverage-v8': 4.1.4
   '@vue/test-utils': 2.4.6
   '@vueuse/core': 14.2.1
   '@vueuse/nuxt': 14.2.1
-  ai: 6.0.141
+  ai: 6.0.154
   aws4fetch: 1.0.20
   better-sqlite3: 12.8.0
-  defu: 6.1.4
+  defu: 6.1.7
   eslint: 9.39.2
   eslint-config-prettier: 10.1.8
   eslint-plugin-jsdoc: 62.8.1
-  fast-xml-parser: 5.5.9
-  fuse.js: 7.1.0
+  fast-xml-parser: 5.5.11
+  fuse.js: 7.3.0
   husky: 9.1.7
   jspdf: 4.2.1
   linkedom: 0.18.12
   minimark: 1.0.0
   nuxt: 4.4.2
   nuxt-llms: 0.2.0
-  nuxt-site-config: 4.0.7
-  nuxt-studio: 1.5.1
+  nuxt-site-config: 4.0.8
+  nuxt-studio: 1.6.0
   ofetch: 1.5.1
   p-limit: 7.3.0
   pinia: 3.0.4
@@ -71,9 +71,9 @@ catalog:
   tailwindcss: 4.2.2
   typescript: 5.9.3
   ufo: 1.6.3
-  vitest: 4.1.2
+  vitest: 4.1.4
   vue-tsc: 3.2.6
-  wrangler: 4.79.0
+  wrangler: 4.81.0
   zod: 4.3.6
 
 catalogMode: 'strict'
