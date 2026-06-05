@@ -1,0 +1,13 @@
+diff --git a/dist/module/module.mjs b/dist/module/module.mjs
+index 7b1145b5bcb2a58c87a5eacbe8ddb3fba4e90be9..4629c0ca685edbed1e9aba701df640f3ea2267a1 100644
+--- a/dist/module/module.mjs
++++ b/dist/module/module.mjs
+@@ -289,7 +289,7 @@ const module$1 = defineNuxtModule({
+       const detectedRepo = detectRepositoryFromCI();
+       if (detectedRepo) {
+         const { provider: detectedProvider, ...detectedWithoutProvider } = detectedRepo;
+-        options.repository = defu(detectedWithoutProvider, options.repository);
++        options.repository = defu(options.repository, detectedWithoutProvider);
+         if (!options.repository.provider) {
+           options.repository.provider = detectedProvider;
+         }

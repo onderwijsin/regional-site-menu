@@ -106,7 +106,8 @@
 			"@tiptap/starter-kit": "catalog:"
 		},
 		"patchedDependencies": {
-			"@nuxt/test-utils@4.0.0": "patches/@nuxt__test-utils@4.0.0.patch"
+			"@nuxt/test-utils@4.0.0": "patches/@nuxt__test-utils@4.0.0.patch",
+			"nuxt-studio@1.7.0": "patches/nuxt-studio@1.7.0.patch"
 		}
 	}
 }
