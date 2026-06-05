@@ -13,7 +13,7 @@ export const APP_IDENTITY = {
 	siteTitle: 'Regiosite Menukaart',
 	/** Primary SEO description used in page metadata. */
 	siteDescription:
-		'Ontwerp, evalueer en verbeter de webiste van je regionale onderwijsloket met een flexibele menukaart van elementen waaruit je site kan bestaan. Zet jouw ideeen eenvoudig om in een concrete rapportage die als basis kan dienen voor verdere ontwikkeling.'
+		'Ontwerp, evalueer en verbeter de website van je regionale onderwijsloket met een flexibele menukaart van elementen waaruit je site kan bestaan. Zet jouw ideeen eenvoudig om in een concrete rapportage die als basis kan dienen voor verdere ontwikkeling.'
 } as const
 
 /**
