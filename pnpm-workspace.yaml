@@ -17,7 +17,7 @@ catalog:
   '@nuxt/image': 2.0.0
   '@nuxt/scripts': 0.13.2
   '@nuxt/test-utils': 4.0.0
-  '@nuxt/ui': 4.6.1
+  '@nuxt/ui': 4.8.2
   '@nuxthub/core': 0.10.7
   '@nuxtjs/eslint-module': 4.1.0
   '@nuxtjs/plausible': 3.0.2
@@ -32,11 +32,11 @@ catalog:
   '@semantic-release/release-notes-generator': 14.1.0
   '@sentry/nuxt': 10.47.0
   '@tailwindcss/typography': 0.5.19
-  '@tiptap/core': 3.22.3
-  '@tiptap/html': 3.22.3
-  '@tiptap/markdown': 3.22.3
-  '@tiptap/pm': 3.22.3
-  '@tiptap/starter-kit': 3.22.3
+  '@tiptap/core': 3.25.0
+  '@tiptap/html': 3.25.0
+  '@tiptap/markdown': 3.25.0
+  '@tiptap/pm': 3.25.0
+  '@tiptap/starter-kit': 3.25.0
   '@types/cloudflare-turnstile': 0.2.2
   '@types/node': 25.5.2
   '@vitest/coverage-v8': 4.1.4
@@ -59,7 +59,7 @@ catalog:
   nuxt: 4.4.2
   nuxt-llms: 0.2.0
   nuxt-site-config: 4.0.8
-  nuxt-studio: 1.6.0
+  nuxt-studio: 1.7.0
   ofetch: 1.5.1
   p-limit: 7.3.0
   pinia: 3.0.4
