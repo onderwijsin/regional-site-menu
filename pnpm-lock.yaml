@@ -235,6 +235,9 @@ patchedDependencies:
   '@nuxt/test-utils@4.0.0':
     hash: cf4a5c2401dc969c0ea1851fbe74fcb031e834ddd371beabe5d5791d0a5a8a38
     path: patches/@nuxt__test-utils@4.0.0.patch
+  nuxt-studio@1.7.0:
+    hash: 6b5bef30656f03d1506efe48d914007d711537a4c2838896cc7c0b43495893d1
+    path: patches/nuxt-studio@1.7.0.patch
 
 importers:
 
@@ -422,7 +425,7 @@ importers:
         version: 4.0.8(@nuxt/schema@4.4.7)(magicast@0.5.2)(nuxt@4.4.2(@babel/core@7.29.0)(@babel/plugin-syntax-jsx@7.28.6(@babel/core@7.29.0))(@parcel/watcher@2.5.6)(@types/node@25.5.2)(@vue/compiler-sfc@3.5.30)(aws4fetch@1.0.20)(better-sqlite3@12.8.0)(cac@6.7.14)(db0@0.3.4(better-sqlite3@12.8.0))(eslint@9.39.2(jiti@2.6.1))(ioredis@5.10.0)(lightningcss@1.32.0)(magicast@0.5.2)(meow@13.2.0)(optionator@0.9.4)(pinia@3.0.4(typescript@5.9.3)(vue@3.5.30(typescript@5.9.3)))(rolldown@1.0.0-beta.57)(rollup-plugin-visualizer@6.0.11(rolldown@1.0.0-beta.57)(rollup@4.59.0))(rollup@4.59.0)(terser@5.46.0)(typescript@5.9.3)(vite@7.3.1(@types/node@25.5.2)(jiti@2.6.1)(lightningcss@1.32.0)(terser@5.46.0)(yaml@2.8.2))(vue-tsc@3.2.6(typescript@5.9.3))(yaml@2.8.2))(vite@7.3.1(@types/node@25.5.2)(jiti@2.6.1)(lightningcss@1.32.0)(terser@5.46.0)(yaml@2.8.2))(vue@3.5.30(typescript@5.9.3))(zod@4.3.6)
       nuxt-studio:
         specifier: 'catalog:'
-        version: 1.7.0(aws4fetch@1.0.20)(db0@0.3.4(better-sqlite3@12.8.0))(ioredis@5.10.0)(magicast@0.5.2)(vue@3.5.30(typescript@5.9.3))
+        version: 1.7.0(patch_hash=6b5bef30656f03d1506efe48d914007d711537a4c2838896cc7c0b43495893d1)(aws4fetch@1.0.20)(db0@0.3.4(better-sqlite3@12.8.0))(ioredis@5.10.0)(magicast@0.5.2)(vue@3.5.30(typescript@5.9.3))
       ofetch:
         specifier: 'catalog:'
         version: 1.5.1
@@ -17634,7 +17637,7 @@ snapshots:
       - vue
       - zod
 
-  nuxt-studio@1.7.0(aws4fetch@1.0.20)(db0@0.3.4(better-sqlite3@12.8.0))(ioredis@5.10.0)(magicast@0.5.2)(vue@3.5.30(typescript@5.9.3)):
+  nuxt-studio@1.7.0(patch_hash=6b5bef30656f03d1506efe48d914007d711537a4c2838896cc7c0b43495893d1)(aws4fetch@1.0.20)(db0@0.3.4(better-sqlite3@12.8.0))(ioredis@5.10.0)(magicast@0.5.2)(vue@3.5.30(typescript@5.9.3)):
     dependencies:
       '@ai-sdk/gateway': 3.0.125(zod@4.3.6)
       '@ai-sdk/vue': 3.0.197(vue@3.5.30(typescript@5.9.3))(zod@4.3.6)
