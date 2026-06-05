@@ -56,7 +56,7 @@ catalog:
   jspdf: 4.2.1
   linkedom: 0.18.12
   minimark: 1.0.0
-  nuxt: 4.4.7
+  nuxt: 4.4.6
   nuxt-llms: 0.2.0
   nuxt-site-config: 4.0.8
   nuxt-studio: 1.7.0
